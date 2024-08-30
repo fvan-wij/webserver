@@ -1,13 +1,10 @@
 #pragma once
 
-#define POLL_TIMEOUT 100
+#define POLL_TIMEOUT 2500
 #define LISTEN_BACKLOG 8
 
 #define LOG_ERROR(x) std::cerr << "[ERROR] : " << x << std::endl
 #define LOG(x) std::cout << "[INFO] : " << x << std::endl
-
-
-
 
 #define UNUSED(x) (void)(x)
 #define WARNING(message) \

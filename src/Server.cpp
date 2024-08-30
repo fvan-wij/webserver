@@ -11,17 +11,6 @@
 #include <unistd.h>
 #include <vector>
 
-
-void replace_first(
-    std::string& s,
-    std::string const& toReplace,
-    std::string const& replaceWith
-) {
-    std::size_t pos = s.find(toReplace);
-    if (pos == std::string::npos) return;
-    s.replace(pos, toReplace.length(), replaceWith);
-}
-
 static bool echo(int fd)
 {
 	const size_t buf_size = 1024;
@@ -35,21 +24,8 @@ static bool echo(int fd)
 
 	std::string s = 
 	"HTTP/1.1 200 OK\r\n"
-	"Server: nginx/1.27.1\r\n"
-	"Date: Thu, 29 Aug 2024 13:02:31 GMT\r\n"
-	"Content-Type: text/html\r\n"
-	"Content-Length: 615\r\n"
-	"Last-Modified: Mon, 12 Aug 2024 14:21:01 GMT\r\n"
-	"Connection: closed\r\n"
-	"Accept-Ranges: bytes\r\n";
+	"\r\n<h1> Fakka strijders </h1>\r\n";
 
-	s += "\r\n<h3> Fakka strijders </h3>\r\n";
-
-	// if (!s[0] || !std::strcmp(s.c_str(), "yup\r\n"))
-	// {
-	// 	send(fd, bye_str.c_str(), bye_str.length() * sizeof(char), 0);
-	// 	return false;
-	// }
 	if (!s[0])
 	{
 		return false;
@@ -72,25 +48,10 @@ Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 
 }
 
-// Socket::Socket(t_sock_type connection_type, int domain, int type, int protocol, int port, bool reuse_addr) : _type(connection_type)//Listener connection
-
 Server::Server(std::vector<uint16_t> ports)
 {
 	for (uint16_t p : ports)
 	{
-		// int fd = _socket_create();
-		//
-		// if (fd == -1)
-		// {
-		// 	UNIMPLEMENTED("handle _socketCreate failed");
-		// }
-		//
-		// if (!_socket_bind(fd, p))
-		// {
-		// 	UNIMPLEMENTED("handle _socketBind failed");
-		// }
-
-		// _pfds.push_back({fd, POLLIN, 0});
 		Socket new_listener = Socket(LISTENER, p);
 		_pfds.push_back({new_listener.get_fd(), POLLIN, 0});
 		_sockets.push_back(new_listener);
@@ -105,35 +66,62 @@ void Server::handle_events()
 		pollfd &pfd = _pfds[i];
 		LOG("checking fd: " << pfd.fd);
 
-		// if current fd is a listener
-		if (pfd.revents && _sockets[LISTENER].get_fd() == pfd.fd)
+		if (pfd.revents && is_listener(pfd.fd))
 		{
-			// if new connection
-			// connections.add new connection
 			_pfds.push_back({_socket_accept(pfd.fd), POLLIN | POLLOUT, 0});
 		}
-		else if (pfd.revents & POLLIN)
+		else if (ready_to_read(pfd.revents))
 		{
-			// connection.gethttphandler.appendToBuf(connection.data)
 			LOG("fd: " << pfd.fd << " POLLIN");
 			if (!echo(pfd.fd))
 			{
-				close(pfd.fd);
-				_pfds.erase(_pfds.begin() + i);
+				_close_connection(i);
 			}
 		}
-		else if (pfd.revents & POLLOUT)
+		else if (ready_to_write(pfd.revents))
 		{
-			// connection.httphandler.response.ready?
-			// connection.send
 			LOG("fd: " << pfd.fd << " POLLOUT");
+		}
+		else if (error_occurred(pfd.revents))
+		{
+			LOG_ERROR("POLLERR | POLLNVAL error occurred");
 		}
 	}
 }
 
-std::vector<pollfd>& Server::getFds()
+int Server::poll_events()
+{
+	int n_ready;
+	bool print_ready = true;
+
+	n_ready = poll(Server::get_pfds().data(), Server::get_pfds().size(), POLL_TIMEOUT);
+	if (n_ready == -1)
+	{
+		LOG_ERROR("Failed polling: " << strerror(errno));
+		return -1;
+	}
+	else if (print_ready && !n_ready)
+	{
+		LOG("Polling... n of events set: " << n_ready);
+		print_ready = false;
+	}
+	else if (n_ready)
+	{
+		LOG("Polling... n of events set: " << n_ready);
+		print_ready = true;
+		return 1;
+	}
+	return -1;
+}
+
+std::vector<pollfd>& Server::get_pfds()
 {
 	return _pfds;
+}
+
+std::vector<Socket>& Server::get_sockets()
+{
+	return _sockets;
 }
 
 int Server::_socket_create()
@@ -157,31 +145,6 @@ int Server::_socket_create()
 	return fd;
 }
 
-bool Server::_socket_bind(int fd, uint16_t port)
-{
-	sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = INADDR_ANY;
-
-	if (bind(fd, (sockaddr *) &addr, sizeof(sockaddr_in)) == -1)
-	{
-		LOG_ERROR("Failed binding to port: " << port << ", " << strerror(errno));
-		close(fd);
-		return false;
-	}
-	else
-		LOG("Bound to port: " << port);
-
-	if (listen(fd, LISTEN_BACKLOG) == -1)
-	{
-		LOG_ERROR("Listen failed, " << strerror(errno));
-		close(fd);
-		return false;
-	}
-	return true;
-}
-
 int Server::_socket_accept(int fd)
 {
 	int clientFd = accept(fd, nullptr, nullptr);
@@ -198,5 +161,38 @@ int Server::_socket_accept(int fd)
 	Socket client_socket = Socket(CLIENT, clientFd);
 	_sockets.push_back(client_socket);
 	return clientFd;
+}
+
+void Server::_close_connection(int index)
+{
+	close(_pfds[index].fd);
+	_pfds.erase(_pfds.begin() + index);
+	_sockets.erase(_sockets.begin() + index);
+	LOG(" Disconnected socket[" << index << "], total sockets: " << _sockets.size());
+}
+
+bool						Server::is_listener(int fd)
+{
+	return fd == _pfds[LISTENER].fd;
+}
+
+bool						Server::is_client(int fd)
+{
+	return fd != _pfds[LISTENER].fd;
+}
+
+bool						Server::error_occurred(short revents)
+{
+	return revents & POLLERR || revents & POLLNVAL;	
+}
+
+bool						Server::ready_to_read(short revents)
+{
+	return revents & POLLIN;
+}
+
+bool						Server::ready_to_write(short revents)
+{
+	return revents & POLLOUT;
 }
 
