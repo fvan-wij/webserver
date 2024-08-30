@@ -11,15 +11,6 @@ Socket::Socket(t_sock_type connection_type, int data)
 		_init_client(data);
 }
 
-// Socket::Socket(t_sock_type connection_type, int fd)  //Client connection
-// {
-// 	// std::cout << "<Constructing client connection...>" << std::endl;
-// 	_type = connection_type;
-// 	_fd = fd;
-// 	if (fd < 0)
-// 		std::cout << "(Error in Socket constructor client): fd is invalid" << std::endl;
-// }
-
 int 						Socket::get_fd() const
 {
 	if (_fd <= 0)

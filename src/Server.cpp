@@ -40,8 +40,7 @@ static bool echo(int fd)
 	"Content-Type: text/html\r\n"
 	"Content-Length: 615\r\n"
 	"Last-Modified: Mon, 12 Aug 2024 14:21:01 GMT\r\n"
-	// "Connection: closed\r\n"
-	// "ETag: \\"66ba1a4d-267"\\"
+	"Connection: closed\r\n"
 	"Accept-Ranges: bytes\r\n";
 
 	s += "\r\n<h3> Fakka strijders </h3>\r\n";
@@ -107,7 +106,7 @@ void Server::handle_events()
 		LOG("checking fd: " << pfd.fd);
 
 		// if current fd is a listener
-		if (pfd.revents && _sockets[LISTENER].get_fd())
+		if (pfd.revents && _sockets[LISTENER].get_fd() == pfd.fd)
 		{
 			// if new connection
 			// connections.add new connection
