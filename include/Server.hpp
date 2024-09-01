@@ -36,6 +36,9 @@ private:
 	std::vector<Socket> 		_sockets;
 	// HttpServer				_http_server; //Psst, will be ServerImplementation at some point!!!
 
+
+	void 						_add_connection(Socket s);
+
 	int 						_socket_create();
 	int 						_socket_accept(int fd);
 	void						_close_connection(int index);

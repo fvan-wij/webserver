@@ -9,10 +9,11 @@
 #include <unistd.h>
 #include <poll.h>
 
-typedef enum t_sock_type {
-	LISTENER = 0,
-	CLIENT = 1,
-} t_sock_type;
+enum class SocketType 
+{
+	LISTENER,
+	CLIENT,
+};
 
 class Socket
 {
@@ -20,19 +21,22 @@ class Socket
 
 		//Constructors
 		Socket();
-		Socket(t_sock_type type, int data); //Listener socket constructor, constructs listener or client based on type argument
+		Socket(SocketType type, int data); //Listener socket constructor, constructs listener or client based on type argument
 		~Socket();
 		
-		//Member functions
+		// Funcs
+		Socket 						accept();
+
+		// Getters
 		int 						get_fd() const;
 		struct sockaddr_in			get_address() const;
-		bool						is_listener() {return _type == LISTENER;};
-		bool						is_client() {return _type == CLIENT;};
+		bool						is_listener() {return _type == SocketType::LISTENER;};
+		bool						is_client() {return _type == SocketType::CLIENT;};
 
 	private:
 		int							_fd;
 		struct sockaddr_in			_address;
-		t_sock_type					_type;
+		SocketType					_type;
 		// ServerImplementation	
 
 		void						_init_listener(int port);

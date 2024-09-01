@@ -52,10 +52,21 @@ Server::Server(std::vector<uint16_t> ports)
 {
 	for (uint16_t p : ports)
 	{
-		Socket new_listener = Socket(LISTENER, p);
-		_pfds.push_back({new_listener.get_fd(), POLLIN, 0});
-		_sockets.push_back(new_listener);
+		_add_connection({SocketType::LISTENER, p});
+		
 	}
+}
+
+void Server::_add_connection(Socket s)
+{
+	uint8_t mask = POLLIN;
+
+	if (s.is_client())
+		mask = POLLIN | POLLOUT;
+
+	_sockets.push_back(s);
+	_pfds.push_back({s.get_fd(), mask, 0});
+
 }
 
 void Server::handle_events()
@@ -64,11 +75,12 @@ void Server::handle_events()
 	for (size_t i = 0; i < _pfds.size(); i++)
 	{
 		pollfd &pfd = _pfds[i];
-		LOG("checking fd: " << pfd.fd);
+		LOG("checking fd: " << pfd.fd << " : socket fd : " << _sockets[i].get_fd());
 
-		if (pfd.revents && is_listener(pfd.fd))
+		if (ready_to_read(pfd.revents) && _sockets[i].is_listener())
 		{
-			_pfds.push_back({_socket_accept(pfd.fd), POLLIN | POLLOUT, 0});
+			Socket client_sock = _sockets[i].accept();
+			_add_connection(client_sock);
 		}
 		else if (ready_to_read(pfd.revents))
 		{
@@ -84,7 +96,7 @@ void Server::handle_events()
 		}
 		else if (error_occurred(pfd.revents))
 		{
-			LOG_ERROR("POLLERR | POLLNVAL error occurred");
+			LOG_ERROR("POLLERR | POLLNVAL error occurred: " << strerror(errno));
 		}
 	}
 }
@@ -145,23 +157,23 @@ int Server::_socket_create()
 	return fd;
 }
 
-int Server::_socket_accept(int fd)
-{
-	int clientFd = accept(fd, nullptr, nullptr);
-	if (clientFd == -1)
-	{
-		LOG_ERROR("Failed accepting client on fd: " << fd << ", " << strerror(errno));
-		close(fd);
-		return -1;
-	}
-	else
-	{
-		LOG("Accepted new client on listening socket fd: " << fd << " with clientFd " << clientFd);
-	}
-	Socket client_socket = Socket(CLIENT, clientFd);
-	_sockets.push_back(client_socket);
-	return clientFd;
-}
+// int Server::_socket_accept(int fd)
+// {
+// 	int clientFd = accept(fd, nullptr, nullptr);
+// 	if (clientFd == -1)
+// 	{
+// 		LOG_ERROR("Failed accepting client on fd: " << fd << ", " << strerror(errno));
+// 		close(fd);
+// 		return -1;
+// 	}
+// 	else
+// 	{
+// 		LOG("Accepted new client on listening socket fd: " << fd << " with clientFd " << clientFd);
+// 	}
+// 	Socket client_socket = Socket(CLIENT, clientFd);
+// 	_sockets.push_back(client_socket);
+// 	return clientFd;
+// }
 
 void Server::_close_connection(int index)
 {
@@ -169,16 +181,6 @@ void Server::_close_connection(int index)
 	_pfds.erase(_pfds.begin() + index);
 	_sockets.erase(_sockets.begin() + index);
 	LOG(" Disconnected socket[" << index << "], total sockets: " << _sockets.size());
-}
-
-bool						Server::is_listener(int fd)
-{
-	return fd == _pfds[LISTENER].fd;
-}
-
-bool						Server::is_client(int fd)
-{
-	return fd != _pfds[LISTENER].fd;
 }
 
 bool						Server::error_occurred(short revents)

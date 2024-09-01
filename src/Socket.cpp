@@ -1,14 +1,32 @@
+#include "meta.hpp"
 #include "Socket.hpp"
 #include <netinet/in.h>
 
 
+
 //Socket can be client or listener
-Socket::Socket(t_sock_type connection_type, int data)
+Socket::Socket(SocketType connection_type, int data) : _fd(data), _type(connection_type)	
 {
-	if (connection_type == LISTENER)
+	if (_type == SocketType::LISTENER)
 		_init_listener(data);
-	else if (connection_type == CLIENT)
-		_init_client(data);
+}
+
+Socket Socket::accept()
+{
+	int clientFd = ::accept(_fd, nullptr, nullptr);
+	if (clientFd == -1)
+	{
+		UNIMPLEMENTED("EXCEPTION: Failed accepting client on fd: " << _fd << ", " << strerror(errno));
+		close(_fd);
+	}
+	else
+	{
+		// TODO Use logger
+		LOG("Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd);
+		close(_fd);
+	}
+	return Socket(SocketType::CLIENT, clientFd);
+
 }
 
 int 						Socket::get_fd() const
@@ -18,14 +36,12 @@ int 						Socket::get_fd() const
 	return _fd;
 };
 
-struct sockaddr_in						Socket::get_address() const 
-{
-	struct sockaddr_in	empty;
 
-	if (_type == LISTENER)
-		return _address;
-	std::cout << "!WARNING: get_address() returns empty address due to being client!" << std::endl;
-	return empty;
+struct sockaddr_in	Socket::get_address() const 
+{
+	if (_type == SocketType::CLIENT)
+		std::cout << "!WARNING: get_address() returns empty address due to being client!" << std::endl;
+	return _address;
 };
 
 Socket::~Socket()
@@ -38,6 +54,7 @@ void 				Socket::_init_listener(int port)
 	_fd = socket(AF_INET, SOCK_STREAM, 0); //Creates connection
 	if (_fd < 0)
 	{
+		// TODO Throw error
 		std::cout << "Error occurred: " << strerror(errno) << std::endl;
 	}
 
@@ -57,12 +74,6 @@ void 				Socket::_init_listener(int port)
 		std::cout << "Error occurred: " << strerror(errno) << std::endl;
 		return;
 	}
-	_type = LISTENER;
 }
 
-void					Socket::_init_client(int fd)
-{
-	_type = CLIENT;
-	_fd = fd;
-}
 

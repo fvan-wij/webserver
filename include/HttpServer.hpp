@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 class HttpServer
 {
@@ -9,6 +10,6 @@ class HttpServer
 		void		handle_request(int fd); //Reads request, parses, generates response
 	private:
 		// std::string	_request_buffer;
-		// HttpObject	_object;
+		// std::vector<HttpObject>	_object;
 
 };
