@@ -23,7 +23,6 @@ Socket Socket::accept()
 	{
 		// TODO Use logger
 		LOG("Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd);
-		close(_fd);
 	}
 	return Socket(SocketType::CLIENT, clientFd);
 
@@ -75,5 +74,4 @@ void 				Socket::_init_listener(int port)
 		return;
 	}
 }
-
 

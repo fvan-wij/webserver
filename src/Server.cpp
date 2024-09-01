@@ -41,8 +41,6 @@ static bool echo(int fd)
 	return false;
 }
 
-
-
 Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 {
 
@@ -52,21 +50,8 @@ Server::Server(std::vector<uint16_t> ports)
 {
 	for (uint16_t p : ports)
 	{
-		_add_connection({SocketType::LISTENER, p});
-		
+		_socket_add({SocketType::LISTENER, p});
 	}
-}
-
-void Server::_add_connection(Socket s)
-{
-	uint8_t mask = POLLIN;
-
-	if (s.is_client())
-		mask = POLLIN | POLLOUT;
-
-	_sockets.push_back(s);
-	_pfds.push_back({s.get_fd(), mask, 0});
-
 }
 
 void Server::handle_events()
@@ -75,19 +60,19 @@ void Server::handle_events()
 	for (size_t i = 0; i < _pfds.size(); i++)
 	{
 		pollfd &pfd = _pfds[i];
-		LOG("checking fd: " << pfd.fd << " : socket fd : " << _sockets[i].get_fd());
+		// LOG("checking fd: " << pfd.fd << " : socket fd : " << _sockets[i].get_fd());
 
 		if (ready_to_read(pfd.revents) && _sockets[i].is_listener())
 		{
 			Socket client_sock = _sockets[i].accept();
-			_add_connection(client_sock);
+			_socket_add(client_sock);
 		}
 		else if (ready_to_read(pfd.revents))
 		{
 			LOG("fd: " << pfd.fd << " POLLIN");
 			if (!echo(pfd.fd))
 			{
-				_close_connection(i);
+				_socket_remove(i);
 			}
 		}
 		else if (ready_to_write(pfd.revents))
@@ -109,17 +94,17 @@ int Server::poll_events()
 	n_ready = poll(Server::get_pfds().data(), Server::get_pfds().size(), POLL_TIMEOUT);
 	if (n_ready == -1)
 	{
-		LOG_ERROR("Failed polling: " << strerror(errno));
+		// LOG_ERROR("Failed polling: " << strerror(errno));
 		return -1;
 	}
 	else if (print_ready && !n_ready)
 	{
-		LOG("Polling... n of events set: " << n_ready);
+		// LOG("Polling... n of events set: " << n_ready);
 		print_ready = false;
 	}
 	else if (n_ready)
 	{
-		LOG("Polling... n of events set: " << n_ready);
+		// LOG("Polling... n of events set: " << n_ready);
 		print_ready = true;
 		return 1;
 	}
@@ -136,51 +121,26 @@ std::vector<Socket>& Server::get_sockets()
 	return _sockets;
 }
 
-int Server::_socket_create()
+void Server::_socket_add(Socket s)
 {
-	int fd = socket(AF_INET, SOCK_STREAM, 0);
+	short mask = POLLIN;
 
-	if (fd == -1)
-	{
-		LOG_ERROR(strerror(errno));
-		return fd;
-	}
-	else
-		LOG("Created socket with fd: " << fd);
+	if (s.is_client())
+		mask = POLLIN | POLLOUT;
 
-	int enable = 1;
-	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) == -1)
-	{
-		LOG_ERROR(strerror(errno));
-		close(fd);
-	}
-	return fd;
+	_sockets.push_back(s);
+	_pfds.push_back({s.get_fd(), mask, 0});
+
 }
 
-// int Server::_socket_accept(int fd)
-// {
-// 	int clientFd = accept(fd, nullptr, nullptr);
-// 	if (clientFd == -1)
-// 	{
-// 		LOG_ERROR("Failed accepting client on fd: " << fd << ", " << strerror(errno));
-// 		close(fd);
-// 		return -1;
-// 	}
-// 	else
-// 	{
-// 		LOG("Accepted new client on listening socket fd: " << fd << " with clientFd " << clientFd);
-// 	}
-// 	Socket client_socket = Socket(CLIENT, clientFd);
-// 	_sockets.push_back(client_socket);
-// 	return clientFd;
-// }
-
-void Server::_close_connection(int index)
+void Server::_socket_remove(int index)
 {
+	const int fd = _pfds[index].fd;
+
 	close(_pfds[index].fd);
 	_pfds.erase(_pfds.begin() + index);
 	_sockets.erase(_sockets.begin() + index);
-	LOG(" Disconnected socket[" << index << "], total sockets: " << _sockets.size());
+	LOG("Removed socket[" << fd << "], total sockets: " << _sockets.size());
 }
 
 bool						Server::error_occurred(short revents)

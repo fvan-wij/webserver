@@ -37,9 +37,6 @@ private:
 	// HttpServer				_http_server; //Psst, will be ServerImplementation at some point!!!
 
 
-	void 						_add_connection(Socket s);
-
-	int 						_socket_create();
-	int 						_socket_accept(int fd);
-	void						_close_connection(int index);
+	void 						_socket_add(Socket s);
+	void						_socket_remove(int index);
 };
