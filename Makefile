@@ -11,10 +11,14 @@ SRC_DIR		:=	src
 SRC_ENTRY	:=	main.cpp
 SRCS		:=	Server.cpp \
 				Socket.cpp \
+				HttpServer.cpp
 
 
 HEADER_DIR	:=	include
-HEADERS 	:=	Server.hpp
+HEADERS 	:=	Server.hpp \
+				Socket.hpp \
+				meta.hpp \
+				HttpServer.hpp
 
 OBJ_DIR		:=	obj
 

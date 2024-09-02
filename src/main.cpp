@@ -1,6 +1,4 @@
 #include "Server.hpp"
-#include "meta.hpp"
-#include <iostream>
 #include <cstring>
 
 
@@ -19,7 +17,7 @@ int main()
 	{
 		for(auto &s : servers)
 		{
-			if (s.poll_events() != -1)
+			if (s.poll() > 0)
 				s.handle_events();
 		}
 	}

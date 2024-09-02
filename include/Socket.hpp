@@ -1,11 +1,9 @@
 #pragma once
 
+#include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/types.h>
-#include <iostream>
-#include <string.h>
-#include <errno.h>
 #include <unistd.h>
 #include <poll.h>
 
@@ -26,6 +24,8 @@ class Socket
 		
 		// Funcs
 		Socket 						accept();
+		std::string 				read();
+		void 						write(const std::string s);
 
 		// Getters
 		int 						get_fd() const;
@@ -37,7 +37,6 @@ class Socket
 		int							_fd;
 		struct sockaddr_in			_address;
 		SocketType					_type;
-		// ServerImplementation	
 
 		void						_init_listener(int port);
 		void						_init_client(int fd);

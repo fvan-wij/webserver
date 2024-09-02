@@ -1,6 +1,9 @@
 #include "meta.hpp"
 #include "Socket.hpp"
+#include <cerrno>
+#include <cstring>
 #include <netinet/in.h>
+#include <sys/types.h>
 
 
 
@@ -22,11 +25,41 @@ Socket Socket::accept()
 	else
 	{
 		// TODO Use logger
-		LOG("Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd);
+		LOG("\n\nAccepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd);
 	}
 	return Socket(SocketType::CLIENT, clientFd);
 
 }
+
+std::string Socket::read()
+{
+	char buffer[SOCKET_READ_SIZE];
+
+	bzero(&buffer, sizeof(buffer));
+	if (recv(_fd, buffer, SOCKET_READ_SIZE, 0) == -1)
+	{
+		UNIMPLEMENTED("recv failed");
+	}
+
+	return buffer;
+}
+
+void Socket::write(const std::string s)
+{
+	UNUSED(s);
+
+	ssize_t data_sent = send(_fd, s.c_str(), s.length(), 0);
+	if (data_sent == -1)
+	{
+		UNIMPLEMENTED("send failed");
+	}
+	if (data_sent != (ssize_t) s.length())
+	{
+		WARNING("data send is not equal to data passed in");
+	}
+}
+
+
 
 int 						Socket::get_fd() const
 {
