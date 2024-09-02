@@ -48,7 +48,7 @@ void CGI::start(std::string path)
 		char *args[] =
 		{
 			(char *) path.c_str(),
-			(char*) ("5"),
+			(char*) ("2"),
 			NULL,
 		};
 
