@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Socket.hpp"
+#include "CGI.hpp"
 #include <string>
 
 
@@ -17,7 +18,7 @@ class HttpServer
 
 		void		handle(std::string data);
 
-		bool		is_ready() const;
+		bool		is_ready();
 		std::string	get_data() const;
 
 	private:
@@ -25,7 +26,6 @@ class HttpServer
 		bool 		_ready;
 		Socket		&_socket;
 
-		// UwU whats this?
-		// CGI cgi;
+		CGI	_cgi;
 
 };

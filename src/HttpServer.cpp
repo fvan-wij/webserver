@@ -18,13 +18,14 @@ HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request
 
 void	HttpServer::handle(std::string data)
 {
+	_ready = false;
 	// LOG("HttpServer : data [" << data << "]");
 	UNUSED(data);
 	LOG("HttpServer with sock_fd " << _socket.get_fd() <<" : received some  data");
 	// Append to `_request_buffer` until we reach EOF?
 	// RUN CGI and other bullshit.
 	// After CGI has exited (which we will check externally) we'll set _ready to true.
-	_ready = true;
+	_cgi.start("sleep_echo_prog");
 }
 
 
@@ -37,14 +38,18 @@ std::string	HttpServer::get_data() const
 	}
 	std::string s = 
 	"HTTP/1.1 200 OK\r\n"
-	"\r\n<h1> Fakka strijders </h1>\r\n";
+	"\r\n<h1> Fakka strijders </h1>\r\n"
+	"\r\n";
+
+	s += _cgi.get_buffer();
+
 
 	return s;
 }
 
-bool		HttpServer::is_ready() const
+bool		HttpServer::is_ready()
 {
-	return _ready;
+	return _cgi.poll();
 }
 
 HttpServer::~HttpServer()
