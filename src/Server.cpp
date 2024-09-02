@@ -108,7 +108,6 @@ int Server::poll()
 
 	for (const Socket &s : _sockets)
 	{
-	
 		if (s.is_client())
 		{
 			HttpServer &instance = _server_instances.at(std::cref(s));
