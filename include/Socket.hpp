@@ -30,8 +30,8 @@ class Socket
 		// Getters
 		int 						get_fd() const;
 		struct sockaddr_in			get_address() const;
-		bool						is_listener() {return _type == SocketType::LISTENER;};
-		bool						is_client() {return _type == SocketType::CLIENT;};
+		bool						is_listener() const {return _type == SocketType::LISTENER;};
+		bool						is_client() const {return _type == SocketType::CLIENT;};
 
 	private:
 		int							_fd;

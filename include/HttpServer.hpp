@@ -17,6 +17,7 @@ class HttpServer
 
 
 		void		handle(std::string data);
+		void 		poll_cgi();
 
 		bool		is_ready();
 		std::string	get_data() const;

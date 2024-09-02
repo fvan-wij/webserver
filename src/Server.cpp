@@ -106,6 +106,16 @@ int Server::poll()
 
 	// iterate over all `_server_instances` and waitpid their CGI.
 
+	for (const Socket &s : _sockets)
+	{
+	
+		if (s.is_client())
+		{
+			HttpServer &instance = _server_instances.at(std::cref(s));
+			instance.poll_cgi();
+		}
+	}
+
 	return n_ready;
 }
 

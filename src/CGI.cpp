@@ -10,7 +10,7 @@
 #include <string>
 #include <unistd.h>
 
-CGI::CGI()
+CGI::CGI() : _is_running(false)
 {
 
 }
@@ -19,6 +19,7 @@ CGI::CGI()
 
 void CGI::start(std::string path)
 {
+	_is_running = true;
 	LOG("starting CGI with path: " << path);
 	if (pipe(_pipes) == -1)
 	{
@@ -47,6 +48,7 @@ void CGI::start(std::string path)
 		char *args[] =
 		{
 			(char *) path.c_str(),
+			(char*) ("5"),
 			NULL,
 		};
 
@@ -66,8 +68,10 @@ void CGI::start(std::string path)
 // incase there is more than 4KB of data.
 bool CGI::poll()
 {
-	int32_t status;
+	if (!_is_running)
+		return false;
 
+	int32_t status;
 	if (::waitpid(_pid, &status, WNOHANG) == -1)
 	{
 		UNIMPLEMENTED("waitpid failed" << strerror(errno));
@@ -84,6 +88,7 @@ bool CGI::poll()
 			;
 		}
 		close(_pipes[PipeFD::READ]);
+		_is_running = false;
 		return true;
 	}
 	return false;	

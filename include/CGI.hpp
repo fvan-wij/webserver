@@ -26,10 +26,10 @@ public:
 	const std::string &get_buffer() const;
 
 private:
+	bool		_is_running;
 	std::string _buffer;
-	int _pid;
-	int _pipes[PipeFD::COUNT];
-
+	int			_pid;
+	int			_pipes[PipeFD::COUNT];
 
 	int32_t _read();
 };
