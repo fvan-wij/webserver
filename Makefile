@@ -12,7 +12,8 @@ SRC_ENTRY	:=	main.cpp
 SRCS		:=	Server.cpp \
 				Socket.cpp \
 				HttpServer.cpp \
-				CGI.cpp
+				CGI.cpp			\
+				HttpObject.cpp \
 
 
 HEADER_DIR	:=	include
@@ -20,7 +21,8 @@ HEADERS 	:=	Server.hpp \
 				Socket.hpp \
 				meta.hpp \
 				HttpServer.hpp \
-				CGI.hpp
+				CGI.hpp			\
+				HttpObject.hpp \
 
 OBJ_DIR		:=	obj
 
