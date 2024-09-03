@@ -1,14 +1,32 @@
 #pragma once
 
+#include "Socket.hpp"
+#include "CGI.hpp"
+#include <string>
+
+
 class HttpServer
 {
 	public:
-		HttpServer();
+		HttpServer() = delete;
+		HttpServer(const HttpServer &);
+		HttpServer &operator=(const HttpServer &) = delete;
 		~HttpServer();
 
-		void		handle_request(int fd); //Reads request, parses, generates response
+		HttpServer(Socket &s);
+
+
+		void		handle(std::string data);
+		void 		poll_cgi();
+
+		bool		is_ready();
+		std::string	get_data() const;
+
 	private:
-		// std::string	_request_buffer;
-		// HttpObject	_object;
+		std::string	_request_buffer;
+		bool 		_ready;
+		Socket		&_socket;
+
+		CGI	_cgi;
 
 };

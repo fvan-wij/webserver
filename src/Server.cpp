@@ -1,26 +1,17 @@
 #include "Server.hpp"
+#include "HttpServer.hpp"
 #include "meta.hpp"
-#include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <functional>
 #include <iostream>
 #include <netinet/in.h>
+#include <sched.h>
 #include <string>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
-
-
-void replace_first(
-    std::string& s,
-    std::string const& toReplace,
-    std::string const& replaceWith
-) {
-    std::size_t pos = s.find(toReplace);
-    if (pos == std::string::npos) return;
-    s.replace(pos, toReplace.length(), replaceWith);
-}
 
 static bool echo(int fd)
 {
@@ -35,21 +26,8 @@ static bool echo(int fd)
 
 	std::string s = 
 	"HTTP/1.1 200 OK\r\n"
-	"Server: nginx/1.27.1\r\n"
-	"Date: Thu, 29 Aug 2024 13:02:31 GMT\r\n"
-	"Content-Type: text/html\r\n"
-	"Content-Length: 615\r\n"
-	"Last-Modified: Mon, 12 Aug 2024 14:21:01 GMT\r\n"
-	"Connection: closed\r\n"
-	"Accept-Ranges: bytes\r\n";
+	"\r\n<h1> Fakka strijders </h1>\r\n";
 
-	s += "\r\n<h3> Fakka strijders </h3>\r\n";
-
-	// if (!s[0] || !std::strcmp(s.c_str(), "yup\r\n"))
-	// {
-	// 	send(fd, bye_str.c_str(), bye_str.length() * sizeof(char), 0);
-	// 	return false;
-	// }
 	if (!s[0])
 	{
 		return false;
@@ -65,138 +43,175 @@ static bool echo(int fd)
 	return false;
 }
 
-
-
 Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 {
 
 }
 
-// Socket::Socket(t_sock_type connection_type, int domain, int type, int protocol, int port, bool reuse_addr) : _type(connection_type)//Listener connection
-
 Server::Server(std::vector<uint16_t> ports)
 {
 	for (uint16_t p : ports)
 	{
-		// int fd = _socket_create();
-		//
-		// if (fd == -1)
-		// {
-		// 	UNIMPLEMENTED("handle _socketCreate failed");
-		// }
-		//
-		// if (!_socket_bind(fd, p))
-		// {
-		// 	UNIMPLEMENTED("handle _socketBind failed");
-		// }
-
-		// _pfds.push_back({fd, POLLIN, 0});
-		Socket new_listener = Socket(LISTENER, p);
-		_pfds.push_back({new_listener.get_fd(), POLLIN, 0});
-		_sockets.push_back(new_listener);
+		_add_client({SocketType::LISTENER, p});
 	}
 }
 
 void Server::handle_events()
 {
-	// loop over connections
+
 	for (size_t i = 0; i < _pfds.size(); i++)
 	{
 		pollfd &pfd = _pfds[i];
-		LOG("checking fd: " << pfd.fd);
+		Socket &s = _sockets[i];
+		// LOG("checking fd: " << pfd.fd << " : socket fd : " << _sockets[i].get_fd());
 
-		// if current fd is a listener
-		if (pfd.revents && _sockets[LISTENER].get_fd() == pfd.fd)
+		if (s.is_listener() && ready_to_read(pfd.revents))
 		{
-			// if new connection
-			// connections.add new connection
-			_pfds.push_back({_socket_accept(pfd.fd), POLLIN | POLLOUT, 0});
+			Socket client_sock = s.accept();
+			_add_client(client_sock);
 		}
-		else if (pfd.revents & POLLIN)
+		else if (s.is_client() && ready_to_read(pfd.revents))
 		{
-			// connection.gethttphandler.appendToBuf(connection.data)
 			LOG("fd: " << pfd.fd << " POLLIN");
-			if (!echo(pfd.fd))
-			{
-				close(pfd.fd);
-				_pfds.erase(_pfds.begin() + i);
-			}
+
+			std::string data = s.read();
+			
+			_server_instances.at(std::cref(s)).handle(data);
 		}
-		else if (pfd.revents & POLLOUT)
+		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
-			// connection.httphandler.response.ready?
-			// connection.send
 			LOG("fd: " << pfd.fd << " POLLOUT");
+			// TODO check if client's httpserver instance is ready to write;
+			// NOTE we can maybe do the wait pid thing here?
+
+			HttpServer &instance = _server_instances.at(std::cref(s));
+			if (instance.is_ready())
+			{
+				std::string data = instance.get_data();
+				s.write(data);
+				_client_remove(i);
+			}
+
+		}
+		else if (error_occurred(pfd.revents))
+		{
+			LOG_ERROR("POLLERR | POLLNVAL error occurred: " << strerror(errno));
 		}
 	}
 }
 
-std::vector<pollfd>& Server::getFds()
+int Server::poll()
+{
+	int n_ready = _poll_events();
+
+	// iterate over all `_server_instances` and waitpid their CGI.
+
+	for (const Socket &s : _sockets)
+	{
+		if (s.is_client())
+		{
+			HttpServer &instance = _server_instances.at(std::cref(s));
+			instance.poll_cgi();
+		}
+	}
+
+	return n_ready;
+}
+
+
+
+std::vector<pollfd>& Server::get_pfds()
 {
 	return _pfds;
 }
 
-int Server::_socket_create()
+std::vector<Socket>& Server::get_sockets()
 {
-	int fd = socket(AF_INET, SOCK_STREAM, 0);
-
-	if (fd == -1)
-	{
-		LOG_ERROR(strerror(errno));
-		return fd;
-	}
-	else
-		LOG("Created socket with fd: " << fd);
-
-	int enable = 1;
-	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable)) == -1)
-	{
-		LOG_ERROR(strerror(errno));
-		close(fd);
-	}
-	return fd;
+	return _sockets;
 }
 
-bool Server::_socket_bind(int fd, uint16_t port)
+
+
+int Server::_poll_events()
 {
-	sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = INADDR_ANY;
+	int n_ready;
+	static bool print_ready = true;
 
-	if (bind(fd, (sockaddr *) &addr, sizeof(sockaddr_in)) == -1)
+	n_ready = ::poll(Server::get_pfds().data(), Server::get_pfds().size(), POLL_TIMEOUT);
+	if (n_ready == -1)
 	{
-		LOG_ERROR("Failed binding to port: " << port << ", " << strerror(errno));
-		close(fd);
-		return false;
+		LOG_ERROR("Failed polling: " << strerror(errno));
 	}
-	else
-		LOG("Bound to port: " << port);
-
-	if (listen(fd, LISTEN_BACKLOG) == -1)
+	else if (print_ready && !n_ready)
 	{
-		LOG_ERROR("Listen failed, " << strerror(errno));
-		close(fd);
-		return false;
+		LOG("Polling... n of events set: " << n_ready);
+		print_ready = false;
 	}
-	return true;
+	else if (n_ready)
+	{
+		LOG("Polling... n of events set: " << n_ready);
+		print_ready = true;
+	}
+	return n_ready;
 }
 
-int Server::_socket_accept(int fd)
+
+
+void Server::_add_client(Socket s)
 {
-	int clientFd = accept(fd, nullptr, nullptr);
-	if (clientFd == -1)
+	short mask = POLLIN;
+
+	// we copy `s` into _sockets where is will reside until we call `_client_remove`.
+	// This means that all other refences to still `s` will become invalid the moment this function returns.
+	_sockets.push_back(s);
+
+	Socket &r_s = _sockets.back();
+
+	if (s.is_client())
 	{
-		LOG_ERROR("Failed accepting client on fd: " << fd << ", " << strerror(errno));
-		close(fd);
-		return -1;
+		// OOF
+		_server_instances.insert(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
+		mask = POLLIN | POLLOUT;
 	}
-	else
+
+	_pfds.push_back({r_s.get_fd(), mask, 0});
+}
+
+void Server::_client_remove(int index)
+{
+	const int fd = _pfds[index].fd;
+
+	if (_sockets[index].is_client())
 	{
-		LOG("Accepted new client on listening socket fd: " << fd << " with clientFd " << clientFd);
+		_server_instances.erase(_sockets.at(index));
 	}
-	Socket client_socket = Socket(CLIENT, clientFd);
-	_sockets.push_back(client_socket);
-	return clientFd;
+
+	close(_pfds[index].fd);
+	_pfds.erase(_pfds.begin() + index);
+	_sockets.erase(_sockets.begin() + index);
+	LOG("Removed socket[" << fd << "], total sockets: " << _sockets.size());
+}
+
+bool Server::error_occurred(short revents)
+{
+	return revents & POLLERR || revents & POLLNVAL;	
+}
+
+bool Server::ready_to_read(short revents)
+{
+	return revents & POLLIN;
+}
+
+bool Server::ready_to_write(short revents)
+{
+	return revents & POLLOUT;
+}
+
+
+
+// The `_server_instances` uses this func to compare the entries
+bool operator<(const std::reference_wrapper<const Socket> a, const std::reference_wrapper<const Socket> b)
+{
+	return a.get().get_fd() < b.get().get_fd();
 }
 
