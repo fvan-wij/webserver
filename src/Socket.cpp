@@ -1,9 +1,4 @@
-#include "meta.hpp"
 #include "Socket.hpp"
-#include <cerrno>
-#include <cstring>
-#include <netinet/in.h>
-#include <sys/types.h>
 
 
 
@@ -40,7 +35,8 @@ std::string Socket::read()
 	{
 		UNIMPLEMENTED("recv failed");
 	}
-
+	HttpObject request(buffer);
+	std::cout << request << std::endl;
 	return buffer;
 }
 

@@ -13,36 +13,6 @@
 #include <unistd.h>
 #include <vector>
 
-static bool echo(int fd)
-{
-	const size_t buf_size = 1024;
-	char buffer[buf_size];
-	const std::string bye_str = "Cya!\n";
-	bzero(&buffer, sizeof(buffer));
-	// read up on EWOULDBLOCK
-	recv(fd, buffer, buf_size, 0);
-	LOG("Received: [" << buffer << "]");
-
-
-	std::string s = 
-	"HTTP/1.1 200 OK\r\n"
-	"\r\n<h1> Fakka strijders </h1>\r\n";
-
-	if (!s[0])
-	{
-		return false;
-	}
-	send(fd, s.c_str(), s.length(), 0);
-
-
-	// NOTE according to the http docs we can use the same connection for multiple requests.
-	// Therefore we dont HAVE to close the connection after sending this response.
-	// However in our current setup (in which we will send only 1 response this will work)
-	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview
-
-	return false;
-}
-
 Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 {
 
