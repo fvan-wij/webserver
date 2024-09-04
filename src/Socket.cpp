@@ -92,7 +92,7 @@ void 				Socket::_init_listener(int port)
 	if (_fd < 0)
 	{
 		// TODO Throw error
-		std::cout << "Error occurred: " << strerror(errno) << std::endl;
+		LOG_ERROR("Error occurred: " << strerror(errno));
 	}
 
 	_address.sin_family = AF_INET;
@@ -103,12 +103,12 @@ void 				Socket::_init_listener(int port)
 	setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &optval2, sizeof(optval2));
 	if (bind(_fd, (struct sockaddr *) &_address, sizeof(_address)) < 0) //Binds connection to address
 	{
-		std::cout << "Error occurred: " << strerror(errno) << std::endl;
+		LOG_ERROR("Error occurred: " << strerror(errno));
 		return;
 	}
 	if (listen(_fd, 5) < 0)
 	{
-		std::cout << "Error occurred: " << strerror(errno) << std::endl;
+		LOG_ERROR("Error occurred: " << strerror(errno));
 		return;
 	}
 }

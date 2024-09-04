@@ -1,0 +1,349 @@
+[00:52:20][INFO] : [POLL] n of events set: 1
+[00:52:20][INFO] : [0.0.0.0:9090-5] new connection [127.0.0.1:9090-7]
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLIN | fd : 7
+[00:52:21][INFO] : HttpServer : data [GET / HTTP/1.1
+Host: localhost:9090
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Linux"
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9
+
+]
+[00:52:21][INFO] : HttpServer with sock_fd 7 : received some  data
+[00:52:21][NOTICE] : starting CGI with path: sleep_echo_var
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:21][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:22][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:23][NOTICE] : CGI exited with code: 0
+[00:52:23][INFO] : [127.0.0.1:9090-7] CGI is ready!
+[00:52:23][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:23][DEBUG] : Removed socket[7], total sockets: 2	 @ src/Server.cpp:205
+[00:52:23][DEBUG] : remaining sockets in map	 @ src/Server.cpp:206
+[00:52:23][INFO] : [0.0.0.0:9090-5] new connection [127.0.0.1:9090-7]
+[00:52:23][INFO] : [127.0.0.1:9090-7] POLLIN | fd : 7
+[00:52:23][INFO] : HttpServer : data [GET /favicon.ico HTTP/1.1
+Host: localhost:9090
+Connection: keep-alive
+sec-ch-ua: "Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36
+sec-ch-ua-platform: "Linux"
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: image
+Referer: http://localhost:9090/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9
+
+]
+[00:52:23][INFO] : HttpServer with sock_fd 7 : received some  data
+[00:52:23][NOTICE] : starting CGI with path: sleep_echo_var
+[00:52:23][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:23][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:23][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:23][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:23][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:23][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:23][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:24][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:25][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:25][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:25][NOTICE] : CGI exited with code: 0
+[00:52:25][INFO] : [127.0.0.1:9090-7] CGI is ready!
+[00:52:25][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:25][DEBUG] : Removed socket[7], total sockets: 2	 @ src/Server.cpp:205
+[00:52:25][DEBUG] : remaining sockets in map	 @ src/Server.cpp:206
+[00:52:33][INFO] : [0.0.0.0:9090-5] new connection [127.0.0.1:9090-7]
+[00:52:33][INFO] : [127.0.0.1:9090-7] POLLIN | fd : 7
+[00:52:33][INFO] : HttpServer : data [GET / HTTP/1.1
+Host: localhost:9090
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Linux"
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9
+
+]
+[00:52:33][INFO] : HttpServer with sock_fd 7 : received some  data
+[00:52:33][NOTICE] : starting CGI with path: sleep_echo_var
+[00:52:33][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:33][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:33][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:33][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:34][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:35][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:35][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:35][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:35][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:35][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:35][NOTICE] : CGI exited with code: 0
+[00:52:35][INFO] : [127.0.0.1:9090-7] CGI is ready!
+[00:52:35][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:35][DEBUG] : Removed socket[7], total sockets: 2	 @ src/Server.cpp:205
+[00:52:35][DEBUG] : remaining sockets in map	 @ src/Server.cpp:206
+[00:52:35][INFO] : [0.0.0.0:9090-5] new connection [127.0.0.1:9090-7]
+[00:52:35][INFO] : [127.0.0.1:9090-7] POLLIN | fd : 7
+[00:52:35][INFO] : HttpServer : data [GET /favicon.ico HTTP/1.1
+Host: localhost:9090
+Connection: keep-alive
+sec-ch-ua: "Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36
+sec-ch-ua-platform: "Linux"
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: image
+Referer: http://localhost:9090/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9
+
+]
+[00:52:35][INFO] : HttpServer with sock_fd 7 : received some  data
+[00:52:35][NOTICE] : starting CGI with path: sleep_echo_var
+[00:52:35][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:35][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:36][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:37][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:37][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:37][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:37][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:37][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:37][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:37][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:37][NOTICE] : CGI exited with code: 0
+[00:52:37][INFO] : [127.0.0.1:9090-7] CGI is ready!
+[00:52:37][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:37][DEBUG] : Removed socket[7], total sockets: 2	 @ src/Server.cpp:205
+[00:52:37][DEBUG] : remaining sockets in map	 @ src/Server.cpp:206
+[00:52:39][INFO] : [0.0.0.0:9090-5] new connection [127.0.0.1:9090-7]
+[00:52:39][INFO] : [127.0.0.1:9090-7] POLLIN | fd : 7
+[00:52:39][INFO] : HttpServer : data [GET / HTTP/1.1
+Host: localhost:9090
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Linux"
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9
+
+]
+[00:52:39][INFO] : HttpServer with sock_fd 7 : received some  data
+[00:52:39][NOTICE] : starting CGI with path: sleep_echo_var
+[00:52:39][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:39][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:39][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:39][INFO] : [POLL] n of events set: 2
+[00:52:39][INFO] : [0.0.0.0:9091-6] new connection [127.0.0.1:9091-9]
+[00:52:39][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:39][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:39][INFO] : [127.0.0.1:9091-9] POLLIN | fd : 9
+[00:52:39][INFO] : HttpServer : data [GET / HTTP/1.1
+Host: localhost:9091
+Connection: keep-alive
+Cache-Control: max-age=0
+sec-ch-ua: "Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Linux"
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9
+
+]
+[00:52:39][INFO] : HttpServer with sock_fd 9 : received some  data
+[00:52:39][NOTICE] : starting CGI with path: sleep_echo_var
+[00:52:39][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:39][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:40][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:40][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:40][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:40][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:40][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:40][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:40][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:40][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:40][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:40][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:40][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:40][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:40][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:40][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:40][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:40][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:40][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:40][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:41][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:41][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:41][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:41][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][NOTICE] : CGI exited with code: 0
+[00:52:41][INFO] : [127.0.0.1:9090-7] CGI is ready!
+[00:52:41][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:41][DEBUG] : Removed socket[7], total sockets: 3	 @ src/Server.cpp:205
+[00:52:41][DEBUG] : remaining sockets in map	 @ src/Server.cpp:206
+[00:52:41][DEBUG] : key[9]	 @ src/Server.cpp:189
+[00:52:41][INFO] : [POLL] n of events set: 1
+[00:52:41][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][INFO] : [POLL] n of events set: 2
+[00:52:41][NOTICE] : CGI exited with code: 0
+[00:52:41][INFO] : [127.0.0.1:9091-9] CGI is ready!
+[00:52:41][INFO] : [0.0.0.0:9090-5] new connection [127.0.0.1:9090-7]
+[00:52:41][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:41][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:42][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:42][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:42][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:42][INFO] : [127.0.0.1:9090-7] POLLIN | fd : 7
+[00:52:42][INFO] : HttpServer : data [GET /favicon.ico HTTP/1.1
+Host: localhost:9090
+Connection: keep-alive
+sec-ch-ua: "Not)A;Brand";v="99", "Google Chrome";v="127", "Chromium";v="127"
+sec-ch-ua-mobile: ?0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36
+sec-ch-ua-platform: "Linux"
+Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: no-cors
+Sec-Fetch-Dest: image
+Referer: http://localhost:9090/
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.9
+
+]
+[00:52:42][INFO] : HttpServer with sock_fd 7 : received some  data
+[00:52:42][NOTICE] : starting CGI with path: sleep_echo_var
+[00:52:42][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:42][NOTICE] : CGI exited with code: 0
+[00:52:44][INFO] : [127.0.0.1:9090-7] CGI is ready!
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:44][INFO] : [127.0.0.1:9090-7] POLLOUT | fd : 7
+[00:52:44][DEBUG] : Removed socket[7], total sockets: 3	 @ src/Server.cpp:205
+[00:52:44][DEBUG] : remaining sockets in map	 @ src/Server.cpp:206
+[00:52:44][INFO] : [POLL] n of events set: 1
+[00:52:44][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:44][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:44][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:44][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:44][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:44][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:44][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:44][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:44][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:44][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:44][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:45][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:45][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:45][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:45][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:45][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:45][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:45][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:45][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:45][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:45][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:45][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:45][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85
+[00:52:45][ERROR] : _server_instances.get_data out of range poep | with socket fd: 9 out of range!	 @ src/Server.cpp:117
+[00:52:45][INFO] : [127.0.0.1:9091-9] POLLOUT | fd : 9
+[00:52:45][ERROR] : _server_instances.get_data out of range | with socket fd: 9 out of range!	 @ src/Server.cpp:85

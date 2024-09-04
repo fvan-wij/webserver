@@ -77,7 +77,8 @@ void Logger::operator()(std::string const& message, char const* function, char c
 			<< ":" << std::setfill('0') << std::setw(2) << ct.tm_sec << "]";
 
 	std::cout << COLORS[int(_level)] << time.str() << PREFIX[int(_level)] << message;
-	if (_level == Level::DEBUG)
+
+	if (_level == Level::DEBUG || _level == Level::WARNING || _level == Level::ERROR)
 		std::cout << "\t @ " << file << ":" << line;
 
 	std::cout << COLOR_RESET << std::endl;

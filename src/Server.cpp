@@ -1,12 +1,14 @@
 #include "Server.hpp"
 #include "HttpServer.hpp"
 #include "Logger.hpp"
+#include <algorithm>
 #include <arpa/inet.h>
 #include "meta.hpp"
 #include <cstdint>
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <netinet/in.h>
 #include <sched.h>
 #include <stdexcept>
@@ -15,6 +17,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
+
+// #define LOG_INFO(x) do { } while(0);
+// #define LOG_DEBUG(x) do { } while(0);
 
 Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 {
@@ -42,7 +47,7 @@ void Server::handle_events()
 		if (s.is_listener() && ready_to_read(pfd.revents))
 		{
 			Socket client_sock = s.accept();
-			LOG_INFO(s << "new connection | fd : " << client_sock.get_fd());
+			LOG_INFO(s << " new connection " << client_sock);
 			_add_client(client_sock);
 		}
 		else if (s.is_client() && ready_to_read(pfd.revents))
@@ -94,7 +99,6 @@ int Server::poll()
 	int n_ready = _poll_events();
 
 	// iterate over all `_server_instances` and waitpid their CGI.
-
 	for (const Socket &s : _sockets)
 	{
 		if (s.is_client())
@@ -105,7 +109,7 @@ int Server::poll()
 				instance.poll_cgi();
 				if (instance.is_ready())
 				{
-					LOG_INFO("CGI of fd : " << s.get_fd() << " is ready!");
+					LOG_INFO(s << " CGI is ready!");
 				}
 			}
 			catch (const std::out_of_range &e)
@@ -136,22 +140,21 @@ std::vector<Socket>& Server::get_sockets()
 int Server::_poll_events()
 {
 	int n_ready;
-	static bool print_ready = true;
+
 
 	n_ready = ::poll(Server::get_pfds().data(), Server::get_pfds().size(), POLL_TIMEOUT);
 	if (n_ready == -1)
 	{
 		LOG_ERROR("Failed polling: " << strerror(errno));
 	}
-	else if (print_ready && !n_ready)
+	else if (n_ready)
 	{
-		LOG_INFO("Polling... n of events set: " << n_ready);
-		print_ready = false;
-	}
-	else if (!print_ready && n_ready)
-	{
-		LOG_INFO("Polling... n of events set: " << n_ready);
-		print_ready = true;
+		static int n_ready_old = std::numeric_limits<int>::max();
+		if (n_ready != n_ready_old)
+		{
+			n_ready_old = n_ready;
+			LOG_INFO("[POLL] n of events set: " << n_ready);
+		}
 	}
 	return n_ready;
 }
