@@ -1,5 +1,7 @@
 #include "Server.hpp"
 #include "HttpServer.hpp"
+#include "Logger.hpp"
+#include <arpa/inet.h>
 #include "meta.hpp"
 #include <cstdint>
 #include <cstring>
@@ -27,6 +29,7 @@ Server::Server(std::vector<uint16_t> ports)
 	}
 }
 
+
 void Server::handle_events()
 {
 
@@ -39,11 +42,12 @@ void Server::handle_events()
 		if (s.is_listener() && ready_to_read(pfd.revents))
 		{
 			Socket client_sock = s.accept();
+			LOG_INFO(s << "new connection | fd : " << client_sock.get_fd());
 			_add_client(client_sock);
 		}
 		else if (s.is_client() && ready_to_read(pfd.revents))
 		{
-			LOG_INFO("fd: " << pfd.fd << " POLLIN");
+			LOG_INFO(s << " POLLIN | fd : " << pfd.fd);
 
 			std::string data = s.read();
 			
@@ -58,7 +62,7 @@ void Server::handle_events()
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
-			LOG_INFO("fd: " << pfd.fd << " POLLOUT");
+			LOG_INFO(s << " POLLOUT | fd : " << pfd.fd);
 			// TODO check if client's httpserver instance is ready to write;
 			// NOTE we can maybe do the wait pid thing here?
 			try
@@ -144,7 +148,7 @@ int Server::_poll_events()
 		LOG_INFO("Polling... n of events set: " << n_ready);
 		print_ready = false;
 	}
-	else if (n_ready)
+	else if (!print_ready && n_ready)
 	{
 		LOG_INFO("Polling... n of events set: " << n_ready);
 		print_ready = true;

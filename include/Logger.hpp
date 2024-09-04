@@ -15,7 +15,7 @@
     __FUNCTION__,                               \
     __FILE__,                                   \
     __LINE__                                    \
-  );
+  )
 
 
 #define LOG_ERROR(Message_) LOG(Logger::Error(), Message_)
