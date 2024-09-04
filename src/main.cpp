@@ -1,12 +1,15 @@
 #include "Server.hpp"
 #include <cstring>
+#include "ConfigParser.hpp"
 
-
-int main()
+int main(int argc, char **argv)
 {
 	std::vector<Server> servers;
+	std::vector<t_config>	configs;
 
 	// parse config
+	if (argc > 1)
+		configs = parse_config(argv[1]);
 	// for each server_config in config.serverblock
 	// servers.push_back(server(serverrconfig))
 

@@ -1,5 +1,5 @@
 NAME		:= app
-RUN_CMD		:= ./$(NAME) 
+RUN_CMD		:= ./$(NAME)
 
 CFLAGS		+= -Wall -Wextra -std=c++11
 # CFLAGS		+= -Werror
@@ -12,7 +12,9 @@ SRC_ENTRY	:=	main.cpp
 SRCS		:=	Server.cpp \
 				Socket.cpp \
 				HttpServer.cpp \
-				CGI.cpp
+				CGI.cpp \
+				config/ConfigParser.cpp \
+
 
 
 HEADER_DIR	:=	include
@@ -20,7 +22,8 @@ HEADERS 	:=	Server.hpp \
 				Socket.hpp \
 				meta.hpp \
 				HttpServer.hpp \
-				CGI.hpp
+				CGI.hpp \
+				ConfigParser.hpp \
 
 OBJ_DIR		:=	obj
 
@@ -34,7 +37,7 @@ OBJ_DIRS 	:=	$(dir $(OBJS))
 
 .PHONY: make_libs fclean
 
-all: 
+all:
 	$(MAKE) $(NAME) -j4
 
 $(NAME): $(OBJS) $(SRC_DIR)/$(SRC_ENTRY)
@@ -61,4 +64,3 @@ compile_commands: fclean
 
 norm:
 	norminette include src
-
