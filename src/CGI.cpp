@@ -20,7 +20,7 @@ CGI::CGI() : _is_running(false)
 void CGI::start(std::string path)
 {
 	_is_running = true;
-	LOG_INFO("starting CGI with path: " << path);
+	LOG_NOTICE("starting CGI with path: " << path);
 	if (pipe(_pipes) == -1)
 	{
 		UNIMPLEMENTED("pipe failed" << std::string(strerror(errno)));

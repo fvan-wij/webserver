@@ -31,6 +31,12 @@ Logger &Logger::Info()
 	return l;
 }
 
+Logger &Logger::Notice()
+{
+	static Logger l(Logger::Level::NOTICE);
+	return l;
+}
+
 Logger &Logger::Debug()
 {
 	static Logger l(Logger::Level::DEBUG);
@@ -45,16 +51,18 @@ void Logger::operator()(std::string const& message, char const* function, char c
 	UNUSED(function);
 
 	const char *PREFIX[] = {
-		COLOR_RED		"[ERROR] : ",
-		COLOR_YELLOW	"[WARNING] : ",
-		COLOR_CYAN		"[INFO] : ",
-		COLOR_WHITE		"[DEBUG] : ",
+		"[ERROR] : ",
+		"[WARNING] : ",
+		"[INFO] : ",
+		"[NOTICE] : ",
+		"[DEBUG] : ",
 	};
 
 	const char *COLORS[] = {
 		COLOR_RED,
 		COLOR_YELLOW,
 		COLOR_CYAN,
+		COLOR_GREEN,
 		COLOR_WHITE,
 	};
 

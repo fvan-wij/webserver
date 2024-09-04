@@ -21,6 +21,7 @@
 #define LOG_ERROR(Message_) LOG(Logger::Error(), Message_)
 #define LOG_WARNING(Message_) LOG(Logger::Warning(), Message_)
 #define LOG_INFO(Message_) LOG(Logger::Info(), Message_)
+#define LOG_NOTICE(Message_) LOG(Logger::Notice(), Message_)
 #define LOG_DEBUG(Message_) LOG(Logger::Debug(), Message_)
 
 
@@ -34,6 +35,7 @@ public:
 		ERROR,
 		WARNING,
 		INFO,
+		NOTICE,
 		DEBUG,
 	};
 
@@ -53,6 +55,7 @@ public:
 	static Logger &Error();
 	static Logger &Warning();
 	static Logger &Info();
+	static Logger &Notice();
 	static Logger &Debug();
 
 private:
