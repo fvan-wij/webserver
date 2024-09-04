@@ -45,10 +45,10 @@ void Logger::operator()(std::string const& message, char const* function, char c
 	UNUSED(function);
 
 	const char *PREFIX[] = {
-		COLOR_RED		"[ERROR]   : ",
+		COLOR_RED		"[ERROR] : ",
 		COLOR_YELLOW	"[WARNING] : ",
-		COLOR_CYAN		"[INFO]    : ",
-		COLOR_WHITE		"[DEBUG]   : ",
+		COLOR_CYAN		"[INFO] : ",
+		COLOR_WHITE		"[DEBUG] : ",
 	};
 
 	const char *COLORS[] = {
