@@ -20,6 +20,7 @@ HEADER_DIR	:=	include
 HEADERS 	:=	Server.hpp \
 				Socket.hpp \
 				meta.hpp \
+				ansi.hpp \
 				HttpServer.hpp \
 				Logger.hpp \
 				CGI.hpp

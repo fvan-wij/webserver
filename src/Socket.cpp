@@ -4,6 +4,7 @@
 #include <cstring>
 #include <netinet/in.h>
 #include <sys/types.h>
+#include <iostream>
 
 
 
@@ -25,7 +26,7 @@ Socket Socket::accept()
 	else
 	{
 		// TODO Use logger
-		LOG("\n\nAccepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd);
+		LOG_INFO("\n\nAccepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd);
 	}
 	return Socket(SocketType::CLIENT, clientFd);
 

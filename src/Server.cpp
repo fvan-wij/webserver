@@ -7,41 +7,12 @@
 #include <iostream>
 #include <netinet/in.h>
 #include <sched.h>
+#include <stdexcept>
 #include <string>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
-
-static bool echo(int fd)
-{
-	const size_t buf_size = 1024;
-	char buffer[buf_size];
-	const std::string bye_str = "Cya!\n";
-	bzero(&buffer, sizeof(buffer));
-	// read up on EWOULDBLOCK
-	recv(fd, buffer, buf_size, 0);
-	LOG("Received: [" << buffer << "]");
-
-
-	std::string s = 
-	"HTTP/1.1 200 OK\r\n"
-	"\r\n<h1> Fakka strijders </h1>\r\n";
-
-	if (!s[0])
-	{
-		return false;
-	}
-	send(fd, s.c_str(), s.length(), 0);
-
-
-	// NOTE according to the http docs we can use the same connection for multiple requests.
-	// Therefore we dont HAVE to close the connection after sending this response.
-	// However in our current setup (in which we will send only 1 response this will work)
-	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview
-
-	return false;
-}
 
 Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 {
@@ -72,25 +43,39 @@ void Server::handle_events()
 		}
 		else if (s.is_client() && ready_to_read(pfd.revents))
 		{
-			LOG("fd: " << pfd.fd << " POLLIN");
+			LOG_INFO("fd: " << pfd.fd << " POLLIN");
 
 			std::string data = s.read();
 			
-			_server_instances.at(std::cref(s)).handle(data);
+			try
+			{
+				_server_instances.at(std::cref(s)).handle(data);
+			}
+			catch (const std::out_of_range &e)
+			{
+				LOG_ERROR("_server_instances.handle out of range | with socket fd: " << s.get_fd() << " out of range!");
+			}
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
-			LOG("fd: " << pfd.fd << " POLLOUT");
+			LOG_INFO("fd: " << pfd.fd << " POLLOUT");
 			// TODO check if client's httpserver instance is ready to write;
 			// NOTE we can maybe do the wait pid thing here?
-
-			HttpServer &instance = _server_instances.at(std::cref(s));
-			if (instance.is_ready())
+			try
 			{
-				std::string data = instance.get_data();
-				s.write(data);
-				_client_remove(i);
+				HttpServer &instance = _server_instances.at(std::cref(s));
+				if (instance.is_ready())
+				{
+					std::string data = instance.get_data();
+					s.write(data);
+					_client_remove(i);
+				}
 			}
+			catch (const std::out_of_range &e)
+			{
+				LOG_ERROR("_server_instances.get_data out of range | with socket fd: " << s.get_fd() << " out of range!");
+			}
+
 
 		}
 		else if (error_occurred(pfd.revents))
@@ -110,8 +95,20 @@ int Server::poll()
 	{
 		if (s.is_client())
 		{
-			HttpServer &instance = _server_instances.at(std::cref(s));
-			instance.poll_cgi();
+			try
+			{
+				HttpServer &instance = _server_instances.at(std::cref(s));
+				instance.poll_cgi();
+				if (instance.is_ready())
+				{
+					LOG_INFO("CGI of fd : " << s.get_fd() << " is ready!");
+				}
+			}
+			catch (const std::out_of_range &e)
+			{
+				LOG_ERROR("_server_instances.get_data out of range poep | with socket fd: " << s.get_fd() << " out of range!");
+
+			}
 		}
 	}
 
@@ -144,12 +141,12 @@ int Server::_poll_events()
 	}
 	else if (print_ready && !n_ready)
 	{
-		LOG("Polling... n of events set: " << n_ready);
+		LOG_INFO("Polling... n of events set: " << n_ready);
 		print_ready = false;
 	}
 	else if (n_ready)
 	{
-		LOG("Polling... n of events set: " << n_ready);
+		LOG_INFO("Polling... n of events set: " << n_ready);
 		print_ready = true;
 	}
 	return n_ready;
@@ -177,6 +174,15 @@ void Server::_add_client(Socket s)
 	_pfds.push_back({r_s.get_fd(), mask, 0});
 }
 
+template<typename T>
+static void map_list_keys(T map)
+{
+	for (const auto &it : map)
+	{
+		LOG_DEBUG("key[" << it.first.get().get_fd() << "]");
+	}
+}
+
 void Server::_client_remove(int index)
 {
 	const int fd = _pfds[index].fd;
@@ -189,7 +195,10 @@ void Server::_client_remove(int index)
 	close(_pfds[index].fd);
 	_pfds.erase(_pfds.begin() + index);
 	_sockets.erase(_sockets.begin() + index);
-	LOG("Removed socket[" << fd << "], total sockets: " << _sockets.size());
+	LOG_DEBUG("Removed socket[" << fd << "], total sockets: " << _sockets.size());
+	LOG_DEBUG("\nremaining sockets in map");
+	map_list_keys(_server_instances);
+	LOG_DEBUG("\n");
 }
 
 bool Server::error_occurred(short revents)

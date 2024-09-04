@@ -20,10 +20,10 @@ CGI::CGI() : _is_running(false)
 void CGI::start(std::string path)
 {
 	_is_running = true;
-	LOG("starting CGI with path: " << path);
+	LOG_INFO("starting CGI with path: " << path);
 	if (pipe(_pipes) == -1)
 	{
-		UNIMPLEMENTED("pipe failed" << strerror(errno));
+		UNIMPLEMENTED("pipe failed" << std::string(strerror(errno)));
 	}
 
 	_pid = fork();
@@ -36,13 +36,13 @@ void CGI::start(std::string path)
 	else if (_pid == 0)
 	{
 		// Attach "this" proccess's STDOUT_FILENO to pipe.
-		if (dup2(_pipes[PipeFD::WRITE], STDOUT_FILENO) == -1)
+		if (dup2(_pipes[int(PipeFD::WRITE)], STDOUT_FILENO) == -1)
 		{
 			UNIMPLEMENTED("dup2 failed" << strerror(errno));
 		}
 
-		close(_pipes[PipeFD::WRITE]);
-		close(_pipes[PipeFD::WRITE]);
+		close(_pipes[int(PipeFD::WRITE)]);
+		close(_pipes[int(PipeFD::WRITE)]);
 
 
 		char *args[] =
@@ -58,7 +58,7 @@ void CGI::start(std::string path)
 		}
 		exit(123);
 	}
-	close(_pipes[PipeFD::WRITE]);
+	close(_pipes[int(PipeFD::WRITE)]);
 }
 
 
@@ -80,14 +80,14 @@ bool CGI::poll()
 	// NOTE maybe we can just straight up attach the pipe from the CGI to the client's socket_fd.
 	if (WIFEXITED(status))
 	{
-		LOG("CGI exited with code: " << WEXITSTATUS(status));
+		LOG_INFO("CGI exited with code: " << WEXITSTATUS(status));
 
 		// read until the pipe is empty.
 		while (_read() == PIPE_READ_SIZE - 1)
 		{
 			;
 		}
-		close(_pipes[PipeFD::READ]);
+		close(_pipes[int(PipeFD::READ)]);
 		_is_running = false;
 		return true;
 	}
@@ -104,7 +104,7 @@ int32_t CGI::_read()
 {
 	char buffer[PIPE_READ_SIZE];
 
-	int32_t read_count = read(_pipes[PipeFD::READ], &buffer, PIPE_READ_SIZE - 1);
+	int32_t read_count = read(_pipes[int(PipeFD::READ)], &buffer, PIPE_READ_SIZE - 1);
 	if (read_count == -1)
 	{
 		UNIMPLEMENTED("read failed " << strerror(errno));

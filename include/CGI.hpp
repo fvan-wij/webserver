@@ -15,7 +15,7 @@ public:
 	void start(std::string path);
 	bool poll();
 
-	enum PipeFD
+	enum class PipeFD : int
 	{
 		READ	= 0,
 		WRITE	= 1,
@@ -29,7 +29,7 @@ private:
 	bool		_is_running;
 	std::string _buffer;
 	int			_pid;
-	int			_pipes[PipeFD::COUNT];
+	int			_pipes[int(PipeFD::COUNT)];
 
 	int32_t _read();
 };
