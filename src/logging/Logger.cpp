@@ -53,7 +53,7 @@ void Logger::operator()(std::string const& message, char const* function, char c
 	if (_level == Level::DEBUG)
 		std::cout << "\t @ " << file << ":" << line;
 
-	std::cout << std::endl;
+	std::cout << COLOR_RESET << std::endl;
 }
 
 
