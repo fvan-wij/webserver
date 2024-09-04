@@ -1,43 +1,35 @@
 #include "HttpObject.hpp"
 
+static std::vector<std::string>	tokenize_string(std::string string, std::string delimiter)
+{
+	std::vector<std::string> 	tokens;
+	size_t						pos = 0;
+
+	pos = string.find(delimiter);
+	while (pos != std::string::npos)
+	{
+		std::string token = string.substr(0, pos);
+		tokens.push_back(token);
+		string.erase(0, pos + delimiter.length());
+		pos = string.find(delimiter);
+	}
+	tokens.push_back(string);
+	return tokens;
+}
+
 HttpObject::HttpObject(const std::string &buffer) 
 {
-	std::istringstream 	stream(buffer);
-	std::string 		line;
-	std::string			method;
-	size_t 				colon_index, protocol_index, location_index;
-	bool				body = false;
+	std::istringstream 			stream(buffer);
+	std::string 				line;
+	std::vector<std::string>	tokens;
+	bool						body = false;
 
-	std::getline(stream, line);
-	method = line.substr(0, 3);
-	if (method != "GET" && method != "POST" && method != "DELETE")
-		LOG_ERROR("Method not supported: " << method);
-	_method = method;
-
-	protocol_index = line.find("HTTP/1.1");
-	if (protocol_index == std::string::npos)
-		LOG_ERROR("Protocol not apparent in header file");
-	_protocol = line.substr(protocol_index, line.length());
-
-	location_index = line.find("/");
-	if (location_index == std::string::npos)
-		LOG_ERROR("location not apparent in header file");
-	_location = line.substr(location_index, (protocol_index - location_index) - 1);
-
+	_parse_request_line(stream);
 	while (std::getline(stream, line))
 	{
 		if (!body)
 		{
-			if (line[0] == ':')
-				colon_index = line.rfind(':');
-			else
-				colon_index = line.find(':');
-			if (colon_index != std::string::npos)
-			{
-				std::string key = line.substr(0, colon_index);
-				std::string value = line.substr(colon_index + 2, line.length() - colon_index);
-				_header.emplace(key, value);
-			}
+			_parse_header_line(line);
 			if (line[0] == '\r')
 				body = true;
 		}
@@ -96,6 +88,54 @@ std::string &HttpObject::get_location()
 {
 	if (!_location.empty())
 		return _location;
-	LOG_ERROR("Protocol is empty!");
+	LOG_ERROR("Location is empty!");
 	return _location;
+}
+
+void	HttpObject::_parse_request_line(std::istringstream 	&stream)
+{
+	std::string 				line;
+	std::vector<std::string>	tokens;
+
+	std::getline(stream, line);
+	tokens = tokenize_string(line, " ");
+	if (tokens.size() != 3)
+	{
+		LOG_ERROR("HttpObject: Missing method, location or protocol!");
+		return;
+	}
+	if (tokens[0] != "GET" && tokens[0] != "POST" && tokens[0] != "DELETE")
+	{
+		LOG_ERROR("Method not present");
+		return;
+	}
+	_method = tokens[0];
+	if (tokens[1][0] != '/')
+	{
+		LOG_ERROR("Location not present");
+		return;
+	}
+	_location = tokens[1];
+	if (tokens[2] != "HTTP/1.1\r")
+	{
+		LOG_ERROR("Protocol not present");
+		return;
+	}
+	_protocol = tokens[2];
+}
+
+void	HttpObject::_parse_header_line(std::string line)
+{
+	size_t	colon_index;
+
+	if (line[0] == ':')
+		colon_index = line.rfind(':');
+	else
+		colon_index = line.find(':');
+	if (colon_index != std::string::npos)
+	{
+		std::string key = line.substr(0, colon_index);
+		std::string value = line.substr(colon_index + 2, line.length() - colon_index);
+		_header.emplace(key, value);
+	}
 }

@@ -25,7 +25,9 @@ void	HttpServer::handle(std::string data)
 	// Append to `_request_buffer` until we reach EOF?
 	// RUN CGI and other bullshit.
 	// After CGI has exited (which we will check externally) we'll set _ready to true.
-	_cgi.start("sleep_echo_var");
+	HttpObject request(data);
+	if (request.trigger_cgi())
+		_cgi.start("sleep_echo_var");
 }
 
 

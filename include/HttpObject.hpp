@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iostream>
 #include <unordered_map>
+#include <vector>
 
 #include "meta.hpp"
 
@@ -27,6 +28,7 @@ public:
 	std::string 									&get_method();
 	std::string 									&get_protocol();
 	std::string 									&get_location();
+	bool											trigger_cgi(){return _method == "POST";};
 
 private:
 	std::unordered_map<std::string, std::string>	_header;
@@ -34,6 +36,9 @@ private:
 	std::string										_method;
 	std::string										_protocol;
 	std::string										_location;
+
+	void											_parse_request_line(std::istringstream &stream);
+	void											_parse_header_line(std::string line);
 
 };
 

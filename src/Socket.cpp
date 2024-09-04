@@ -35,8 +35,6 @@ std::string Socket::read()
 	{
 		UNIMPLEMENTED("recv failed");
 	}
-	HttpObject request(buffer);
-	std::cout << request << std::endl;
 	return buffer;
 }
 

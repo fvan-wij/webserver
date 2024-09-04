@@ -62,6 +62,7 @@ void Server::handle_events()
 				_client_remove(i);
 			}
 
+
 		}
 		else if (error_occurred(pfd.revents))
 		{
