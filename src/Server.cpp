@@ -196,9 +196,8 @@ void Server::_client_remove(int index)
 	_pfds.erase(_pfds.begin() + index);
 	_sockets.erase(_sockets.begin() + index);
 	LOG_DEBUG("Removed socket[" << fd << "], total sockets: " << _sockets.size());
-	LOG_DEBUG("\nremaining sockets in map");
+	LOG_DEBUG("remaining sockets in map");
 	map_list_keys(_server_instances);
-	LOG_DEBUG("\n");
 }
 
 bool Server::error_occurred(short revents)
