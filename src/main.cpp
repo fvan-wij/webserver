@@ -1,4 +1,6 @@
+#include <cstdlib>
 #include <vector>
+#include "Logger.hpp"
 #include "Server.hpp"
 
 int main()
@@ -11,6 +13,11 @@ int main()
 
 	servers.push_back({{8080, 8081}});
 	servers.push_back({{9090, 9091}});
+
+	for(const Server &s : servers)
+		LOG_NOTICE(s << " started.");
+
+
 
 	while (1)
 	{

@@ -19,6 +19,12 @@ Socket::Socket(SocketType connection_type, int data) : _type(connection_type)
 		_init_client(data);
 }
 
+Socket::~Socket()
+{
+	// std::cout << "<deconstructing connection>" << std::endl;
+}
+
+
 Socket Socket::accept()
 {
 	int clientFd = ::accept(_fd, nullptr, nullptr);
@@ -86,6 +92,15 @@ std::string Socket::get_address_str() const
 
 
 
+// TODO Memcmp?
+bool Socket::operator==	(const Socket &rhs) const
+{
+	return	this->_fd == rhs._fd && this->_type == rhs._type &&
+			this->_address.sin_addr.s_addr == rhs._address.sin_addr.s_addr;
+}
+
+
+
 void 				Socket::_init_listener(int port)
 {
 	_fd = socket(AF_INET, SOCK_STREAM, 0); //Creates connection
@@ -125,11 +140,6 @@ void	Socket::_init_client(int fd)
 	}
 }
 
-
-Socket::~Socket()
-{
-	// std::cout << "<deconstructing connection>" << std::endl;
-}
 
 
 std::ostream& operator<< (std::ostream& os, const Socket& s)

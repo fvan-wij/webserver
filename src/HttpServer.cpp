@@ -24,6 +24,7 @@ void	HttpServer::handle(std::string data)
 	// Append to `_request_buffer` until we reach EOF?
 	// RUN CGI and other bullshit.
 	// After CGI has exited (which we will check externally) we'll set _ready to true.
+	LOG_NOTICE(_socket << " starting CGI");
 	_cgi.start("sleep_echo_var");
 }
 
@@ -54,6 +55,8 @@ bool		HttpServer::is_ready()
 void 		HttpServer::poll_cgi()
 {
 	_ready = _cgi.poll();
+	if (_ready)
+		LOG_NOTICE(_socket << " CGI exited");
 }
 
 HttpServer::~HttpServer()

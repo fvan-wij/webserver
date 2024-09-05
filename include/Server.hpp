@@ -29,8 +29,7 @@ public:
 	bool						ready_to_write(short revents);
 	bool						error_occurred(short revents);
 
-	std::vector<pollfd>& 		get_pfds();
-	std::vector<Socket>& 		get_sockets();
+	const std::vector<Socket>& 		get_sockets() const;
 
 private:
 	// TODO Maybe put all of this shit in somekind of clients container for e.x
@@ -63,5 +62,11 @@ private:
 
 	int							_poll_events();
 	void 						_add_client(Socket s);
-	void						_client_remove(int index);
+	void 						_client_remove(Socket &s);
+	std::vector<pollfd>& 		_get_pfds();
+
 };
+
+
+
+std::ostream& operator<< (std::ostream& stream, const Server& rhs);

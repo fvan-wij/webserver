@@ -34,6 +34,8 @@ class Socket
 		bool						is_listener() const {return _type == SocketType::LISTENER;};
 		bool						is_client() const {return _type == SocketType::CLIENT;};
 
+		bool operator==	(const Socket &rhs) const;
+
 	private:
 		int							_fd;
 		struct sockaddr_in			_address;

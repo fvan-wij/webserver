@@ -8,6 +8,7 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <netinet/in.h>
 #include <sched.h>
@@ -15,6 +16,7 @@
 #include <string>
 #include <sys/poll.h>
 #include <sys/socket.h>
+#include <type_traits>
 #include <unistd.h>
 #include <vector>
 
@@ -52,22 +54,23 @@ void Server::handle_events()
 		}
 		else if (s.is_client() && ready_to_read(pfd.revents))
 		{
-			LOG_INFO(s << " POLLIN | fd : " << pfd.fd);
+			// LOG_INFO(s << " POLLIN | fd : " << pfd.fd);
 
 			std::string data = s.read();
-			
+			if (data.empty())
+				continue;	
 			try
 			{
 				_server_instances.at(std::cref(s)).handle(data);
 			}
 			catch (const std::out_of_range &e)
 			{
-				LOG_ERROR("_server_instances.handle out of range | with socket fd: " << s.get_fd() << " out of range!");
+				LOG_ERROR(s << "_server_instances.handle out of range");
 			}
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
-			LOG_INFO(s << " POLLOUT | fd : " << pfd.fd);
+			// LOG_INFO(s << " POLLOUT | fd : " << pfd.fd);
 			// TODO check if client's httpserver instance is ready to write;
 			// NOTE we can maybe do the wait pid thing here?
 			try
@@ -77,12 +80,12 @@ void Server::handle_events()
 				{
 					std::string data = instance.get_data();
 					s.write(data);
-					_client_remove(i);
+					_client_remove(s);
 				}
 			}
 			catch (const std::out_of_range &e)
 			{
-				LOG_ERROR("_server_instances.get_data out of range | with socket fd: " << s.get_fd() << " out of range!");
+				LOG_ERROR(s << "_server_instances.get_data out of range");
 			}
 
 
@@ -114,7 +117,7 @@ int Server::poll()
 			}
 			catch (const std::out_of_range &e)
 			{
-				LOG_ERROR("_server_instances.get_data out of range poep | with socket fd: " << s.get_fd() << " out of range!");
+				LOG_ERROR(s << "_server_instances.is_ready out of range");
 
 			}
 		}
@@ -125,12 +128,8 @@ int Server::poll()
 
 
 
-std::vector<pollfd>& Server::get_pfds()
-{
-	return _pfds;
-}
 
-std::vector<Socket>& Server::get_sockets()
+const std::vector<Socket>& Server::get_sockets() const
 {
 	return _sockets;
 }
@@ -142,7 +141,7 @@ int Server::_poll_events()
 	int n_ready;
 
 
-	n_ready = ::poll(Server::get_pfds().data(), Server::get_pfds().size(), POLL_TIMEOUT);
+	n_ready = ::poll(Server::_get_pfds().data(), Server::_get_pfds().size(), POLL_TIMEOUT);
 	if (n_ready == -1)
 	{
 		LOG_ERROR("Failed polling: " << strerror(errno));
@@ -160,6 +159,15 @@ int Server::_poll_events()
 }
 
 
+
+template<typename T>
+static void map_list_keys(T &map)
+{
+	for (const auto &it : map)
+	{
+		LOG_DEBUG("key[" << it.first.get() << "]");
+	}
+}
 
 void Server::_add_client(Socket s)
 {
@@ -179,32 +187,50 @@ void Server::_add_client(Socket s)
 	}
 
 	_pfds.push_back({r_s.get_fd(), mask, 0});
+	LOG_DEBUG("Added socket[" << s << "], total sockets: " << _sockets.size() - 1);
+	map_list_keys(_server_instances);
 }
 
-template<typename T>
-static void map_list_keys(T map)
+void Server::_client_remove(Socket &s)
 {
-	for (const auto &it : map)
+
+	LOG_DEBUG("Removing socket[" << s << "], total sockets: " << _sockets.size() - 1);
+
+	if (s.is_client())
 	{
-		LOG_DEBUG("key[" << it.first.get().get_fd() << "]");
+		_server_instances.erase(s);
 	}
-}
-
-void Server::_client_remove(int index)
-{
-	const int fd = _pfds[index].fd;
-
-	if (_sockets[index].is_client())
+	else
 	{
-		_server_instances.erase(_sockets.at(index));
+		LOG_ERROR("Trying to remove " << s << " which is not a client");
 	}
 
-	close(_pfds[index].fd);
-	_pfds.erase(_pfds.begin() + index);
-	_sockets.erase(_sockets.begin() + index);
-	LOG_DEBUG("Removed socket[" << fd << "], total sockets: " << _sockets.size());
+	for (size_t  i = 0; i < _pfds.size(); i++)
+	{
+		if (_pfds.at(i).fd == s.get_fd())	
+		{
+			close(_pfds[i].fd);
+			_pfds.erase(_pfds.begin() + i);
+		}
+	}
+	
+	for (size_t  i = 0; i < _sockets.size(); i++)
+	{
+		if (_sockets.at(i) == s)	
+		{
+			_sockets.erase(_sockets.begin() + i);
+		}
+	}
+
+
+
 	LOG_DEBUG("remaining sockets in map");
 	map_list_keys(_server_instances);
+}
+
+std::vector<pollfd>& Server::_get_pfds()
+{
+	return _pfds;
 }
 
 bool Server::error_occurred(short revents)
@@ -230,3 +256,18 @@ bool operator<(const std::reference_wrapper<const Socket> a, const std::referenc
 	return a.get().get_fd() < b.get().get_fd();
 }
 
+
+std::ostream& operator<< (std::ostream& os, const Server& rhs)
+{
+	bool first = true;
+
+	os << "{";
+	for(const Socket &s : rhs.get_sockets())
+	{
+		if (!first) os << "|";
+		os << s;
+		first = false;
+	}
+	os << "}";
+	return os;
+}
