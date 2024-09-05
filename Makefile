@@ -2,8 +2,6 @@ NAME		:= app
 RUN_CMD		:= ./$(NAME) 
 
 CFLAGS		+= -Wall -Wextra -std=c++11
-# CFLAGS		+= -Werror
-# CFLAGS		+= -g -fsanitize=address
 
 IFLAGS		:=	-Iinclude
 
@@ -13,7 +11,7 @@ SRCS		:=	Server.cpp \
 				Socket.cpp \
 				HttpServer.cpp \
 				CGI.cpp			\
-				HttpObject.cpp \
+				HttpObjects/HttpObject.cpp \
 
 
 HEADER_DIR	:=	include

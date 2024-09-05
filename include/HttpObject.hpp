@@ -24,7 +24,7 @@ public:
 	~HttpObject();
 
 	std::unordered_map<std::string, std::string>	&get_header();
-	const std::string										&get_body() const;
+	const std::string								&get_body() const;
 	std::string										&get_value(const std::string &key);
 	std::string 									&get_method();
 	std::string 									&get_protocol();
