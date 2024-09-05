@@ -179,6 +179,7 @@ void Server::_add_client(Socket s)
 
 	Socket &r_s = _sockets.back();
 
+
 	if (s.is_client())
 	{
 		// OOF
@@ -196,13 +197,10 @@ void Server::_client_remove(Socket &s)
 
 	LOG_DEBUG("Removing socket[" << s << "], total sockets: " << _sockets.size() - 1);
 
-	if (s.is_client())
-	{
-		_server_instances.erase(s);
-	}
-	else
+	if (!s.is_client())
 	{
 		LOG_ERROR("Trying to remove " << s << " which is not a client");
+		return;
 	}
 
 	for (size_t  i = 0; i < _pfds.size(); i++)
@@ -221,11 +219,14 @@ void Server::_client_remove(Socket &s)
 			_sockets.erase(_sockets.begin() + i);
 		}
 	}
+		_server_instances.erase(s);
 
 
 
 	LOG_DEBUG("remaining sockets in map");
 	map_list_keys(_server_instances);
+
+	LOG_DEBUG("Removed socket[" << s << "], total sockets: " << _sockets.size() - 1);
 }
 
 std::vector<pollfd>& Server::_get_pfds()
