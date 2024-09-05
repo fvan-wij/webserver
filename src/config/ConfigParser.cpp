@@ -29,17 +29,23 @@ std::vector<t_config>	parse_config(std::string config_path)
 {
 	std::vector<t_config>		configs;
 	std::ifstream				in(config_path, std::ios_base::in);
-	std::vector<std::string>	lines;
+	std::vector<std::string>	tokenized_line;
 	std::string					line;
+	std::vector<std::string>	tokens;
 
 	while (getline(in, line))
 	{
-		lines = tokenize_string(line, " ");
-		for (unsigned x = 0; x < lines.size(); x++)
+		tokenized_line = tokenize_string(line, " ");
+		for (unsigned x = 0; x < tokenized_line.size(); x++)
 		{
-			std::cout << lines[x] << ',' << std::endl;
+			tokens.push_back(tokenized_line[x]);
 		}
 	}
+	for (unsigned i = 0; i < tokens.size(); i++)
+	{
+		std::cout << tokens[i];
+	}
+	std::cout << std::endl;
 	std::cout << std::endl;
 	return (configs);
 };
