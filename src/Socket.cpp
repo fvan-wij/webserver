@@ -53,8 +53,6 @@ void Socket::write(const std::string s)
 	}
 }
 
-
-
 int 						Socket::get_fd() const
 {
 	if (_fd <= 0)

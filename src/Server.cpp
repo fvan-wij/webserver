@@ -45,7 +45,6 @@ void Server::handle_events()
 			LOG("fd: " << pfd.fd << " POLLIN");
 
 			std::string data = s.read();
-			
 			_server_instances.at(std::cref(s)).handle(data);
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
@@ -55,14 +54,12 @@ void Server::handle_events()
 			// NOTE we can maybe do the wait pid thing here?
 
 			HttpServer &instance = _server_instances.at(std::cref(s));
-			if (instance.is_ready())
+			if (instance.is_ready() || !instance.object[int(Http::REQUEST)].trigger_cgi())
 			{
 				std::string data = instance.get_data();
 				s.write(data);
 				_client_remove(i);
 			}
-
-
 		}
 		else if (error_occurred(pfd.revents))
 		{

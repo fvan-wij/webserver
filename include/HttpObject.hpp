@@ -15,6 +15,7 @@
 
 class HttpObject {
 public:
+	HttpObject();
 	HttpObject(const std::string &buffer);
 	HttpObject(HttpObject &&) = default;
 	HttpObject(const HttpObject &) = default;
@@ -22,12 +23,14 @@ public:
 	HttpObject &operator=(const HttpObject &) = default;
 	~HttpObject();
 
-	std::string										&get_body();
 	std::unordered_map<std::string, std::string>	&get_header();
+	const std::string										&get_body() const;
 	std::string										&get_value(const std::string &key);
 	std::string 									&get_method();
 	std::string 									&get_protocol();
 	std::string 									&get_location();
+
+	void											set_body(std::string &body){_body = body;};
 	bool											trigger_cgi(){return _method == "POST";};
 
 private:

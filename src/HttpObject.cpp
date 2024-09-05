@@ -17,6 +17,11 @@ static std::vector<std::string>	tokenize_string(std::string string, std::string 
 	return tokens;
 }
 
+HttpObject::HttpObject() 
+{
+	
+}
+
 HttpObject::HttpObject(const std::string &buffer) 
 {
 	std::istringstream 			stream(buffer);
@@ -53,7 +58,7 @@ std::ostream & operator << (std::ostream &out, HttpObject &obj)
 	return out;
 }
 
-std::string &HttpObject::get_body()
+const std::string &HttpObject::get_body() const
 {
 	return _body;
 }
