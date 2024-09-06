@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include "meta.hpp"
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <functional>
 #include <iostream>
@@ -117,7 +118,12 @@ int Server::poll()
 			}
 			catch (const std::out_of_range &e)
 			{
+				static int counter = 0;
 				LOG_ERROR(s << "_server_instances.is_ready out of range");
+				if (counter > 5)
+					exit(123);
+				counter++;
+
 
 			}
 		}

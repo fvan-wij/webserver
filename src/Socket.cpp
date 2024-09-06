@@ -21,8 +21,9 @@ Socket::Socket(SocketType connection_type, int data) : _type(connection_type)
 
 Socket::~Socket()
 {
+	LOG_DEBUG(*this << " destroyed");
 	_fd = -1;
-	// std::cout << "<deconstructing connection>" << std::endl;
+
 }
 
 
