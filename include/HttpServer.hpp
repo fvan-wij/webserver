@@ -3,39 +3,33 @@
 #include "Socket.hpp"
 #include "CGI.hpp"
 #include <string>
-
-enum class Http:int {
-	REQUEST = 0,
-	RESPONSE = 1,
-};
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
+#include "HandlerFactory.hpp"
 
 class HttpServer
 {
 	public:
-		HttpServer() = delete;
+		HttpServer();
 		HttpServer(const HttpServer &);
 		HttpServer &operator=(const HttpServer &) = delete;
 		~HttpServer();
 
-		HttpServer(Socket &s);
+		// HttpServer(Socket &s);
 
 
-		void		handle(std::string data);
+		void		handle(HttpRequest &request);
 		void 		poll_cgi();
 		void		respond();
 
 		bool		is_ready();
-		std::string	get_data() const;
-		void		set_request(std::string buffer);
-		void		set_response();
+		std::string	get_data();
 
-		HttpObject	object[2];
+		HttpResponse	response;
 
 	private:
 		std::string	_request_buffer;
-		bool 		_ready;
-		Socket		&_socket;
-
+		// Socket		&_socket;
 		CGI			_cgi;
 
 };

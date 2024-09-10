@@ -42,21 +42,27 @@ void Server::handle_events()
 		}
 		else if (s.is_client() && ready_to_read(pfd.revents))
 		{
-			LOG("fd: " << pfd.fd << " POLLIN");
+			// LOG("fd: " << pfd.fd << " POLLIN");
 
 			std::string data = s.read();
-			_server_instances.at(std::cref(s)).handle(data);
+			HttpRequest request = HttpRequest();
+			request.parse(data);
+			// _server_instances.at(std::cref(s)).handle(request);
+			auto it = _fd_map.at(s.get_fd());
+			it->handle(request);
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
-			LOG("fd: " << pfd.fd << " POLLOUT");
+			// LOG("fd: " << pfd.fd << " POLLOUT");
 			// TODO check if client's httpserver instance is ready to write;
 			// NOTE we can maybe do the wait pid thing here?
 
-			HttpServer &instance = _server_instances.at(std::cref(s));
-			if (instance.is_ready() || !instance.object[int(Http::REQUEST)].trigger_cgi())
+			// HttpServer &instance = _server_instances.at(std::cref(s));
+			auto it = _fd_map.at(s.get_fd());
+			if (it->response.is_ready())
 			{
-				std::string data = instance.get_data();
+				std::string data = it->get_data();
+				LOG("Sending generated response: \n" << GREEN << it->response.to_string() << END);
 				s.write(data);
 				_client_remove(i);
 			}
@@ -73,13 +79,13 @@ int Server::poll()
 	int n_ready = _poll_events();
 
 	// iterate over all `_server_instances` and waitpid their CGI.
-
 	for (const Socket &s : _sockets)
 	{
 		if (s.is_client())
 		{
-			HttpServer &instance = _server_instances.at(std::cref(s));
-			instance.poll_cgi();
+			auto it = _fd_map.at(s.get_fd());
+			it->poll_cgi();
+			// instance.poll_cgi();
 		}
 	}
 
@@ -112,12 +118,12 @@ int Server::_poll_events()
 	}
 	else if (print_ready && !n_ready)
 	{
-		LOG("Polling... n of events set: " << n_ready);
+		// LOG("Polling... n of events set: " << n_ready);
 		print_ready = false;
 	}
 	else if (n_ready)
 	{
-		LOG("Polling... n of events set: " << n_ready);
+		// LOG("Polling... n of events set: " << n_ready);
 		print_ready = true;
 	}
 	return n_ready;
@@ -138,7 +144,10 @@ void Server::_add_client(Socket s)
 	if (s.is_client())
 	{
 		// OOF
-		_server_instances.insert(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
+		// _server_instances.insert(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
+		// _server_instances.emplace(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
+		// _fd_map[r_s.get_fd()] = std::make_unique<HttpServer>();
+		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>();
 		mask = POLLIN | POLLOUT;
 	}
 
@@ -151,7 +160,9 @@ void Server::_client_remove(int index)
 
 	if (_sockets[index].is_client())
 	{
-		_server_instances.erase(_sockets.at(index));
+		auto it = _fd_map.find(_sockets[index].get_fd());
+		// _server_instances.erase(_sockets.at(index));
+		_fd_map.erase(it);
 	}
 
 	close(_pfds[index].fd);
@@ -174,8 +185,6 @@ bool Server::ready_to_write(short revents)
 {
 	return revents & POLLOUT;
 }
-
-
 
 // The `_server_instances` uses this func to compare the entries
 bool operator<(const std::reference_wrapper<const Socket> a, const std::reference_wrapper<const Socket> b)

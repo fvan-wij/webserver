@@ -1,7 +1,7 @@
 NAME		:= app
 RUN_CMD		:= ./$(NAME) 
 
-CFLAGS		+= -Wall -Wextra -std=c++11
+CFLAGS		+= -Wall -Wextra -std=c++17 -g -fsanitize=address
 
 IFLAGS		:=	-Iinclude
 
@@ -11,7 +11,11 @@ SRCS		:=	Server.cpp \
 				Socket.cpp \
 				HttpServer.cpp \
 				CGI.cpp			\
-				HttpObjects/HttpObject.cpp \
+				HttpObjects/HttpRequest.cpp \
+				HttpObjects/HttpResponse.cpp \
+				RequestHandlers/GetRequestHandler.cpp \
+				RequestHandlers/PostRequestHandler.cpp \
+				RequestHandlers/HandlerFactory.cpp \
 
 
 HEADER_DIR	:=	include
@@ -20,7 +24,11 @@ HEADERS 	:=	Server.hpp \
 				meta.hpp \
 				HttpServer.hpp \
 				CGI.hpp			\
-				HttpObject.hpp \
+				HttpRequest.hpp \
+				HttpResponse.hpp \
+				GetRequestHandler.hpp \
+				PostRequestHandler.hpp \
+				HandlerFactory.hpp \
 
 OBJ_DIR		:=	obj
 

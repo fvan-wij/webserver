@@ -1,21 +1,33 @@
 #pragma once
 
-#include "HttpObject.hpp"
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <sstream>
 
-class HttpRequest : public HttpObject {
+#include "meta.hpp"
+
+class HttpRequest
+{
 public:
-	HttpRequest();
-	HttpRequest(HttpRequest &&) = default;
-	HttpRequest(const HttpRequest &) = default;
-	HttpRequest &operator=(HttpRequest &&) = default;
-	HttpRequest &operator=(const HttpRequest &) = default;
-	~HttpRequest();
+	std::string 									get_method() const;
+	std::string 									get_uri() const;
+	std::string 									get_protocol() const;
+	const std::string 								get_body() const {return _body;};
+	std::unordered_map<std::string, std::string>	get_headers() const {return _header;};
+	std::string										get_value(const std::string &key) const;
 
-	std::string 									&get_method();
-	std::string 									&get_protocol();
-	std::string 									&get_location();
+	void											parse(const std::string &buffer);
 
 private:
+	std::string _method;
+	std::string _protocol;
+	std::string _uri;
+	std::string _body;
+	void		_parse_request_line(std::istringstream 	&stream);
+	std::unordered_map<std::string, std::string>	_header;
 	
 };
 
+std::ostream & operator << (std::ostream &out, HttpRequest &request);
+std::ostream & operator << (std::ostream &out, const HttpRequest &request);
