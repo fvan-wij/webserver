@@ -18,6 +18,7 @@ SRCS		:=	Server.cpp \
 				RequestHandlers/BadRequestHandler.cpp \
 				RequestHandlers/RequestHandler.cpp \
 				RequestHandlers/HandlerFactory.cpp \
+				logging/Logger.cpp
 
 
 HEADER_DIR	:=	include
@@ -40,7 +41,7 @@ SRCS 		:=	$(addprefix $(SRC_DIR)/, $(SRCS))
 HEADERS 	:=	$(addprefix $(HEADER_DIR)/, $(HEADERS))
 
 
-OBJS 		:=	$(patsubst $(SRC_DIR)%.c, $(OBJ_DIR)%.o, $(SRCS))
+OBJS 		:=	$(patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.o, $(SRCS))
 OBJ_DIRS 	:=	$(dir $(OBJS))
 
 .PHONY: make_libs fclean
@@ -51,7 +52,7 @@ all:
 $(NAME): $(OBJS) $(SRC_DIR)/$(SRC_ENTRY)
 	$(CXX) $(SRC_DIR)/$(SRC_ENTRY) $(OBJS) $(CFLAGS) $(IFLAGS) -o $(NAME)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(HEADERS)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS)
 	@mkdir -p $(OBJ_DIRS)
 	$(CXX) $(CFLAGS) $(IFLAGS) -c $< -o $@
 
@@ -73,3 +74,7 @@ compile_commands: fclean
 norm:
 	norminette include src
 
+
+cgi:
+	mkdir -p ~/.local/bin 
+	gcc sleep_echo_prog.c -o ~/.local/bin/sleep_echo_var
