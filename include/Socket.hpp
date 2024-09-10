@@ -20,6 +20,8 @@ class Socket
 		//Constructors
 		Socket();
 		Socket(SocketType type, int data); //Listener socket constructor, constructs listener or client based on type argument
+		Socket(const Socket &);
+		Socket &operator=(const Socket &);
 		~Socket();
 		
 		// Funcs
@@ -34,7 +36,6 @@ class Socket
 		bool						is_listener() const {return _type == SocketType::LISTENER;};
 		bool						is_client() const {return _type == SocketType::CLIENT;};
 
-		bool operator==	(const Socket &rhs) const;
 
 	private:
 		int							_fd;
@@ -46,3 +47,5 @@ class Socket
 };
 
 std::ostream& operator<< (std::ostream& stream, const Socket& rhs);
+bool operator== (const Socket &s1, const Socket &s2);
+

@@ -50,7 +50,7 @@ private:
 	// 	public Client(socket &s, pollfd &pfd, ServerInstance &server)
 	// }
 
-	typedef typename std::map<std::reference_wrapper<const Socket>, HttpServer> SocketRef_HttpServer_map;
+	typedef typename std::map<const Socket *, HttpServer> SocketRef_HttpServer_map;
 	
 	std::vector<pollfd> 			_pfds;
 	std::vector<Socket> 			_sockets;

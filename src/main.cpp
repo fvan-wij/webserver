@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdlib>
 #include <vector>
 #include "Logger.hpp"
@@ -27,5 +28,35 @@ int main()
 				s.handle_events();
 		}
 	}
+	return 0;
+}
+
+
+int main1()
+{
+	std::vector<int> vec;
+
+	vec.push_back(1);
+	vec.push_back(2);
+	vec.push_back(3);
+
+
+	for(const auto &i : vec)
+	{
+		LOG_DEBUG("vec: " << i);
+	}
+
+	int &target = vec.at(1);
+
+	auto it = std::find(vec.begin(), vec.end(), target);
+	LOG_DEBUG("erasing with : " << target);
+	vec.erase(it);
+
+
+	for(const auto &i : vec)
+	{
+		LOG_DEBUG("vec: " << i);
+	}
+
 	return 0;
 }

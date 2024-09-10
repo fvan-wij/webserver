@@ -9,20 +9,31 @@
 #include <cstring>
 #include <functional>
 #include <iostream>
-#include <iterator>
 #include <limits>
+#include <map>
 #include <netinet/in.h>
 #include <sched.h>
 #include <stdexcept>
 #include <string>
+#include <strings.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
-#include <type_traits>
 #include <unistd.h>
+#include <utility>
 #include <vector>
 
 // #define LOG_INFO(x) do { } while(0);
 // #define LOG_DEBUG(x) do { } while(0);
+
+template<typename T>
+static void map_list_keys(T &map)
+{
+	for (const auto &it : map)
+	{
+		LOG_DEBUG("key[" << *it.first << "]");
+	}
+}
+
 
 Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 {
@@ -62,7 +73,7 @@ void Server::handle_events()
 				continue;	
 			try
 			{
-				_server_instances.at(std::cref(s)).handle(data);
+				_server_instances.at(&s).handle(data);
 			}
 			catch (const std::out_of_range &e)
 			{
@@ -76,7 +87,7 @@ void Server::handle_events()
 			// NOTE we can maybe do the wait pid thing here?
 			try
 			{
-				HttpServer &instance = _server_instances.at(std::cref(s));
+				HttpServer &instance = _server_instances.at(&s);
 				if (instance.is_ready())
 				{
 					std::string data = instance.get_data();
@@ -103,13 +114,16 @@ int Server::poll()
 	int n_ready = _poll_events();
 
 	// iterate over all `_server_instances` and waitpid their CGI.
-	for (const Socket &s : _sockets)
+	// map_list_keys(_server_instances);
+	// for (const Socket &s : _sockets)
+	for (size_t i = 0; i < _sockets.size(); i++) // This dont make a difference.
 	{
+		const Socket &s = _sockets[i];
 		if (s.is_client())
 		{
 			try
 			{
-				HttpServer &instance = _server_instances.at(std::cref(s));
+				HttpServer &instance = _server_instances.at(&s);
 				instance.poll_cgi();
 				if (instance.is_ready())
 				{
@@ -166,15 +180,6 @@ int Server::_poll_events()
 
 
 
-template<typename T>
-static void map_list_keys(T &map)
-{
-	for (const auto &it : map)
-	{
-		LOG_DEBUG("key[" << it.first.get() << "]");
-	}
-}
-
 void Server::_add_client(Socket s)
 {
 	short mask = POLLIN;
@@ -189,7 +194,8 @@ void Server::_add_client(Socket s)
 	if (s.is_client())
 	{
 		// OOF
-		_server_instances.insert(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
+		// _server_instances.insert(&r_s, HttpServer(r_s));
+		_server_instances.insert(std::make_pair(&r_s, HttpServer(r_s)));
 		mask = POLLIN | POLLOUT;
 	}
 
@@ -214,25 +220,42 @@ void Server::_client_remove(Socket &s)
 		if (_pfds.at(i).fd == s.get_fd())	
 		{
 			close(_pfds[i].fd);
+			LOG_DEBUG("erasing _pfds : " << _pfds.begin()->fd + i);
 			_pfds.erase(_pfds.begin() + i);
 		}
 	}
-	
-	for (size_t  i = 0; i < _sockets.size(); i++)
+
+
+
+	if (_server_instances.find(&s) != _server_instances.end())
 	{
-		if (_sockets.at(i) == s)	
-		{
-			_sockets.erase(_sockets.begin() + i);
-		}
+		LOG_DEBUG(s << " exists in _server_instances");
+		_server_instances.erase(_server_instances.find(&s));
+		LOG_DEBUG(s << " erased from _server_instances");
 	}
-		_server_instances.erase(s);
+	else
+	{
+		LOG_ERROR(s << " not in _server_instances");
+	}
 
 
 
-	LOG_DEBUG("remaining sockets in map");
+	// BUG SOMEWHERE HERE
+	// In the logs its removing the element after `s`
+	auto it = std::find(_sockets.begin(), _sockets.end(), s);
+	LOG_DEBUG("erasing _socket with fd : " << it->get_fd() << " and port : " << it->get_port());
+	_sockets.erase(it);
+
+
+	LOG_DEBUG("remaining sockets in _sockets");
+	for(const auto &sock : _sockets)
+	{
+		LOG_DEBUG("sock: " << sock);
+	}
+	LOG_DEBUG("remaining sockets in _server_instances");
 	map_list_keys(_server_instances);
 
-	LOG_DEBUG("Removed socket[" << s << "], total sockets: " << _sockets.size() - 1);
+
 }
 
 std::vector<pollfd>& Server::_get_pfds()
@@ -258,10 +281,10 @@ bool Server::ready_to_write(short revents)
 
 
 // The `_server_instances` uses this func to compare the entries
-bool operator<(const std::reference_wrapper<const Socket> a, const std::reference_wrapper<const Socket> b)
-{
-	return a.get().get_fd() < b.get().get_fd();
-}
+// bool operator<(const Socket *a, const Socket *b)
+// {
+// 	return a->get_fd() < b->get_fd();
+// }
 
 
 std::ostream& operator<< (std::ostream& os, const Server& rhs)

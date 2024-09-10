@@ -19,6 +19,22 @@ Socket::Socket(SocketType connection_type, int data) : _type(connection_type)
 		_init_client(data);
 }
 
+Socket::Socket(const Socket &other)
+{
+	*this = other;
+}
+
+Socket &Socket::operator=(const Socket &rhs)
+{
+	if (this != &rhs)
+	{
+		this->_fd = rhs._fd;
+		this->_address = rhs._address;
+		this->_type = rhs._type;
+	}
+	return *this;
+}
+
 Socket::~Socket()
 {
 	LOG_DEBUG(*this << " destroyed");
@@ -72,7 +88,7 @@ void Socket::write(const std::string s)
 int 						Socket::get_fd() const
 {
 	if (_fd <= 0)
-		LOG_ERROR("get_sock_fd() returns negative fd, something's off...");
+		LOG_ERROR("socket : " << _fd << ": get_fd() returns negative fd, something's off...");
 	return _fd;
 };
 
@@ -94,12 +110,12 @@ std::string Socket::get_address_str() const
 
 
 
-// TODO Memcmp?
-bool Socket::operator==	(const Socket &rhs) const
-{
-	return	this->_fd == rhs._fd && this->_type == rhs._type &&
-			this->_address.sin_addr.s_addr == rhs._address.sin_addr.s_addr;
-}
+// // TODO Memcmp?
+// bool Socket::operator==	(const Socket &rhs) const
+// {
+// 	return	this->_fd == rhs._fd && this->_type == rhs._type &&
+// 			this->_address.sin_addr.s_addr == rhs._address.sin_addr.s_addr;
+// }
 
 
 
@@ -148,4 +164,11 @@ std::ostream& operator<< (std::ostream& os, const Socket& s)
 {
 	os << "[" << s.get_address_str() << ":" << s.get_port() << "-" << s.get_fd() << "]";
 	return os;
+}
+
+bool operator==(const Socket &s1, const Socket &s2)
+{
+	return	s1.get_fd() == s2.get_fd() &&
+			s1.get_port() == s2.get_port() &&
+			s1.get_address_str() == s2.get_address_str();
 }
