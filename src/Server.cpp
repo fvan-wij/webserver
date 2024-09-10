@@ -18,7 +18,7 @@ Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 
 }
 
-Server::Server(std::vector<uint16_t> ports)
+Server::Server(std::vector<uint16_t> ports) : _exit_server(false)
 {
 	for (uint16_t p : ports)
 	{
@@ -28,7 +28,6 @@ Server::Server(std::vector<uint16_t> ports)
 
 void Server::handle_events()
 {
-
 	for (size_t i = 0; i < _pfds.size(); i++)
 	{
 		pollfd &pfd = _pfds[i];
@@ -47,22 +46,17 @@ void Server::handle_events()
 			std::string data = s.read();
 			HttpRequest request = HttpRequest();
 			request.parse(data);
-			// _server_instances.at(std::cref(s)).handle(request);
-			auto it = _fd_map.at(s.get_fd());
-			it->handle(request);
+			auto http_server = _fd_map.at(s.get_fd());
+			http_server->handle(request);
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
 			// LOG("fd: " << pfd.fd << " POLLOUT");
-			// TODO check if client's httpserver instance is ready to write;
-			// NOTE we can maybe do the wait pid thing here?
-
-			// HttpServer &instance = _server_instances.at(std::cref(s));
-			auto it = _fd_map.at(s.get_fd());
-			if (it->response.is_ready())
+			auto http_server = _fd_map.at(s.get_fd());
+			if (http_server->response.is_ready())
 			{
-				std::string data = it->get_data();
-				LOG("Sending generated response: \n" << GREEN << it->response.to_string() << END);
+				std::string data = http_server->get_data();
+				LOG("Sending response: \n" << GREEN << http_server->response.to_string() << END);
 				s.write(data);
 				_client_remove(i);
 			}
@@ -78,14 +72,12 @@ int Server::poll()
 {
 	int n_ready = _poll_events();
 
-	// iterate over all `_server_instances` and waitpid their CGI.
 	for (const Socket &s : _sockets)
 	{
 		if (s.is_client())
 		{
-			auto it = _fd_map.at(s.get_fd());
-			it->poll_cgi();
-			// instance.poll_cgi();
+			auto http_server = _fd_map.at(s.get_fd());
+			http_server->poll_cgi();
 		}
 	}
 
@@ -104,32 +96,17 @@ std::vector<Socket>& Server::get_sockets()
 	return _sockets;
 }
 
-
-
 int Server::_poll_events()
 {
 	int n_ready;
-	static bool print_ready = true;
 
 	n_ready = ::poll(Server::get_pfds().data(), Server::get_pfds().size(), POLL_TIMEOUT);
 	if (n_ready == -1)
 	{
 		LOG_ERROR("Failed polling: " << strerror(errno));
 	}
-	else if (print_ready && !n_ready)
-	{
-		// LOG("Polling... n of events set: " << n_ready);
-		print_ready = false;
-	}
-	else if (n_ready)
-	{
-		// LOG("Polling... n of events set: " << n_ready);
-		print_ready = true;
-	}
 	return n_ready;
 }
-
-
 
 void Server::_add_client(Socket s)
 {
@@ -160,12 +137,11 @@ void Server::_client_remove(int index)
 
 	if (_sockets[index].is_client())
 	{
-		auto it = _fd_map.find(_sockets[index].get_fd());
-		// _server_instances.erase(_sockets.at(index));
-		_fd_map.erase(it);
+		auto http_server = _fd_map.find(_sockets[index].get_fd());
+		_fd_map.erase(http_server);
 	}
 
-	close(_pfds[index].fd);
+	close(fd);
 	_pfds.erase(_pfds.begin() + index);
 	_sockets.erase(_sockets.begin() + index);
 	LOG("Removed socket[" << fd << "], total sockets: " << _sockets.size());

@@ -15,7 +15,7 @@ HttpServer::HttpServer()
 
 HttpServer::~HttpServer()
 {
-	LOG(RED << "DELETING HTTPSERVER!" << END);
+	// LOG(RED << "DELETING HTTPSERVER!" << END);
 }
 
 HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request_buffer) 

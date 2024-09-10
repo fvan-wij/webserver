@@ -24,18 +24,27 @@ public:
 	Server(std::vector<uint16_t> ports);
 
 	//Methods
-	void 						handle_events();
-	int 						poll();
+	void 										handle_events();
+	int 										poll();
 
-	bool						ready_to_read(short revents);
-	bool						ready_to_write(short revents);
-	bool						error_occurred(short revents);
+	bool										ready_to_read(short revents);
+	bool										ready_to_write(short revents);
+	bool										error_occurred(short revents);
+	bool										should_exit(){return _exit_server;};
 
-	std::vector<pollfd>& 		get_pfds();
-	std::vector<Socket>& 		get_sockets();
-	std::unordered_map<int, HttpResponse>	response_queue;
+	std::vector<pollfd>& 						get_pfds();
+	std::vector<Socket>& 						get_sockets();
 
 private:
+	std::unordered_map<int, std::shared_ptr<HttpServer>>	_fd_map;
+	std::vector<pollfd> 						_pfds;
+	std::vector<Socket> 						_sockets;
+	bool										_exit_server;
+
+	int											_poll_events();
+	void 										_add_client(Socket s);
+	void										_client_remove(int index);
+
 	// TODO Maybe put all of this shit in somekind of clients container for e.x
 	// in this case all the data inclient container will be sequential so we can still call.
 	// `poll()` with `ClientContainer.get_pfds()`
@@ -54,18 +63,4 @@ private:
 	// 	public Client(socket &s, pollfd &pfd, ServerInstance &server)
 	// }
 
-	// typedef typename std::map<std::reference_wrapper<const Socket>, HttpServer> SocketRef_HttpServer_map;
-	std::map<int, std::shared_ptr<HttpServer>>	_fd_map;
-	
-	std::vector<pollfd> 			_pfds;
-	std::vector<Socket> 			_sockets;
-
-	// Because you cannot have a STL-container which stores references we use this wrapper class.
-	// SocketRef_HttpServer_map		_server_instances;
-
-
-
-	int							_poll_events();
-	void 						_add_client(Socket s);
-	void						_client_remove(int index);
 };

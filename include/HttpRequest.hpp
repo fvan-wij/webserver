@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <sstream>
+#include <exception>
 
 #include "meta.hpp"
 
@@ -18,6 +19,19 @@ public:
 	std::string										get_value(const std::string &key) const;
 
 	void											parse(const std::string &buffer);
+
+	class HttpException : public std::exception
+	{
+		private:
+			std::string	message;
+
+		public:
+			HttpException(const char* msg) : message(msg){};
+			const char* what() const throw()
+			{
+				return message.c_str();
+			}
+	};
 
 private:
 	std::string _method;

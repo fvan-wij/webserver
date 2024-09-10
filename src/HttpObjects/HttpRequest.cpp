@@ -31,7 +31,14 @@ void	HttpRequest::parse(const std::string &buffer)
 	std::istringstream 			stream(buffer);
 	std::string					line;
 
-	_parse_request_line(stream);
+	try 
+	{
+		_parse_request_line(stream);
+	}
+	catch (HttpException& e)
+	{
+		std::cerr << "Caught an exception: " << e.what() << std::endl;
+	}
 	size_t			colon_index;
 	bool 			body = false;
 	while (std::getline(stream, line))
@@ -81,27 +88,15 @@ void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
 	std::getline(stream, line);
 	tokens = tokenize_string(line, " ");
 	if (tokens.size() != 3)
-	{
-		LOG_ERROR("HttpRequest: Missing method, location or protocol!");
-		return;
-	}
+		throw HttpException("HttpRequest: Missing method, location or protocol!");
 	if (tokens[0] != "GET" && tokens[0] != "POST" && tokens[0] != "DELETE")
-	{
-		LOG_ERROR("Method not present");
-		return;
-	}
+		throw HttpException("HttpRequest: Method not present!");
 	_method = tokens[0];
 	if (tokens[1][0] != '/')
-	{
-		LOG_ERROR("Location not present");
-		return;
-	}
+		throw HttpException("HttpRequest: URI not present!");
 	_uri = tokens[1];
 	if (tokens[2] != "HTTP/1.1\r")
-	{
-		LOG_ERROR("Protocol not present");
-		return;
-	}
+		throw HttpException("HttpRequest: Protocol not present!");
 	_protocol = tokens[2];
 }
 

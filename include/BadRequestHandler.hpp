@@ -2,7 +2,7 @@
 
 #include "RequestHandler.hpp"
 
-class PostRequestHandler : public RequestHandler
+class BadRequestHandler : public RequestHandler
 {
 	public:
 		HttpResponse	handle_request(const HttpRequest &request);

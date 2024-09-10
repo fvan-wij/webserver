@@ -20,7 +20,7 @@ Socket Socket::accept()
 	else
 	{
 		// TODO Use logger
-		LOG("\n\nAccepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd);
+		LOG(GREEN << "Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd << END);
 	}
 	return Socket(SocketType::CLIENT, clientFd);
 

@@ -13,6 +13,7 @@ enum class ResponseType:int {
 	UPLOAD = 1,
 	CGI = 2,
 };
+
 class HttpResponse 
 {
 	public:
