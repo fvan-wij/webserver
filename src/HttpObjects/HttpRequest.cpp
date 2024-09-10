@@ -1,4 +1,5 @@
 #include "HttpRequest.hpp"
+#include "Logger.hpp"
 
 std::string	HttpRequest::get_method() const
 {
@@ -22,7 +23,7 @@ std::string	HttpRequest::get_value(const std::string &key) const
 	{
 		return it;
 	}
-	LOG("value for given key " << key << "is empty");
+	LOG_DEBUG("value for given key " << key << "is empty");
 	return "";
 }
 

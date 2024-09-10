@@ -1,13 +1,52 @@
+#include "Logger.hpp"
+#include "meta.hpp"
 #include "Socket.hpp"
+#include <arpa/inet.h>
+#include <cerrno>
+#include <cstring>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <iostream>
+
+
+#ifndef DEBUG_SOCKET
+#define LOG_DEBUG(x) do { } while (0)
+#endif
 
 
 
 //Socket can be client or listener
-Socket::Socket(SocketType connection_type, int data) : _fd(data), _type(connection_type)	
+Socket::Socket(SocketType connection_type, int data) : _type(connection_type)	
 {
 	if (_type == SocketType::LISTENER)
 		_init_listener(data);
+	else if (_type == SocketType::CLIENT)
+		_init_client(data);
 }
+
+Socket::Socket(const Socket &other)
+{
+	*this = other;
+}
+
+Socket &Socket::operator=(const Socket &rhs)
+{
+	if (this != &rhs)
+	{
+		this->_fd = rhs._fd;
+		this->_address = rhs._address;
+		this->_type = rhs._type;
+	}
+	return *this;
+}
+
+Socket::~Socket()
+{
+	LOG_DEBUG(*this << " destroyed");
+	_fd = -1;
+
+}
+
 
 Socket Socket::accept()
 {
@@ -16,11 +55,6 @@ Socket Socket::accept()
 	{
 		UNIMPLEMENTED("EXCEPTION: Failed accepting client on fd: " << _fd << ", " << strerror(errno));
 		close(_fd);
-	}
-	else
-	{
-		// TODO Use logger
-		LOG(GREEN << "Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd << END);
 	}
 	return Socket(SocketType::CLIENT, clientFd);
 
@@ -35,6 +69,7 @@ std::string Socket::read()
 	{
 		UNIMPLEMENTED("recv failed");
 	}
+
 	return buffer;
 }
 
@@ -49,29 +84,45 @@ void Socket::write(const std::string s)
 	}
 	if (data_sent != (ssize_t) s.length())
 	{
-		WARNING("data send is not equal to data passed in");
+		LOG_WARNING("data send is not equal to data passed in");
 	}
 }
+
+
 
 int 						Socket::get_fd() const
 {
 	if (_fd <= 0)
-		std::cout << "get_sock_fd() returns negative fd, something's off..." << std::endl;
+		LOG_ERROR("socket : " << _fd << ": get_fd() returns negative fd, something's off...");
 	return _fd;
 };
 
 
-struct sockaddr_in	Socket::get_address() const 
+int Socket::get_port() const
 {
-	if (_type == SocketType::CLIENT)
-		std::cout << "!WARNING: get_address() returns empty address due to being client!" << std::endl;
-	return _address;
-};
-
-Socket::~Socket()
-{
-	// std::cout << "<deconstructing connection>" << std::endl;
+	return ntohs(_address.sin_port);
 }
+
+std::string Socket::get_address_str() const
+{
+	char str[INET_ADDRSTRLEN];
+	if (!inet_ntop(AF_INET, &(_address.sin_addr), str, INET_ADDRSTRLEN))
+	{
+		LOG_ERROR("Failed inet_ntop");
+	}
+	return str;
+}
+
+
+
+// // TODO Memcmp?
+// bool Socket::operator==	(const Socket &rhs) const
+// {
+// 	return	this->_fd == rhs._fd && this->_type == rhs._type &&
+// 			this->_address.sin_addr.s_addr == rhs._address.sin_addr.s_addr;
+// }
+
+
 
 void 				Socket::_init_listener(int port)
 {
@@ -79,7 +130,7 @@ void 				Socket::_init_listener(int port)
 	if (_fd < 0)
 	{
 		// TODO Throw error
-		std::cout << "Error occurred: " << strerror(errno) << std::endl;
+		LOG_ERROR("Error occurred: " << strerror(errno));
 	}
 
 	_address.sin_family = AF_INET;
@@ -90,13 +141,39 @@ void 				Socket::_init_listener(int port)
 	setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &optval2, sizeof(optval2));
 	if (bind(_fd, (struct sockaddr *) &_address, sizeof(_address)) < 0) //Binds connection to address
 	{
-		std::cout << "Error occurred: " << strerror(errno) << std::endl;
+		LOG_ERROR("Error occurred: " << strerror(errno));
 		return;
 	}
 	if (listen(_fd, 5) < 0)
 	{
-		std::cout << "Error occurred: " << strerror(errno) << std::endl;
+		LOG_ERROR("Error occurred: " << strerror(errno));
 		return;
 	}
 }
 
+
+void	Socket::_init_client(int fd)
+{
+	_fd = fd;
+
+	socklen_t len = sizeof(_address);
+	if (getsockname(get_fd(), (struct sockaddr *) &_address, &len) == -1)
+	{
+		LOG_ERROR("Failed getsockname");
+	}
+}
+
+
+
+std::ostream& operator<< (std::ostream& os, const Socket& s)
+{
+	os << "[" << s.get_address_str() << ":" << s.get_port() << "-" << s.get_fd() << "]";
+	return os;
+}
+
+bool operator==(const Socket &s1, const Socket &s2)
+{
+	return	s1.get_fd() == s2.get_fd() &&
+			s1.get_port() == s2.get_port() &&
+			s1.get_address_str() == s2.get_address_str();
+}

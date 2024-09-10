@@ -2,3 +2,4 @@
 Session.vim
 compile_commands.json
 app
+obj/
