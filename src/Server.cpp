@@ -13,42 +13,12 @@
 #include <unistd.h>
 #include <vector>
 
-static bool echo(int fd)
-{
-	const size_t buf_size = 1024;
-	char buffer[buf_size];
-	const std::string bye_str = "Cya!\n";
-	bzero(&buffer, sizeof(buffer));
-	// read up on EWOULDBLOCK
-	recv(fd, buffer, buf_size, 0);
-	LOG("Received: [" << buffer << "]");
-
-
-	std::string s = 
-	"HTTP/1.1 200 OK\r\n"
-	"\r\n<h1> Fakka strijders </h1>\r\n";
-
-	if (!s[0])
-	{
-		return false;
-	}
-	send(fd, s.c_str(), s.length(), 0);
-
-
-	// NOTE according to the http docs we can use the same connection for multiple requests.
-	// Therefore we dont HAVE to close the connection after sending this response.
-	// However in our current setup (in which we will send only 1 response this will work)
-	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview
-
-	return false;
-}
-
 Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 {
 
 }
 
-Server::Server(std::vector<uint16_t> ports)
+Server::Server(std::vector<uint16_t> ports) : _exit_server(false)
 {
 	for (uint16_t p : ports)
 	{
@@ -58,7 +28,6 @@ Server::Server(std::vector<uint16_t> ports)
 
 void Server::handle_events()
 {
-
 	for (size_t i = 0; i < _pfds.size(); i++)
 	{
 		pollfd &pfd = _pfds[i];
@@ -72,26 +41,25 @@ void Server::handle_events()
 		}
 		else if (s.is_client() && ready_to_read(pfd.revents))
 		{
-			LOG("fd: " << pfd.fd << " POLLIN");
+			// LOG("fd: " << pfd.fd << " POLLIN");
 
 			std::string data = s.read();
-			
-			_server_instances.at(std::cref(s)).handle(data);
+			HttpRequest request = HttpRequest();
+			request.parse(data);
+			auto http_server = _fd_map.at(s.get_fd());
+			http_server->handle(request);
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
-			LOG("fd: " << pfd.fd << " POLLOUT");
-			// TODO check if client's httpserver instance is ready to write;
-			// NOTE we can maybe do the wait pid thing here?
-
-			HttpServer &instance = _server_instances.at(std::cref(s));
-			if (instance.is_ready())
+			// LOG("fd: " << pfd.fd << " POLLOUT");
+			auto http_server = _fd_map.at(s.get_fd());
+			if (http_server->response.is_ready())
 			{
-				std::string data = instance.get_data();
+				std::string data = http_server->get_data();
+				LOG("Sending response: \n" << GREEN << http_server->response.to_string() << END);
 				s.write(data);
 				_client_remove(i);
 			}
-
 		}
 		else if (error_occurred(pfd.revents))
 		{
@@ -104,14 +72,12 @@ int Server::poll()
 {
 	int n_ready = _poll_events();
 
-	// iterate over all `_server_instances` and waitpid their CGI.
-
 	for (const Socket &s : _sockets)
 	{
 		if (s.is_client())
 		{
-			HttpServer &instance = _server_instances.at(std::cref(s));
-			instance.poll_cgi();
+			auto http_server = _fd_map.at(s.get_fd());
+			http_server->poll_cgi();
 		}
 	}
 
@@ -130,32 +96,17 @@ std::vector<Socket>& Server::get_sockets()
 	return _sockets;
 }
 
-
-
 int Server::_poll_events()
 {
 	int n_ready;
-	static bool print_ready = true;
 
 	n_ready = ::poll(Server::get_pfds().data(), Server::get_pfds().size(), POLL_TIMEOUT);
 	if (n_ready == -1)
 	{
 		LOG_ERROR("Failed polling: " << strerror(errno));
 	}
-	else if (print_ready && !n_ready)
-	{
-		LOG("Polling... n of events set: " << n_ready);
-		print_ready = false;
-	}
-	else if (n_ready)
-	{
-		LOG("Polling... n of events set: " << n_ready);
-		print_ready = true;
-	}
 	return n_ready;
 }
-
-
 
 void Server::_add_client(Socket s)
 {
@@ -170,7 +121,10 @@ void Server::_add_client(Socket s)
 	if (s.is_client())
 	{
 		// OOF
-		_server_instances.insert(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
+		// _server_instances.insert(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
+		// _server_instances.emplace(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
+		// _fd_map[r_s.get_fd()] = std::make_unique<HttpServer>();
+		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>();
 		mask = POLLIN | POLLOUT;
 	}
 
@@ -183,10 +137,11 @@ void Server::_client_remove(int index)
 
 	if (_sockets[index].is_client())
 	{
-		_server_instances.erase(_sockets.at(index));
+		auto http_server = _fd_map.find(_sockets[index].get_fd());
+		_fd_map.erase(http_server);
 	}
 
-	close(_pfds[index].fd);
+	close(fd);
 	_pfds.erase(_pfds.begin() + index);
 	_sockets.erase(_sockets.begin() + index);
 	LOG("Removed socket[" << fd << "], total sockets: " << _sockets.size());
@@ -206,8 +161,6 @@ bool Server::ready_to_write(short revents)
 {
 	return revents & POLLOUT;
 }
-
-
 
 // The `_server_instances` uses this func to compare the entries
 bool operator<(const std::reference_wrapper<const Socket> a, const std::reference_wrapper<const Socket> b)

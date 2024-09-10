@@ -6,6 +6,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <poll.h>
+#include <cerrno>
+#include <cstring>
+
+#include "meta.hpp"
 
 enum class SocketType 
 {

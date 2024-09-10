@@ -42,7 +42,6 @@ void CGI::start(std::string path)
 		}
 
 		close(_pipes[PipeFD::WRITE]);
-		close(_pipes[PipeFD::WRITE]);
 
 
 		char *args[] =
