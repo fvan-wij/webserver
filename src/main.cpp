@@ -1,3 +1,4 @@
+#include "Logger.hpp"
 #include "Server.hpp"
 #include "HttpRequest.hpp"
 #include "HandlerFactory.hpp"
@@ -11,10 +12,16 @@ int main()
 	// parse config
 	// for each server_config in config.serverblock
 	// servers.push_back(server(serverrconfig))
-	// servers.push_back({{8080, 8081}}); 
+	servers.push_back({{8080, 8081}}); 
 	servers.push_back({{9090, 9091}}); 
 
+
 	LOG_NOTICE("Starting server(s)");
+	for(const Server &s : servers)
+	{
+		LOG_NOTICE(s);
+	}
+
 	while (1)
 	{
 		for(auto &s : servers)

@@ -91,7 +91,7 @@ std::vector<pollfd>& Server::get_pfds()
 	return _pfds;
 }
 
-std::vector<Socket>& Server::get_sockets()
+const std::vector<Socket>& Server::get_sockets() const
 {
 	return _sockets;
 }
@@ -168,3 +168,21 @@ bool operator<(const std::reference_wrapper<const Socket> a, const std::referenc
 	return a.get().get_fd() < b.get().get_fd();
 }
 
+
+
+std::ostream& operator<< (std::ostream& os, const Server& rhs)
+{
+	bool first = true;
+
+
+	// TODO Print server name aswell
+	os << "{";
+	for(const Socket &s : rhs.get_sockets())
+	{
+		if (!first) os << "|";
+		os << s;
+		first = false;
+	}
+	os << "}";
+	return os;
+}

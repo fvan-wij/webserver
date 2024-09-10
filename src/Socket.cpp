@@ -9,6 +9,11 @@
 #include <iostream>
 
 
+#ifndef DEBUG_SOCKET
+#define LOG_DEBUG(x) do { } while (0)
+#endif
+
+
 
 //Socket can be client or listener
 Socket::Socket(SocketType connection_type, int data) : _type(connection_type)	
