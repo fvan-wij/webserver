@@ -1,4 +1,5 @@
 #include "CGI.hpp"
+#include "Logger.hpp"
 #include "meta.hpp"
 #include <bits/pthread_stack_min-dynamic.h>
 #include <cerrno>
@@ -20,7 +21,7 @@ CGI::CGI() : _is_running(false)
 void CGI::start(std::string path)
 {
 	_is_running = true;
-	LOG("starting CGI with path: " << path);
+	LOG_NOTICE("starting CGI with path: " << path);
 	if (pipe(_pipes) == -1)
 	{
 		UNIMPLEMENTED("pipe failed" << strerror(errno));
@@ -79,7 +80,7 @@ bool CGI::poll()
 	// NOTE maybe we can just straight up attach the pipe from the CGI to the client's socket_fd.
 	if (WIFEXITED(status))
 	{
-		LOG("CGI exited with code: " << WEXITSTATUS(status));
+		LOG_NOTICE("CGI exited with code: " << WEXITSTATUS(status));
 
 		// read until the pipe is empty.
 		while (_read() == PIPE_READ_SIZE - 1)
