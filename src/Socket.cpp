@@ -1,4 +1,6 @@
 #include "Socket.hpp"
+#include <arpa/inet.h>
+#include "Logger.hpp"
 
 
 
@@ -7,7 +9,34 @@ Socket::Socket(SocketType connection_type, int data) : _fd(data), _type(connecti
 {
 	if (_type == SocketType::LISTENER)
 		_init_listener(data);
+	else if (_type == SocketType::CLIENT)
+		_init_client(data);
 }
+
+Socket::Socket(const Socket &other)
+{
+	*this = other;
+}
+
+Socket &Socket::operator=(const Socket &rhs)
+{
+	if (this != &rhs)
+	{
+		this->_fd = rhs._fd;
+		this->_address = rhs._address;
+		this->_type = rhs._type;
+	}
+	return *this;
+}
+
+Socket::~Socket()
+{
+	LOG_DEBUG(*this << " destroyed");
+	_fd = -1;
+
+}
+
+
 
 Socket Socket::accept()
 {
@@ -20,7 +49,7 @@ Socket Socket::accept()
 	else
 	{
 		// TODO Use logger
-		LOG(GREEN << "Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd << END);
+		LOG_INFO(GREEN << "Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd << END);
 	}
 	return Socket(SocketType::CLIENT, clientFd);
 
@@ -60,18 +89,23 @@ int 						Socket::get_fd() const
 	return _fd;
 };
 
-
-struct sockaddr_in	Socket::get_address() const 
-{
-	if (_type == SocketType::CLIENT)
-		std::cout << "!WARNING: get_address() returns empty address due to being client!" << std::endl;
-	return _address;
-};
-
-Socket::~Socket()
+std::string Socket::get_address_str() const
 {
 	// std::cout << "<deconstructing connection>" << std::endl;
+	char str[INET_ADDRSTRLEN];
+	if (!inet_ntop(AF_INET, &(_address.sin_addr), str, INET_ADDRSTRLEN))
+	{
+		LOG_ERROR("Failed inet_ntop");
+	}
+	return str;
 }
+
+int Socket::get_port() const
+{
+	return ntohs(_address.sin_port);
+}
+
+
 
 void 				Socket::_init_listener(int port)
 {
@@ -100,3 +134,19 @@ void 				Socket::_init_listener(int port)
 	}
 }
 
+void	Socket::_init_client(int fd)
+{
+	_fd = fd;
+
+	socklen_t len = sizeof(_address);
+	if (getsockname(get_fd(), (struct sockaddr *) &_address, &len) == -1)
+	{
+		LOG_ERROR("Failed getsockname");
+	}
+}
+
+std::ostream& operator<< (std::ostream& os, const Socket& s)
+{
+	os << "[" << s.get_address_str() << ":" << s.get_port() << "-" << s.get_fd() << "]";
+	return os;
+}

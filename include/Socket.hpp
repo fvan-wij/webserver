@@ -24,6 +24,8 @@ class Socket
 		//Constructors
 		Socket();
 		Socket(SocketType type, int data); //Listener socket constructor, constructs listener or client based on type argument
+		Socket(const Socket &);
+		Socket &operator=(const Socket &);;
 		~Socket();
 		
 		// Funcs
@@ -33,7 +35,8 @@ class Socket
 
 		// Getters
 		int 						get_fd() const;
-		struct sockaddr_in			get_address() const;
+ 		int							get_port() const;
+		std::string					get_address_str() const;
 		bool						is_listener() const {return _type == SocketType::LISTENER;};
 		bool						is_client() const {return _type == SocketType::CLIENT;};
 
@@ -45,3 +48,7 @@ class Socket
 		void						_init_listener(int port);
 		void						_init_client(int fd);
 };
+
+
+
+std::ostream& operator<< (std::ostream& stream, const Socket& rhs);
