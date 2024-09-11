@@ -9,11 +9,6 @@
 #include <iostream>
 
 
-#ifndef DEBUG_SOCKET
-#define LOG_DEBUG(x) do { } while (0)
-#endif
-
-
 
 //Socket can be client or listener
 Socket::Socket(SocketType connection_type, int data) : _type(connection_type)	
@@ -112,15 +107,6 @@ std::string Socket::get_address_str() const
 	}
 	return str;
 }
-
-
-
-// // TODO Memcmp?
-// bool Socket::operator==	(const Socket &rhs) const
-// {
-// 	return	this->_fd == rhs._fd && this->_type == rhs._type &&
-// 			this->_address.sin_addr.s_addr == rhs._address.sin_addr.s_addr;
-// }
 
 
 

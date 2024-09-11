@@ -3,26 +3,32 @@
 #include <cwchar>
 #include <string>
 
-HttpServer::HttpServer()
+HttpServer::HttpServer(Socket &s) : _socket(s)
 {
 	response.set_state(NOT_READY);
 }
 
-// HttpServer::HttpServer(Socket &s) : _socket(s)
-// {
-// 	response.set_state(NOT_READY);
-// }
+HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request_buffer), _socket(other._socket)
+{
+	// LOG("HttpServer : copied for sock_fd: " << _socket.get_fd());
+}
+
+HttpServer &HttpServer::operator=(const HttpServer &rhs)
+{
+	if (this != &rhs)
+	{
+		_socket = rhs._socket;
+		_request_buffer = rhs._request_buffer;
+		// _cgi = rhs._cgi;
+	}
+	return *this;
+	// LOG("HttpServer : copied for sock_fd: " << _socket.get_fd());
+}
 
 HttpServer::~HttpServer()
 {
 	// LOG(RED << "DELETING HTTPSERVER!" << END);
 }
-
-HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request_buffer) 
-{
-	// LOG("HttpServer : copied for sock_fd: " << _socket.get_fd());
-}
-
 
 void	HttpServer::handle(HttpRequest &request)
 {

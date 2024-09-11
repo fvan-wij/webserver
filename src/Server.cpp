@@ -162,14 +162,6 @@ bool Server::ready_to_write(short revents)
 	return revents & POLLOUT;
 }
 
-// The `_server_instances` uses this func to compare the entries
-bool operator<(const std::reference_wrapper<const Socket> a, const std::reference_wrapper<const Socket> b)
-{
-	return a.get().get_fd() < b.get().get_fd();
-}
-
-
-
 std::ostream& operator<< (std::ostream& os, const Server& rhs)
 {
 	bool first = true;
@@ -185,4 +177,33 @@ std::ostream& operator<< (std::ostream& os, const Server& rhs)
 	}
 	os << "}";
 	return os;
+}
+
+
+void Server::ClientContainer::add(Socket s)
+{
+	short mask = POLLIN;
+
+
+	_sockets.push_back(s);
+	Socket &r_s = _sockets.back();
+
+	if (s.is_client())
+	{
+		_map.insert({r_s, HttpServer(r_s)});
+		mask = POLLIN | POLLOUT;
+	}
+
+	_pfds.push_back({r_s.get_fd(), mask, 0});
+	
+}
+
+void Server::ClientContainer::remove(int i)
+{
+	UNUSED(i);
+}
+
+std::vector<pollfd> &Server::ClientContainer::get_pfds()
+{
+	return _pfds;
 }

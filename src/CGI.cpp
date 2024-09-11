@@ -16,7 +16,23 @@ CGI::CGI() : _is_running(false)
 
 }
 
+CGI::CGI(const CGI &other) : _is_running(other._is_running), _buffer(other._buffer), _pid(other._pid)
+{
+	_pipes[READ] = other._pipes[READ];
+	_pipes[WRITE] = other._pipes[WRITE];
+}
 
+CGI &CGI::operator=(const CGI &other)
+{
+	if (this == &other)
+		return *this;
+	_is_running = other._is_running;
+	_buffer = other._buffer;
+	_pid = other._pid;
+	_pipes[READ] = other._pipes[READ];
+	_pipes[WRITE] = other._pipes[WRITE];
+	return *this;
+}
 
 void CGI::start(std::string path)
 {

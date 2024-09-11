@@ -10,12 +10,12 @@
 class HttpServer
 {
 	public:
-		HttpServer();
+		HttpServer() = delete;
+		HttpServer(Socket &s);
 		HttpServer(const HttpServer &);
-		HttpServer &operator=(const HttpServer &) = delete;
+		HttpServer &operator=(const HttpServer &);
 		~HttpServer();
 
-		// HttpServer(Socket &s);
 
 
 		void		handle(HttpRequest &request);
@@ -29,7 +29,6 @@ class HttpServer
 
 	private:
 		std::string	_request_buffer;
-		// Socket		&_socket;
 		CGI			_cgi;
-
+		Socket		&_socket;
 };

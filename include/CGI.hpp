@@ -8,9 +8,11 @@ class CGI
 {
 public:
 	CGI();
-	CGI(const CGI &) = delete;
-	CGI &operator=(const CGI &) = delete;
+	CGI(const CGI &);
+	CGI &operator=(const CGI &);
 	~CGI();
+	CGI(CGI &&) = delete;
+	CGI &operator=(CGI &&) = delete;
 
 	void start(std::string path);
 	bool poll();
@@ -33,4 +35,6 @@ private:
 
 	int32_t _read();
 };
+
+
 
