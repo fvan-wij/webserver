@@ -66,7 +66,7 @@ void Server::handle_events()
 			if (http_server->response.is_ready())
 			{
 				std::string data = http_server->get_data();
-				LOG_INFO("Sending response: \n"  << http_server->response.to_string());
+				LOG_INFO(s << " Sending response: \n"  << http_server->response.to_string());
 				s.write(data);
 				_client_remove(i);
 			}

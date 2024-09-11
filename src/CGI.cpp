@@ -56,6 +56,12 @@ void CGI::start(std::string path)
 			NULL,
 		};
 
+		if (_socket.get_port() == 9091)
+		{
+			args[1] = (char *) "5";
+		}
+
+
 		if (execvp(args[0], args) == -1)
 		{
 			UNIMPLEMENTED("execvp failed" << strerror(errno));

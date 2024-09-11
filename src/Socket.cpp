@@ -31,9 +31,8 @@ Socket &Socket::operator=(const Socket &rhs)
 
 Socket::~Socket()
 {
-	LOG_DEBUG(*this << " destroyed");
+	// LOG_DEBUG(*this << " destroyed");
 	_fd = -1;
-
 }
 
 
@@ -82,10 +81,10 @@ void Socket::write(const std::string s)
 	}
 }
 
-int 						Socket::get_fd() const
+int Socket::get_fd() const
 {
 	if (_fd <= 0)
-		std::cout << "get_sock_fd() returns negative fd, something's off..." << std::endl;
+		LOG_ERROR("get_sock_fd() returns negative fd, something's off..." );
 	return _fd;
 };
 
