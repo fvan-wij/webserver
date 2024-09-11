@@ -66,7 +66,7 @@ void Server::handle_events()
 			if (http_server->response.is_ready())
 			{
 				std::string data = http_server->get_data();
-				LOG_INFO("Sending response: \n" << GREEN << http_server->response.to_string() << END);
+				LOG_INFO("Sending response: \n"  << http_server->response.to_string());
 				s.write(data);
 				_client_remove(i);
 			}
@@ -135,7 +135,7 @@ void Server::_add_client(Socket s)
 	}
 
 	_pfds.push_back({r_s.get_fd(), mask, 0});
-	LOG_DEBUG(r_s << "added, total sockets: " << _sockets.size());
+	LOG_DEBUG(r_s << " added, total sockets: " << _sockets.size());
 }
 
 void Server::_client_remove(int index)
@@ -153,7 +153,7 @@ void Server::_client_remove(int index)
 	_pfds.erase(_pfds.begin() + index);
 	const Socket tmp = _sockets[index];
 	_sockets.erase(_sockets.begin() + index);
-	LOG_DEBUG(tmp << "Removed, total sockets: " << _sockets.size());
+	LOG_DEBUG(tmp << " Removed, total sockets: " << _sockets.size());
 }
 
 bool Server::error_occurred(short revents)

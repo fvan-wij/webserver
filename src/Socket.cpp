@@ -49,7 +49,7 @@ Socket Socket::accept()
 	else
 	{
 		// TODO Use logger
-		LOG_INFO(GREEN << "Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd << END);
+		LOG_INFO("Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd);
 	}
 	return Socket(SocketType::CLIENT, clientFd);
 
