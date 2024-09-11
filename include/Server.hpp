@@ -14,14 +14,13 @@ class Server
 {
 public:
 	//Default Constructors
-	Server();
-	Server(const Server &) = default;
+	Server(uint16_t port);
+	Server(std::vector<uint16_t> ports);
+	Server(const Server &);
 	Server &operator=(const Server &) = default;
 	~Server() = default;
 
-	//Custom constructors
-	Server(uint16_t port);
-	Server(std::vector<uint16_t> ports);
+	Server() = delete;
 
 	//Methods
 	void 										handle_events();

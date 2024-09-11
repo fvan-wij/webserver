@@ -31,7 +31,7 @@ Socket &Socket::operator=(const Socket &rhs)
 
 Socket::~Socket()
 {
-	LOG_DEBUG(*this << " destroyed");
+	// LOG_DEBUG(*this << " destroyed");
 	_fd = -1;
 
 }
@@ -48,8 +48,7 @@ Socket Socket::accept()
 	}
 	else
 	{
-		// TODO Use logger
-		LOG_INFO(GREEN << "Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd << END);
+		LOG_INFO("Accepted new client on listening socket fd: " << _fd << " with clientFd " << clientFd << END);
 	}
 	return Socket(SocketType::CLIENT, clientFd);
 

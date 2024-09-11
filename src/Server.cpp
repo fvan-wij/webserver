@@ -28,6 +28,15 @@ Server::Server(std::vector<uint16_t> ports) : _exit_server(false)
 	}
 }
 
+Server::Server(const Server &other)
+{
+	this->_sockets = other._sockets;
+	this->_pfds = other._pfds;
+	this->_fd_map = other._fd_map;
+	this->_exit_server = other._exit_server;
+}
+
+
 void Server::handle_events()
 {
 	for (size_t i = 0; i < _pfds.size(); i++)
@@ -58,7 +67,7 @@ void Server::handle_events()
 			if (http_server->response.is_ready())
 			{
 				std::string data = http_server->get_data();
-				LOG_INFO("Sending response: \n" << GREEN << http_server->response.to_string() << END);
+				LOG_NOTICE("Sending response: \n" << http_server->response.to_string() << END);
 				s.write(data);
 				_client_remove(i);
 			}
@@ -127,7 +136,7 @@ void Server::_add_client(Socket s)
 	}
 
 	_pfds.push_back({r_s.get_fd(), mask, 0});
-	LOG_DEBUG(r_s << "added, total sockets: " << _sockets.size());
+	LOG_DEBUG(r_s << " added, total sockets: " << _sockets.size());
 }
 
 void Server::_client_remove(int index)

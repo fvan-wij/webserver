@@ -22,11 +22,12 @@ class Socket
 	public:
 
 		//Constructors
-		Socket();
 		Socket(SocketType type, int data); //Listener socket constructor, constructs listener or client based on type argument
 		Socket(const Socket &);
 		Socket &operator=(const Socket &);;
 		~Socket();
+
+		Socket() = delete;
 		
 		// Funcs
 		Socket 						accept();
