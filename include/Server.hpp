@@ -14,8 +14,8 @@ class Server
 {
 public:
 	//Default Constructors
-	Server();
-	Server(const Server &) = default;
+	Server() = delete;
+	Server(const Server &);
 	Server &operator=(const Server &) = default;
 	~Server() = default;
 

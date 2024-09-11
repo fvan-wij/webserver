@@ -28,6 +28,14 @@ Server::Server(std::vector<uint16_t> ports) : _exit_server(false)
 	}
 }
 
+Server::Server(const Server &other)
+{
+       this->_sockets = other._sockets;
+       this->_pfds = other._pfds;
+       this->_fd_map = other._fd_map;
+       this->_exit_server = other._exit_server;
+}
+
 void Server::handle_events()
 {
 	for (size_t i = 0; i < _pfds.size(); i++)
