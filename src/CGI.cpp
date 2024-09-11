@@ -52,13 +52,13 @@ void CGI::start(std::string path)
 		char *args[] =
 		{
 			(char *) path.c_str(),
-			(char*) ("2"),
+			(char*) ("1"),
 			NULL,
 		};
 
 		if (_socket.get_port() == 9091)
 		{
-			args[1] = (char *) "5";
+			args[1] = (char *) "1";
 		}
 
 
