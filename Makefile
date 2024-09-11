@@ -1,7 +1,7 @@
 NAME		:= app
 RUN_CMD		:= ./$(NAME) 
 
-CFLAGS		+= -Wall -Wextra -std=c++17 -g
+CFLAGS		+= -Wall -Wextra -std=c++17 -g -fsanitize=address
 
 IFLAGS		:=	-Iinclude
 

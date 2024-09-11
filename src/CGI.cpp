@@ -14,8 +14,6 @@
 
 
 
-#define LOG(x) do {} while(0);
-#define LOG_ERROR(x) do {} while(0);
 
 CGI::CGI(const Socket &s) : _socket(s), _is_running(false)
 {
@@ -86,7 +84,7 @@ bool CGI::poll()
 	// NOTE maybe we can just straight up attach the pipe from the CGI to the client's socket_fd.
 	if (WIFEXITED(status))
 	{
-		// LOG("CGI exited with code: " << WEXITSTATUS(status));
+		LOG_NOTICE("CGI exited with code: " << WEXITSTATUS(status));
 		// usleep(1);
 
 		// read until the pipe is empty.
