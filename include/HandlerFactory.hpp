@@ -2,10 +2,12 @@
 
 #include <string>
 #include <memory>
+#include "Logger.hpp"
 #include "RequestHandler.hpp"
 #include "GetRequestHandler.hpp"
 #include "PostRequestHandler.hpp"
 #include "BadRequestHandler.hpp"
+#include "meta.hpp"
 
 class HandlerFactory {
 	public:
@@ -16,7 +18,7 @@ class HandlerFactory {
 			else if (method == "POST")
 				return std::make_unique<PostRequestHandler>();
 			else if (method == "DELETE")
-				LOG_ERROR("NOT YET IMLEMENTED");
+				UNIMPLEMENTED("METHOD == DELETE");
 			else
 				return std::make_unique<BadRequestHandler>();
 			return nullptr;

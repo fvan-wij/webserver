@@ -10,9 +10,6 @@
 #define PIPE_READ_SIZE 1024
 
 
-#define LOG_ERROR(x) std::cerr << "[ERROR] : " << x << std::endl
-#define LOG(x) std::cout << "[INFO] : " << x << std::endl
-
 #define UNUSED(x) (void)(x)
 #define WARNING(message) \
 	do { \

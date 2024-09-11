@@ -33,7 +33,7 @@ public:
 	bool										should_exit(){return _exit_server;};
 
 	std::vector<pollfd>& 						get_pfds();
-	std::vector<Socket>& 						get_sockets();
+	const std::vector<Socket>&					get_sockets() const;
 
 private:
 	std::unordered_map<int, std::shared_ptr<HttpServer>>	_fd_map;
@@ -64,3 +64,7 @@ private:
 	// }
 
 };
+
+
+
+std::ostream& operator<< (std::ostream& os, const Server& rhs);

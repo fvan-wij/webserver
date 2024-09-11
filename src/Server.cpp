@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "HttpServer.hpp"
+#include "Logger.hpp"
 #include "meta.hpp"
 #include <cstdint>
 #include <cstring>
@@ -8,6 +9,7 @@
 #include <netinet/in.h>
 #include <sched.h>
 #include <string>
+#include <strings.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -56,7 +58,7 @@ void Server::handle_events()
 			if (http_server->response.is_ready())
 			{
 				std::string data = http_server->get_data();
-				LOG("Sending response: \n" << GREEN << http_server->response.to_string() << END);
+				LOG_INFO("Sending response: \n" << GREEN << http_server->response.to_string() << END);
 				s.write(data);
 				_client_remove(i);
 			}
@@ -91,7 +93,7 @@ std::vector<pollfd>& Server::get_pfds()
 	return _pfds;
 }
 
-std::vector<Socket>& Server::get_sockets()
+const std::vector<Socket>& Server::get_sockets() const
 {
 	return _sockets;
 }
@@ -120,20 +122,18 @@ void Server::_add_client(Socket s)
 
 	if (s.is_client())
 	{
-		// OOF
-		// _server_instances.insert(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
-		// _server_instances.emplace(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
-		// _fd_map[r_s.get_fd()] = std::make_unique<HttpServer>();
-		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>();
+		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>(r_s);
 		mask = POLLIN | POLLOUT;
 	}
 
 	_pfds.push_back({r_s.get_fd(), mask, 0});
+	LOG_DEBUG(r_s << "added, total sockets: " << _sockets.size());
 }
 
 void Server::_client_remove(int index)
 {
 	const int fd = _pfds[index].fd;
+
 
 	if (_sockets[index].is_client())
 	{
@@ -143,8 +143,9 @@ void Server::_client_remove(int index)
 
 	close(fd);
 	_pfds.erase(_pfds.begin() + index);
+	const Socket tmp = _sockets[index];
 	_sockets.erase(_sockets.begin() + index);
-	LOG("Removed socket[" << fd << "], total sockets: " << _sockets.size());
+	LOG_DEBUG(tmp << "Removed, total sockets: " << _sockets.size());
 }
 
 bool Server::error_occurred(short revents)
@@ -162,9 +163,20 @@ bool Server::ready_to_write(short revents)
 	return revents & POLLOUT;
 }
 
-// The `_server_instances` uses this func to compare the entries
-bool operator<(const std::reference_wrapper<const Socket> a, const std::reference_wrapper<const Socket> b)
-{
-	return a.get().get_fd() < b.get().get_fd();
-}
 
+std::ostream& operator<< (std::ostream& os, const Server& rhs)
+{
+	bool first = true;
+
+
+	// TODO Print server name aswell
+	os << "{";
+	for(const Socket &s : rhs.get_sockets())
+	{
+		if (!first) os << "|";
+		os << s;
+		first = false;
+	}
+	os << "}";
+	return os;
+}

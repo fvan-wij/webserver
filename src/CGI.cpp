@@ -9,6 +9,13 @@
 #include <cstdlib>
 #include <string>
 #include <unistd.h>
+#include "Logger.hpp"
+
+
+
+
+#define LOG(x) do {} while(0);
+#define LOG_ERROR(x) do {} while(0);
 
 CGI::CGI() : _is_running(false)
 {

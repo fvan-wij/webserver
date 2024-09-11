@@ -1,28 +1,35 @@
 #include "HttpServer.hpp"
+#include "Logger.hpp"
 #include "meta.hpp"
 #include <cwchar>
 #include <string>
 
-HttpServer::HttpServer()
+
+
+HttpServer::HttpServer(const Socket &s) : _socket(s)
 {
 	response.set_state(NOT_READY);
 }
-
-// HttpServer::HttpServer(Socket &s) : _socket(s)
-// {
-// 	response.set_state(NOT_READY);
-// }
 
 HttpServer::~HttpServer()
 {
 	// LOG(RED << "DELETING HTTPSERVER!" << END);
 }
 
-HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request_buffer) 
+HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request_buffer), _socket(other._socket)
 {
 	// LOG("HttpServer : copied for sock_fd: " << _socket.get_fd());
 }
 
+
+HttpServer &HttpServer::operator=(const HttpServer &rhs)
+{
+	if (this != &rhs)
+	{
+		LOG_DEBUG("HttpServer copy assignement called");
+	}
+	return *this;
+}
 
 void	HttpServer::handle(HttpRequest &request)
 {
@@ -57,16 +64,17 @@ std::string	HttpServer::get_data()
 	return response.to_string();
 }
 
-bool		HttpServer::is_ready()
+bool HttpServer::is_ready()
 {
 	return this->response.is_ready();
 }
 
-void 		HttpServer::poll_cgi()
+void HttpServer::poll_cgi()
 {
 	if (response.get_type() == ResponseType::REGULAR)
 		return;
 	else
 		response.set_state(_cgi.poll());
 }
+
 
