@@ -17,7 +17,7 @@
 #define LOG(x) do {} while(0);
 #define LOG_ERROR(x) do {} while(0);
 
-CGI::CGI() : _is_running(false)
+CGI::CGI(const Socket &s) : _socket(s), _is_running(false)
 {
 
 }

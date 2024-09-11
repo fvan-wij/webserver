@@ -1,16 +1,19 @@
 #pragma once
 
 
+#include "Socket.hpp"
 #include <cstdint>
 #include <string>
 
 class CGI
 {
 public:
-	CGI();
+	CGI(const Socket &s);
 	CGI(const CGI &) = delete;
 	CGI &operator=(const CGI &) = delete;
 	~CGI();
+
+	CGI() = delete;
 
 	void start(std::string path);
 	bool poll();
@@ -26,6 +29,7 @@ public:
 	const std::string &get_buffer() const;
 
 private:
+	const Socket &_socket;
 	bool		_is_running;
 	std::string _buffer;
 	int			_pid;

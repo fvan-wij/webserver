@@ -3,10 +3,11 @@
 #include "meta.hpp"
 #include <cwchar>
 #include <string>
+#include <sys/socket.h>
 
 
 
-HttpServer::HttpServer(const Socket &s) : _socket(s)
+HttpServer::HttpServer(const Socket &s) : _socket(s), _cgi(_socket)
 {
 	response.set_state(NOT_READY);
 }
@@ -16,7 +17,7 @@ HttpServer::~HttpServer()
 	// LOG(RED << "DELETING HTTPSERVER!" << END);
 }
 
-HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request_buffer), _socket(other._socket)
+HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request_buffer), _socket(other._socket), _cgi(_socket)
 {
 	// LOG("HttpServer : copied for sock_fd: " << _socket.get_fd());
 }
