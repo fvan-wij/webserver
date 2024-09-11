@@ -3,7 +3,7 @@ RUN_CMD		:= ./$(NAME)
 
 CFLAGS		+= -Wall -Wextra -std=c++11
 # CFLAGS		+= -Werror
-# CFLAGS		+= -g -fsanitize=address
+CFLAGS		+= -g -fsanitize=address
 
 IFLAGS		:=	-Iinclude
 

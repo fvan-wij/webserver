@@ -9,8 +9,11 @@ typedef struct s_location {
 
 typedef struct s_config {
 
-	std::vector<std::string>		root;
+	std::string						root;
 	std::vector<std::string>		index;
+	std::vector<std::string>		listen;
 	uint32_t						client_max_body_size;
 	t_location						location;
+	std::string						server_name;
+
 } t_config;
