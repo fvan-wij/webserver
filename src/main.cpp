@@ -77,7 +77,7 @@ const std::string invalid_method =
 
 const std::string get = 
 {
-	"GET /index.html HTTP/1.1\r\n"
+	"KAAS / HTTP/1.1\r\n"
 		"Host: example.com\r\n"
 		"Accept: application/json\r\n"
 		"Authorization: Basic dXNlcjpwYXNz\r\n"
@@ -86,15 +86,31 @@ const std::string get =
 		"\r\n"
 };
 
+// #include "Config.hpp"
+
 int main () {
 	HttpRequest request = HttpRequest();
-	request.parse(get);
-	std::cout << request << std::endl;
-	request.validate_with_config();
+	HttpServer 	http_server = HttpServer();
+	t_config	config;
 
+	//Create and validate request
+	request.parse(get);
+	http_server.is_request_valid(request, config);
+
+	//Handle request
 	auto handler = HandlerFactory::create_handler(request.get_type());
 	HttpResponse response = handler->handle_request(request);
 	std::cout << response.to_string() << std::endl;
 	return 0;
 }
+
+//Server.vector = ServerFactory(config file);
+//Server attribute: Config obj;
+// Server http_server.attribute: RequestValidator(config obj);
+//
+//INTERNAL SERVER LOGIC
+//client.read(data);
+//request.parse(data);
+//server.http_server.validate(request);
+//If validated, handle response
 

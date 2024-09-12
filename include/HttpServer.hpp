@@ -6,6 +6,7 @@
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
 #include "HandlerFactory.hpp"
+#include "Config.hpp"
 
 class HttpServer
 {
@@ -23,6 +24,7 @@ class HttpServer
 		void		respond();
 
 		bool		is_ready();
+		bool		is_request_valid(HttpRequest &request, t_config &config);
 		std::string	get_data();
 
 		HttpResponse	response;

@@ -5,7 +5,8 @@
 HttpResponse	BadRequestHandler::handle_request(const HttpRequest &request)
 {
 	HttpResponse response;
-	LOG_NOTICE("Handling BAD request...\n" << request);
+	// LOG_NOTICE("Handling BAD request..." << request);
+	LOG_NOTICE("Handling BAD request...");
 	response.set_status_code(400);
 	response.set_status_mssg("Bad Request");
 	response.set_state(READY);

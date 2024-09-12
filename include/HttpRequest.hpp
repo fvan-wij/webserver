@@ -34,9 +34,10 @@ class HttpRequest
 		std::string										get_value(const std::string &key) const;
 		RequestType										get_type() const {return _type;};
 
+		void											set_type(RequestType type);
+
 		void											parse(const std::string &buffer);
 
-		void											validate_with_config();
 		class HttpException : public std::exception
 	{
 		private:

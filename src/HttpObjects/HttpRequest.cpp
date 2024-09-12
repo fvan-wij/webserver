@@ -27,6 +27,11 @@ std::string	HttpRequest::get_value(const std::string &key) const
 	return "";
 }
 
+void	HttpRequest::set_type(RequestType type)
+{
+	_type = type;
+}
+
 void	HttpRequest::parse(const std::string &buffer)
 {
 	std::istringstream 			stream(buffer);
@@ -102,41 +107,6 @@ void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
 	if (tokens[2] != "HTTP/1.1\r")
 		throw HttpException("HttpRequest: Protocol not present!");
 	_protocol = tokens[2];
-}
-
-void	HttpRequest::validate_with_config()
-{
-	typedef struct s_location {
-		std::vector<std::string>	allowed_methods = 
-		{
-			{"GET"},
-		};
-		std::vector<std::string> URIs = 
-		{
-			{"/index.html"},
-			{"/index"},
-			{"/images"},
-		};
-	} t_location;
-
-	t_location test;
-	bool		permission_method = false;
-	bool		permission_uri = false;
-
-	for (auto methods : test.allowed_methods)
-	{
-		if (_method == methods)
-			permission_method = true;
-	}
-
-	for (auto uris : test.URIs)
-	{
-		if (_uri == uris)
-			permission_uri = true;
-	}
-	LOG_DEBUG(permission_method << ", " << permission_uri);
-	if (!permission_method || !permission_uri)
-		_type = RequestType::BadRequest;
 }
 
 std::ostream & operator << (std::ostream &out, HttpRequest &request)
