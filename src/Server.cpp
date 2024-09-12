@@ -45,7 +45,12 @@ void Server::handle_events()
 
 			std::string data = s.read();
 			HttpRequest request = HttpRequest();
-			request.parse(data);
+			try {
+				request.parse(data);
+			} catch (HttpRequest::HttpException& e) {
+				std::cerr << "Error parsing request: " << e.what() << std::endl;
+				return;
+			}
 			auto http_server = _fd_map.at(s.get_fd());
 			http_server->handle(request);
 		}

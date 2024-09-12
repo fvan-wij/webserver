@@ -15,6 +15,7 @@ SRCS		:=	Server.cpp \
 				HttpObjects/HttpResponse.cpp \
 				RequestHandlers/GetRequestHandler.cpp \
 				RequestHandlers/PostRequestHandler.cpp \
+				RequestHandlers/DeleteRequestHandler.cpp \
 				RequestHandlers/BadRequestHandler.cpp \
 				RequestHandlers/RequestHandler.cpp \
 				RequestHandlers/HandlerFactory.cpp \
@@ -31,6 +32,7 @@ HEADERS 	:=	Server.hpp \
 				HttpResponse.hpp \
 				GetRequestHandler.hpp \
 				PostRequestHandler.hpp \
+				DeleteRequestHandler.hpp \
 				RequestHandler.hpp	\
 				HandlerFactory.hpp \
 

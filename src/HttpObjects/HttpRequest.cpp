@@ -32,14 +32,15 @@ void	HttpRequest::parse(const std::string &buffer)
 	std::istringstream 			stream(buffer);
 	std::string					line;
 
-	try 
-	{
+	try {
 		_parse_request_line(stream);
-	}
-	catch (HttpException& e)
+	} catch (HttpException &e)
 	{
-		std::cerr << "Caught an exception: " << e.what() << std::endl;
+		LOG_ERROR(e.what());
+		_type = RequestType::BadRequest;
+		return;
 	}
+
 	size_t			colon_index;
 	bool 			body = false;
 	while (std::getline(stream, line))
@@ -91,14 +92,51 @@ void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
 	if (tokens.size() != 3)
 		throw HttpException("HttpRequest: Missing method, location or protocol!");
 	if (tokens[0] != "GET" && tokens[0] != "POST" && tokens[0] != "DELETE")
-		throw HttpException("HttpRequest: Method not present!");
+		throw HttpException("HttpRequest: Missing or incorrect request method!");
 	_method = tokens[0];
+	_type = REQUEST_TYPE.at(_method);
+
 	if (tokens[1][0] != '/')
 		throw HttpException("HttpRequest: URI not present!");
 	_uri = tokens[1];
 	if (tokens[2] != "HTTP/1.1\r")
 		throw HttpException("HttpRequest: Protocol not present!");
 	_protocol = tokens[2];
+}
+
+void	HttpRequest::validate_with_config()
+{
+	typedef struct s_location {
+		std::vector<std::string>	allowed_methods = 
+		{
+			{"GET"},
+		};
+		std::vector<std::string> URIs = 
+		{
+			{"/index.html"},
+			{"/index"},
+			{"/images"},
+		};
+	} t_location;
+
+	t_location test;
+	bool		permission_method = false;
+	bool		permission_uri = false;
+
+	for (auto methods : test.allowed_methods)
+	{
+		if (_method == methods)
+			permission_method = true;
+	}
+
+	for (auto uris : test.URIs)
+	{
+		if (_uri == uris)
+			permission_uri = true;
+	}
+	LOG_DEBUG(permission_method << ", " << permission_uri);
+	if (!permission_method || !permission_uri)
+		_type = RequestType::BadRequest;
 }
 
 std::ostream & operator << (std::ostream &out, HttpRequest &request)

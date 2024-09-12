@@ -8,11 +8,6 @@ HttpServer::HttpServer()
 	response.set_state(NOT_READY);
 }
 
-// HttpServer::HttpServer(Socket &s) : _socket(s)
-// {
-// 	response.set_state(NOT_READY);
-// }
-
 HttpServer::~HttpServer()
 {
 	// LOG(RED << "DELETING HTTPSERVER!" << END);
@@ -26,21 +21,10 @@ HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request
 
 void	HttpServer::handle(HttpRequest &request)
 {
-	if (request.get_method() == "POST")
-	{
+	auto handler = HandlerFactory::create_handler(request.get_type());
+	response = handler->handle_request(request);
+	if (response.get_type() == ResponseType::CGI)
 		_cgi.start("sleep_echo_var");
-		auto handler = HandlerFactory::create_handler(request.get_method());
-		this->response = handler->handle_request(request);
-		this->response.set_state(NOT_READY);
-		this->response.set_type(ResponseType::CGI);
-	}
-	else 
-	{
-		auto handler = HandlerFactory::create_handler(request.get_method());
-		this->response = handler->handle_request(request);
-		this->response.set_state(READY);
-		this->response.set_type(ResponseType::REGULAR);
-	}
 }
 
 std::string	HttpServer::get_data()

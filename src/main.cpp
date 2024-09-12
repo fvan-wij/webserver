@@ -5,35 +5,35 @@
 #include <cstring>
 
 
-int main()
-{
-	std::vector<Server> servers;
-
-	// parse config
-	// for each server_config in config.serverblock
-	// servers.push_back(server(serverrconfig))
-	servers.push_back({{8080, 8081}}); 
-	servers.push_back({{9090, 9091}}); 
-
-
-	LOG_NOTICE("Starting server(s)");
-	for(const Server &s : servers)
-	{
-		LOG_NOTICE(s);
-	}
-
-	while (1)
-	{
-		for(auto &s : servers)
-		{
-			if (s.should_exit())
-				return 0;
-			else if (s.poll() > 0)
-				s.handle_events();
-		}
-	}
-	return 0;
-}
+// int main()
+// {
+// 	std::vector<Server> servers;
+//
+// 	// parse config
+// 	// for each server_config in config.serverblock
+// 	// servers.push_back(server(serverrconfig))
+// 	servers.push_back({{8080, 8081}}); 
+// 	servers.push_back({{9090, 9091}}); 
+//
+//
+// 	LOG_NOTICE("Starting server(s)");
+// 	for(const Server &s : servers)
+// 	{
+// 		LOG_NOTICE(s);
+// 	}
+//
+// 	while (1)
+// 	{
+// 		for(auto &s : servers)
+// 		{
+// 			if (s.should_exit())
+// 				return 0;
+// 			else if (s.poll() > 0)
+// 				s.handle_events();
+// 		}
+// 	}
+// 	return 0;
+// }
 
 const std::string response = {
 	":authority: stackoverflow.com\r\n"
@@ -77,7 +77,7 @@ const std::string invalid_method =
 
 const std::string get = 
 {
-	"GET / HTTP/1.1\r\n"
+	"GET /index.html HTTP/1.1\r\n"
 		"Host: example.com\r\n"
 		"Accept: application/json\r\n"
 		"Authorization: Basic dXNlcjpwYXNz\r\n"
@@ -86,22 +86,15 @@ const std::string get =
 		"\r\n"
 };
 
-// int main () {
-// 	HttpRequest request = HttpRequest();
-// 	request.parse(invalid_method);
-// 	std::cout << request << std::endl;
-//
-// 	auto handler = HandlerFactory::create_handler(request.get_method());
-// 	HttpResponse response = handler->handle_request(request);
-// 	std::cout << response.to_string() << std::endl;
-// 	return 0;
-// }
+int main () {
+	HttpRequest request = HttpRequest();
+	request.parse(get);
+	std::cout << request << std::endl;
+	request.validate_with_config();
 
-// int main()
-// {
-// 	HttpServer a;
-// 	int fd = 5;
-//
-// 	std::map<int, std::shared_ptr<HttpServer>>	_fd_map;
-// 	_fd_map[fd] = std::make_shared<HttpServer>();
-// }
+	auto handler = HandlerFactory::create_handler(request.get_type());
+	HttpResponse response = handler->handle_request(request);
+	std::cout << response.to_string() << std::endl;
+	return 0;
+}
+
