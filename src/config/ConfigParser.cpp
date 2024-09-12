@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 
 static std::vector<std::string> tokenize_string(std::string string, std::string delimiter)
 {
@@ -34,66 +35,140 @@ std::string			 parse_root(std::vector<std::string> tokens, unsigned long &i)
 	return (root);
 }
 
-std::vector<std::string> parse_listen(std::vector<std::string> tokens, unsigned long &i)
+std::pair<std::string, int> parse_listen(std::vector<std::string> tokens, unsigned long &i)
 {
-	std::vector<std::string> listen;
+	std::pair<std::string, int> listen;
 	i++;
-	while (tokens[i].find(';') == std::string::npos)
-	{
-	std::cout << "lsiten " << tokens[i] << std::endl;
-		listen.push_back(tokens[i]);
-		i++;
-	}
-	listen.push_back(tokens[i].substr(0, tokens[i].length() - 1));
+	listen.first = tokens[i].substr(0, tokens[i].find(":"));
+	listen.second = std::stoi(tokens[i].substr(tokens[i].find(":"), tokens[i].size()));
+	i++;
 	return (listen);
 }
 
-std::vector<std::string> parse_index(std::vector<std::string> tokens, unsigned long &i)
+std::string parse_index(std::vector<std::string> tokens, unsigned long &i)
 {
-
+	std::string index;
+	i++;
+	index = tokens[i].substr(0, tokens[i].size() - 1);
+	i++;
+	return (index);
 }
 
-std::string parse_server_name(std::vector<std::string> tokens, unsigned long &i)
+std::vector<std::string> parse_server_name(std::vector<std::string> tokens, unsigned long &i)
 {
-	std::string server_name;
-
+	std::vector<std::string>	server_name;
+	i++;
+	while (tokens[i].find(";") == std::string::npos)
+	{
+		server_name.push_back(tokens[i]);
+		i++;
+	}
+	server_name.push_back(tokens[i].substr(0, tokens[i].size() - 1));
+	i++;
 	return (server_name);
 }
 
-t_location parse_location(std::vector<std::string> tokens, unsigned long &i)
+std::vector<std::string>	parse_allow_methods(std::vector<std::string> tokens, unsigned long &i)
 {
-	t_location	location;
-
-
-	return (location);
+	std::vector<std::string>	methods;
+	i++;
+	while (tokens[i].find(";") == std::string::npos)
+	{
+		methods.push_back(tokens[i]);
+		i++;
+	}
+	methods.push_back(tokens[i].substr(0, tokens[i].size() - 1));
+	i++;
+	return (methods);
 }
 
+std::pair<std::string, t_location> parse_location(std::vector<std::string> tokens, unsigned long &i)
+{
+	t_location	location;
+	std::pair<std::string, t_location> entry;
+	i++;
+	location.path = tokens[i];
+	entry.first = location.path;
+	while (tokens[i] != "}")
+	{
+		if (tokens[i] == "root")
+			location.root = parse_root(tokens, i);
+		if (tokens[i] == "index")
+			location.index = parse_index(tokens, i);
+		i++;
+	}
+	i++;
+	entry.second = location;
+	return (entry);
+}
+
+int	parse_client_max_body_size(std::vector<std::string> tokens, unsigned long &i)
+{
+	int client_max_body_size;
+	i++;
+	client_max_body_size = std::stoi(tokens[i]);
+	i++;
+	return (client_max_body_size);
+}
+
+std::pair<int, std::string> parse_error_page(std::vector<std::string> tokens, unsigned long &i)
+{
+	std::pair<int, std::string> error_page;
+	i++;
+	error_page.first = std::stoi(tokens[i]);
+	i++;
+	error_page.second = tokens[i];
+	i++;
+	return (error_page);
+
+}
+
+void	print_config(t_config config)
+{
+	std::cout << "config {" << std::endl;
+	print_listen(config);
+	std::cout << "root: " << config.root << std::endl;
+	std::cout << "index: " << config.index << std::endl;
+	print_server_name(config);
+	print_methods(config.methods);
+	print_location(config);
+	std::cout << "client_max_body_size: " << config.client_max_body_size << std::endl;
+}
 
 t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
 {
 	t_config server_config;
 	while (i < tokens.size())
 	{
+		std::cout << "test";
 		if (tokens[i] == "root")
 			server_config.root = parse_root(tokens, i);
 		if (tokens[i] == "listen")
-			server_config.listen = parse_listen(tokens, i);
-		// if (tokens[i] == "index")
-		// 	server_config.index = parse_index(tokens, i);
-		// if (tokens[i] == "server_name")
-		// 	server_config.server_name = parse_server_name(tokens, i);
-		// if (tokens[i] == "location")
-		// 	server_config.location = parse_location(tokens, i);
+			server_config.listen.push_back(parse_listen(tokens, i));
+		if (tokens[i] == "index")
+			server_config.index = parse_index(tokens, i);
+		if (tokens[i] == "server_name")
+			server_config.server_name = parse_server_name(tokens, i);
+		if (tokens[i] == "location")
+		{
+			std::cout << " location found" << std::endl;
+			std::pair<std::string, t_location>	location;
+			location = parse_location(tokens, i);
+			server_config.paths.push_back(location.first);
+			server_config.location.insert(location);
+
+		}
+		if (tokens[i] == "allow_methods")
+			server_config.methods = parse_allow_methods(tokens, i);
+		if (tokens[i] == "error_page")
+			server_config.error_page.push_back(parse_error_page(tokens, i));
 		if (tokens[i] == "}")
 		{
-			std::cout << "end of server object" << std::endl;
-			std::cout << server_config.root << std::endl;
-			std::cout << server_config.listen[0] << " " << server_config.listen[1] << std::endl;
-			return (server_config);
+			break ;
 		}
-		std::cout << "i: " << i << std::endl;
 		i++;
 	}
+	print_config(server_config);
 	return (server_config);
 }
 
@@ -126,7 +201,7 @@ std::vector<t_config>	parse_config(std::string config_path)
 		if (tokens[i] == "server\0")
 		{
 			t_config server_config;
-			std::cout << "server start" << std::endl;
+			// std::cout << "server start" << std::endl;
 			server_config = read_config(tokens, i);
 		}
 		i++;

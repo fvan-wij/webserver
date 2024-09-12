@@ -1,7 +1,7 @@
 NAME		:= app
 RUN_CMD		:= ./$(NAME)
 
-CFLAGS		+= -Wall -Wextra -std=c++11
+CFLAGS		+= -Wall -Wextra -std=c++17
 # CFLAGS		+= -Werror
 CFLAGS		+= -g -fsanitize=address
 
@@ -14,6 +14,7 @@ SRCS		:=	Server.cpp \
 				HttpServer.cpp \
 				CGI.cpp \
 				config/ConfigParser.cpp \
+				config/print_config.cpp \
 
 
 
