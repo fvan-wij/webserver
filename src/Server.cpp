@@ -125,10 +125,6 @@ void Server::_add_client(Socket s)
 
 	if (s.is_client())
 	{
-		// OOF
-		// _server_instances.insert(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
-		// _server_instances.emplace(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
-		// _fd_map[r_s.get_fd()] = std::make_unique<HttpServer>();
 		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>();
 		mask = POLLIN | POLLOUT;
 	}

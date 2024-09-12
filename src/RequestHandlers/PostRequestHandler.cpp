@@ -1,8 +1,9 @@
 #include "PostRequestHandler.hpp"
 
 
-HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request)
+HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
+	(void) config;
 	HttpResponse response;
 	//Should trigger CGI
 	response.set_status_code(200);

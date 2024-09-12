@@ -2,9 +2,11 @@
 #include "Logger.hpp"
 
 
-HttpResponse	BadRequestHandler::handle_request(const HttpRequest &request)
+HttpResponse	BadRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
 	HttpResponse response;
+	(void) config;
+	(void) request;
 	// LOG_NOTICE("Handling BAD request..." << request);
 	LOG_NOTICE("Handling BAD request...");
 	response.set_status_code(400);

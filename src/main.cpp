@@ -77,7 +77,7 @@ const std::string invalid_method =
 
 const std::string get = 
 {
-	"KAAS / HTTP/1.1\r\n"
+	"DELETE / HTTP/1.1\r\n"
 		"Host: example.com\r\n"
 		"Accept: application/json\r\n"
 		"Authorization: Basic dXNlcjpwYXNz\r\n"
@@ -95,11 +95,11 @@ int main () {
 
 	//Create and validate request
 	request.parse(get);
-	http_server.is_request_valid(request, config);
+	// http_server.is_request_valid(request, config);
 
 	//Handle request
 	auto handler = HandlerFactory::create_handler(request.get_type());
-	HttpResponse response = handler->handle_request(request);
+	HttpResponse response = handler->handle_request(request, config);
 	std::cout << response.to_string() << std::endl;
 	return 0;
 }
