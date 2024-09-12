@@ -10,7 +10,7 @@ typedef struct s_location {
 	{
 		{"GET"},
 		{"POST"},
-		{"DELETE"}
+		{"DELETE"},
 	};
 	std::string root = {"/index.html"};
 	std::string index = {"index.html"};

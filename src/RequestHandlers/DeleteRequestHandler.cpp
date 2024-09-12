@@ -19,6 +19,10 @@ static bool	validate_method(const HttpRequest &request, t_config &config)
 			return true;
 		}
 	}
+	else if (config.location_map.find(request.get_uri()) != config.location_map.end() && is_method_allowed(request.get_method(), config.location_map[request.get_uri()].allowed_methods))
+	{
+		return true;
+	}
 	return false;
 }
 
