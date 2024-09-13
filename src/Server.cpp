@@ -100,7 +100,6 @@ int Server::poll()
 		{
 			auto http_server = _fd_map.at(s.get_fd());
 			http_server->poll_cgi();
-			LOG_DEBUG("checking " << s);
 		}
 	}
 
@@ -155,6 +154,7 @@ void Server::_add_client(Socket s)
 void Server::_client_remove(int index)
 {
 	const int fd = _pfds[index].fd;
+
 
 
 	if (_sockets[index].is_client())

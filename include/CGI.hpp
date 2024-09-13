@@ -16,6 +16,7 @@ public:
 	CGI() = delete;
 
 	void start(std::string path);
+	void stop();
 	bool poll();
 
 	enum class PipeFD

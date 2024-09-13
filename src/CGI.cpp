@@ -5,6 +5,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cstring>
+#include <strings.h>
 #include <sys/wait.h>
 #include <cstdint>
 #include <cstdlib>
@@ -18,10 +19,10 @@
 
 CGI::CGI(const Socket &s) : _socket(s), _is_running(false)
 {
-
+	_buffer.clear();
+	_pid = 0;
+	::bzero(_pipes, int(PipeFD::COUNT) * sizeof(int));
 }
-
-
 
 CGI::~CGI()
 {
@@ -47,9 +48,8 @@ CGI::~CGI()
 		{
 			LOG_DEBUG("child with pid: " << _pid << " was signalled : " << strsignal(WTERMSIG(status)));
 		}
-
-
 	}
+	LOG_DEBUG("CGI Destroyed");
 }
 
 
@@ -84,13 +84,13 @@ void CGI::start(std::string path)
 		char *args[] =
 		{
 			(char *) path.c_str(),
-			(char*) ("1"),
+			(char*) ("3"),
 			NULL,
 		};
 
 		if (_socket.get_port() == 9091)
 		{
-			args[1] = (char *) "1";
+			args[1] = (char *) "3";
 		}
 
 
@@ -102,7 +102,7 @@ void CGI::start(std::string path)
 	}
 	else
 	{
-		LOG_NOTICE(_socket << " starting CGI with path: " << path << " PID " << _pid);
+		LOG_NOTICE(_socket << " CGI(" << _pid << ") started with path: " << path);
 	}
 	close(_pipes[int(PipeFD::WRITE)]);
 }
@@ -132,7 +132,7 @@ bool CGI::poll()
 		}
 		else
 		{
-			LOG_NOTICE(_socket << " CGI exited with code: " << WEXITSTATUS(status));
+			LOG_NOTICE(_socket << " CGI(" << _pid << ") exited with code: " << WEXITSTATUS(status));
 			// usleep(1);
 
 			// read until the pipe is empty.
