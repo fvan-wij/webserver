@@ -18,20 +18,34 @@ class HttpServer
 
 		// HttpServer(Socket &s);
 
+		enum class State {
+			ReadingHeaders,
+			ReadingBody,
+			GeneratingResponse,
+			ProcessingCGI,
+		};
 
-		void		handle(HttpRequest &request);
+		void		handle(std::string_view data);
 		void 		poll_cgi();
 		void		respond();
+		void		on_data_received(std::string_view data);
+		void		handle_headers(std::string_view data);
+		void		handle_body(std::string_view data);
+		void		generate_response();
 
 		bool		is_ready();
-		// bool		is_request_valid(HttpRequest &request, t_config &config);
 		std::string	get_data();
 
 		HttpResponse	response;
+		HttpRequest		request;
 
 	private:
-		std::string	_request_buffer;
+		std::string	_header_buffer;
+		std::string _body_buffer;
 		// Socket		&_socket;
 		CGI			_cgi;
+		bool		_b_headers_complete;
+		bool		_b_body_complete;
+		State		_current_state;
 
 };

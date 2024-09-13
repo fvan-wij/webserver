@@ -44,15 +44,9 @@ void Server::handle_events()
 			// LOG("fd: " << pfd.fd << " POLLIN");
 
 			std::string data = s.read();
-			HttpRequest request = HttpRequest();
-			try {
-				request.parse(data);
-			} catch (HttpRequest::HttpException& e) {
-				std::cerr << "Error parsing request: " << e.what() << std::endl;
-				return;
-			}
+			LOG_DEBUG(data);
 			auto http_server = _fd_map.at(s.get_fd());
-			http_server->handle(request);
+			http_server->handle(data);
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{

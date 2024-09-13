@@ -1,7 +1,7 @@
 NAME		:= app
 RUN_CMD		:= ./$(NAME) 
 
-CFLAGS		+= -Wall -Wextra -std=c++17 -g
+CFLAGS		+= -Wall -Wextra -std=c++17 
 
 IFLAGS		:=	-Iinclude
 
@@ -75,7 +75,6 @@ compile_commands: fclean
 
 norm:
 	norminette include src
-
 
 cgi:
 	mkdir -p ~/.local/bin 

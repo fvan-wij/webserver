@@ -1,31 +1,6 @@
 #include "DeleteRequestHandler.hpp"
 #include "Logger.hpp"
 
-static bool			is_method_allowed(std::string_view method, std::vector<std::string> v)
-{
-	bool	allowed = false;
-
-	if (v.size() > 0 && std::find(v.begin(), v.end(), method) != v.end())
-		allowed = true;
-	return allowed;
-}
-
-static bool	validate_method(const HttpRequest &request, t_config &config)
-{
-	if (config.methods.empty() || is_method_allowed(request.get_method(), config.methods))
-	{
-		if (config.location_map.find(request.get_uri()) != config.location_map.end() && is_method_allowed(request.get_method(), config.location_map[request.get_uri()].allowed_methods))
-		{
-			return true;
-		}
-	}
-	else if (config.location_map.find(request.get_uri()) != config.location_map.end() && is_method_allowed(request.get_method(), config.location_map[request.get_uri()].allowed_methods))
-	{
-		return true;
-	}
-	return false;
-}
-
 HttpResponse	DeleteRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
 	(void) config;

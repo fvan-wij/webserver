@@ -18,13 +18,12 @@ std::string	HttpRequest::get_protocol() const
 
 std::string	HttpRequest::get_value(const std::string &key) const
 {
-	auto it = _header.at(key);
-	if (!it.empty())
+	if (_header.find(key) != _header.end())
 	{
-		return it;
+		return _header.at(key);
 	}
 	LOG_DEBUG("value for given key " << key << "is empty");
-	return "";
+	return std::string();
 }
 
 void	HttpRequest::set_type(RequestType type)
@@ -37,15 +36,7 @@ void	HttpRequest::parse(const std::string &buffer)
 	std::istringstream 			stream(buffer);
 	std::string					line;
 
-	try {
-		_parse_request_line(stream);
-	} catch (HttpException &e)
-	{
-		LOG_ERROR(e.what());
-		_type = RequestType::BadRequest;
-		return;
-	}
-
+	_parse_request_line(stream);
 	size_t			colon_index;
 	bool 			body = false;
 	while (std::getline(stream, line))
@@ -68,6 +59,37 @@ void	HttpRequest::parse(const std::string &buffer)
 		else if (body)
 			_body += line;
 	}
+}
+
+void	HttpRequest::parse_header(const std::string &data)
+{
+	std::istringstream 			stream(data);
+	std::string					line;
+
+	_parse_request_line(stream);
+	size_t			colon_index;
+	while (std::getline(stream, line))
+	{
+			if (line[0] == ':')
+				colon_index = line.rfind(':');
+			else
+				colon_index = line.find(':');
+			if (colon_index != std::string::npos)
+			{
+				std::string key = line.substr(0, colon_index);
+				std::string value = line.substr(colon_index + 2, line.length() - colon_index);
+				_header.emplace(key, value);
+			}
+	}
+	_b_header_parsed = true;
+	LOG_NOTICE("HEADER IS PARSED!");
+}
+
+void HttpRequest::parse_body(const std::string &data)
+{
+	_body += data;
+	_b_body_parsed = true;
+	LOG_NOTICE("BODY IS PARSED!");
 }
 
 static std::vector<std::string>	tokenize_string(std::string string, std::string delimiter)
@@ -115,7 +137,7 @@ std::ostream & operator << (std::ostream &out, HttpRequest &request)
 		out << YELLOW << request.get_method() << " " << request.get_uri() << " " << request.get_protocol() << std::endl;
 	for (const auto& [key, value] : request.get_headers())
 		out << key <<  ":" << value << "\n";
-	out << "\n" << request.get_body() << END << std::endl;
+	out << END << "\n" << RED << request.get_body() << END << std::endl;
 	return out;
 }
 
@@ -125,6 +147,6 @@ std::ostream & operator << (std::ostream &out, const HttpRequest &request)
 		out << YELLOW << request.get_method() << " " << request.get_uri() << " " << request.get_protocol() << std::endl;
 	for (const auto& [key, value] : request.get_headers())
 		out << key <<  ":" << value << "\n";
-	out << "\n" << request.get_body() << END << std::endl;
+	out << END << "\n" << RED << request.get_body() << END << std::endl;
 	return out;
 }

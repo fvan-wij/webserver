@@ -69,7 +69,6 @@ std::string Socket::read()
 	{
 		UNIMPLEMENTED("recv failed");
 	}
-
 	return buffer;
 }
 

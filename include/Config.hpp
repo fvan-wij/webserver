@@ -27,3 +27,5 @@ typedef struct s_config {
 	int											client_max_body_size = 1024;
 	std::vector<std::pair<int, std::string>>	error_page = {{402, "/error/402.html"}, {403, "/error/403.html"}};
 } t_config;
+
+static t_config TEST_CONFIG;
