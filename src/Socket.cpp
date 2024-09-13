@@ -65,7 +65,7 @@ std::string Socket::read()
 	char buffer[SOCKET_READ_SIZE];
 
 	bzero(&buffer, sizeof(buffer));
-	if (recv(_fd, buffer, SOCKET_READ_SIZE, 0) == -1)
+	if (recv(_fd, buffer, SOCKET_READ_SIZE - 1, 0) == -1)
 	{
 		UNIMPLEMENTED("recv failed");
 	}

@@ -44,7 +44,6 @@ void Server::handle_events()
 			// LOG("fd: " << pfd.fd << " POLLIN");
 
 			std::string data = s.read();
-			LOG_DEBUG(data);
 			auto http_server = _fd_map.at(s.get_fd());
 			http_server->handle(data);
 		}
