@@ -4,10 +4,10 @@
 #include <cwchar>
 #include <string>
 #include <sys/socket.h>
+#include "HandlerFactory.hpp"
 
 
-
-HttpServer::HttpServer(const Socket &s) : _socket(s), _cgi(_socket)
+HttpServer::HttpServer(const Socket s) : _socket(s), _cgi(_socket)
 {
 	response.set_state(NOT_READY);
 }

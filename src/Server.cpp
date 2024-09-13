@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <netinet/in.h>
 #include <sched.h>
 #include <string>
@@ -12,6 +13,7 @@
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <utility>
 #include <vector>
 
 Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
@@ -31,16 +33,16 @@ Server::Server(const Server &other)
 {
        this->_sockets = other._sockets;
        this->_pfds = other._pfds;
-       this->_fd_map = other._fd_map;
        this->_exit_server = other._exit_server;
 }
 
 void Server::handle_events()
 {
-	for (size_t i = 0; i < _pfds.size(); i++)
+	for (size_t i = 0; i < _sockets.size(); i++)
 	{
 		pollfd &pfd = _pfds[i];
-		Socket &s = _sockets[i];
+		Socket &s = _sockets[i].first;
+		auto server = _sockets[i].second;
 		// LOG("checking fd: " << pfd.fd << " : socket fd : " << _sockets[i].get_fd());
 
 		if (s.is_listener() && ready_to_read(pfd.revents))
@@ -64,8 +66,7 @@ void Server::handle_events()
 				// LOG_INFO(s << " received:\n ["  << data << "]");
 				HttpRequest request = HttpRequest();
 				request.parse(data);
-				auto http_server = _fd_map.at(s.get_fd());
-				http_server->handle(request);
+				server->handle(request);
 
 			}
 
@@ -73,10 +74,9 @@ void Server::handle_events()
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
 			// LOG("fd: " << pfd.fd << " POLLOUT");
-			auto http_server = _fd_map.at(s.get_fd());
-			if (http_server->response.is_ready())
+			if (server->response.is_ready())
 			{
-				std::string data = http_server->get_data();
+				std::string data = server->get_data();
 				// LOG_INFO(s << " Sending response: \n"  << http_server->response.to_string());
 				LOG_INFO(s << " Sending response");
 				s.write(data);
@@ -94,12 +94,18 @@ int Server::poll()
 {
 	int n_ready = _poll_events();
 
-	for (const Socket &s : _sockets)
+	for (const auto &p : _sockets)
 	{
-		if (s.is_client())
+		if (p.first.is_client())
 		{
-			auto http_server = _fd_map.at(s.get_fd());
+			auto http_server = p.second;
 			http_server->poll_cgi();
+			// -----------------------
+			if (http_server->is_ready())
+			{
+				LOG_DEBUG("http_server of " << p.first << " is ready");
+			}
+			// -----------------------
 		}
 	}
 
@@ -113,9 +119,14 @@ std::vector<pollfd>& Server::get_pfds()
 	return _pfds;
 }
 
-const std::vector<Socket>& Server::get_sockets() const
+const std::vector<Socket> Server::get_sockets() const
 {
-	return _sockets;
+	std::vector<Socket> socks;
+	for(const auto &p : _sockets)
+	{
+		socks.push_back(p.first);
+	}
+	return socks;
 }
 
 int Server::_poll_events()
@@ -136,14 +147,13 @@ void Server::_add_client(Socket s)
 
 	// we copy `s` into _sockets where is will reside until we call `_client_remove`.
 	// This means that all other refences to still `s` will become invalid the moment this function returns.
-	_sockets.push_back(s);
+	_sockets.push_back(std::make_pair(s, std::make_shared<HttpServer>(s)));
 
-	Socket &r_s = _sockets.back();
+	Socket &r_s = _sockets.back().first;
 
 
 	if (s.is_client())
 	{
-		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>(r_s);
 		mask = POLLIN | POLLOUT;
 	}
 
@@ -156,16 +166,9 @@ void Server::_client_remove(int index)
 	const int fd = _pfds[index].fd;
 
 
-
-	if (_sockets[index].is_client())
-	{
-		auto http_server = _fd_map.find(_sockets[index].get_fd());
-		_fd_map.erase(http_server);
-	}
-
 	close(fd);
 	_pfds.erase(_pfds.begin() + index);
-	const Socket tmp = _sockets[index];
+	const Socket tmp = _sockets[index].first;
 	_sockets.erase(_sockets.begin() + index);
 	LOG_DEBUG(tmp << " Removed, total sockets: " << _sockets.size());
 }

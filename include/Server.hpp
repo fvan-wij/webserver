@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <sys/poll.h>
+#include <utility>
 #include <vector>
 #include "HttpServer.hpp"
 #include "Socket.hpp"
@@ -30,12 +31,11 @@ public:
 	bool										should_exit(){return _exit_server;};
 
 	std::vector<pollfd>& 						get_pfds();
-	const std::vector<Socket>&					get_sockets() const;
+	const std::vector<Socket>					get_sockets() const;
 
 private:
-	std::unordered_map<int, std::shared_ptr<HttpServer>>	_fd_map;
 	std::vector<pollfd> 						_pfds;
-	std::vector<Socket> 						_sockets;
+	std::vector<std::pair<Socket, std::shared_ptr<HttpServer>>>	_sockets;
 	bool										_exit_server;
 
 	int											_poll_events();

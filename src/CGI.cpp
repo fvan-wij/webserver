@@ -49,7 +49,7 @@ CGI::~CGI()
 			LOG_DEBUG("child with pid: " << _pid << " was signalled : " << strsignal(WTERMSIG(status)));
 		}
 	}
-	LOG_DEBUG("CGI Destroyed");
+	LOG_DEBUG("CGI(" << _pid << ") Destroyed");
 }
 
 

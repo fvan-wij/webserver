@@ -5,12 +5,13 @@
 #include <string>
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
-#include "HandlerFactory.hpp"
+
+
 
 class HttpServer
 {
 	public:
-		HttpServer(const Socket &s);
+		HttpServer(const Socket s);
 		HttpServer(const HttpServer &);
 		HttpServer &operator=(const HttpServer &);
 		~HttpServer();
@@ -29,7 +30,7 @@ class HttpServer
 
 	private:
 		std::string	_request_buffer;
-		const Socket		&_socket;
+		const Socket		_socket;
 		CGI			_cgi;
 
 };
