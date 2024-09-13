@@ -18,14 +18,14 @@ class HttpResponse
 {
 	public:
 		void			set_status_code(const int status);
-		void			set_status_mssg(const std::string &mssg);
+		void			set_status_mssg(const std::string &msg);
 		void			set_body(const std::string &body);
-		void			set_state(bool state){_ready = state;};
+		void			set_state(bool state);
 		void			set_type(ResponseType type){_type = type;};
 
 		void			append_body(std::string &buffer);
 
-		bool			is_ready(){return _ready;};
+		bool			is_ready();
 
 		ResponseType	get_type(){return _type;};
 
@@ -35,6 +35,6 @@ class HttpResponse
 		int				_status_code;
 		std::string		_status_message;
 		std::string		_body;
-		bool			_ready;
+		bool			_is_ready;
 		ResponseType	_type;
 };

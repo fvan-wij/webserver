@@ -1,4 +1,6 @@
 #include "HttpResponse.hpp"
+#include "Logger.hpp"
+#include <system_error>
 
 void		HttpResponse::set_status_code(const int status)
 {
@@ -18,6 +20,17 @@ void		HttpResponse::set_body(const std::string &body)
 void			HttpResponse::append_body(std::string &buffer)
 {
 	_body += buffer;
+}
+
+bool			HttpResponse::is_ready()
+{
+	// LOG_DEBUG("http reponse ready? | " << _is_ready);
+	return	_is_ready;
+}
+
+void HttpResponse::set_state(bool state)
+{
+	_is_ready = state;
 }
 
 std::string		HttpResponse::to_string() const

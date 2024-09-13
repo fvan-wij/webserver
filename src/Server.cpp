@@ -4,7 +4,6 @@
 #include "meta.hpp"
 #include <cstdint>
 #include <cstring>
-#include <functional>
 #include <iostream>
 #include <netinet/in.h>
 #include <sched.h>
@@ -61,7 +60,8 @@ void Server::handle_events()
 			}
 			else
 			{
-				LOG_INFO(s << " received:\n ["  << data << "]");
+				LOG_INFO(s << " received data");
+				// LOG_INFO(s << " received:\n ["  << data << "]");
 				HttpRequest request = HttpRequest();
 				request.parse(data);
 				auto http_server = _fd_map.at(s.get_fd());
@@ -77,7 +77,8 @@ void Server::handle_events()
 			if (http_server->response.is_ready())
 			{
 				std::string data = http_server->get_data();
-				LOG_INFO(s << " Sending response: \n"  << http_server->response.to_string());
+				// LOG_INFO(s << " Sending response: \n"  << http_server->response.to_string());
+				LOG_INFO(s << " Sending response");
 				s.write(data);
 				_client_remove(i);
 			}
@@ -99,6 +100,7 @@ int Server::poll()
 		{
 			auto http_server = _fd_map.at(s.get_fd());
 			http_server->poll_cgi();
+			LOG_DEBUG("checking " << s);
 		}
 	}
 
@@ -139,6 +141,7 @@ void Server::_add_client(Socket s)
 
 	Socket &r_s = _sockets.back();
 
+
 	if (s.is_client())
 	{
 		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>(r_s);
@@ -157,7 +160,6 @@ void Server::_client_remove(int index)
 	if (_sockets[index].is_client())
 	{
 		auto http_server = _fd_map.find(_sockets[index].get_fd());
-		// send kill to cgi
 		_fd_map.erase(http_server);
 	}
 
