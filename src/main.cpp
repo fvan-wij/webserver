@@ -1,15 +1,27 @@
 #include "Server.hpp"
-#include "HttpRequest.hpp"
-#include "HandlerFactory.hpp"
 #include <cstring>
+#include <fstream>
+#include <ostream>
+#include <string>
+#include <unistd.h>
 #include "Logger.hpp"
+
+void write_pid_to_file(const std::string name)
+{
+	std::ofstream file(name);
+
+	file << getpid() << std::endl;
+	file.close();
+}
 
 
 int main()
 {
 	std::vector<Server> servers;
 
-	servers.push_back({{8080, 8081}}); 
+	write_pid_to_file("pid.txt");
+
+	// servers.push_back({{8080, 8081}}); 
 	servers.push_back({{9090, 9091}}); 
 
 	LOG_NOTICE("Starting server(s)");

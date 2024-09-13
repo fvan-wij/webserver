@@ -1,14 +1,11 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
-#include <map>
 #include <sys/poll.h>
 #include <vector>
 #include "HttpServer.hpp"
 #include "Socket.hpp"
 #include <memory>
-#include <algorithm>
 
 class Server
 {

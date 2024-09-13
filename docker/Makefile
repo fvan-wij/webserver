@@ -7,7 +7,7 @@ LOCAL_VOLUME = $(CURDIR)/html
 IS_CONTAINER_RUNNING := $(shell docker ps -a | grep $(NAME_CONTAINER) > /dev/null && docker container inspect -f '{{.State.Status}}' $(NAME_CONTAINER))
 
 ifneq ($(IS_CONTAINER_RUNNING), running)
-	RUN_CMD = docker run -p 80:80 -d -v $(LOCAL_VOLUME):/var/www/mysite/web --name $(NAME_CONTAINER) $(NAME_IMG)
+	RUN_CMD = docker run -p 80:80 -p 9999:9999 -p 8888:8888 -d -v $(LOCAL_VOLUME):/var/www/mysite/web --name $(NAME_CONTAINER) $(NAME_IMG)
 else
 	RUN_CMD = docker restart $(NAME_CONTAINER)
 endif

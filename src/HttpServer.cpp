@@ -14,6 +14,7 @@ HttpServer::HttpServer(const Socket &s) : _socket(s), _cgi(_socket)
 
 HttpServer::~HttpServer()
 {
+	
 	// LOG(RED << "DELETING HTTPSERVER!" << END);
 }
 

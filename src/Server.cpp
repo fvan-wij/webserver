@@ -54,11 +54,21 @@ void Server::handle_events()
 			// LOG("fd: " << pfd.fd << " POLLIN");
 
 			std::string data = s.read();
-			LOG_INFO(s << " received: \n"  << data);
-			HttpRequest request = HttpRequest();
-			request.parse(data);
-			auto http_server = _fd_map.at(s.get_fd());
-			http_server->handle(request);
+			if (data.empty())
+			{
+				LOG_DEBUG("received empty data, removing client " << s);
+				_client_remove(i);
+			}
+			else
+			{
+				LOG_INFO(s << " received:\n ["  << data << "]");
+				HttpRequest request = HttpRequest();
+				request.parse(data);
+				auto http_server = _fd_map.at(s.get_fd());
+				http_server->handle(request);
+
+			}
+
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
@@ -147,6 +157,7 @@ void Server::_client_remove(int index)
 	if (_sockets[index].is_client())
 	{
 		auto http_server = _fd_map.find(_sockets[index].get_fd());
+		// send kill to cgi
 		_fd_map.erase(http_server);
 	}
 

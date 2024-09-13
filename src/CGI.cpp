@@ -2,8 +2,10 @@
 #include "meta.hpp"
 #include <bits/pthread_stack_min-dynamic.h>
 #include <cerrno>
+#include <csignal>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <sys/wait.h>
 #include <cstdint>
 #include <cstdlib>
@@ -22,10 +24,41 @@ CGI::CGI(const Socket &s) : _socket(s), _is_running(false)
 
 
 
+CGI::~CGI()
+{
+	// NOTE Maybe use SIGKILL instead?
+	if (this->_is_running)
+	{
+		if (kill(_pid, SIGINT) == -1)
+		{
+			LOG_ERROR("kill failed " << strerror(errno));
+		}
+		LOG_DEBUG(_socket << " killed child proc with pid " << _pid);
+		int status;
+		if (::waitpid(_pid, &status, 0) == -1)
+		{
+			UNIMPLEMENTED("waitpid failed" << strerror(errno));
+		}
+
+		if (WIFEXITED(status))
+		{
+			LOG_DEBUG("pid: " << _pid << " exited with code: " << WEXITSTATUS(status));
+		}
+		else if (WIFSIGNALED(status))
+		{
+			LOG_DEBUG("child with pid: " << _pid << " was signalled : " << strsignal(WTERMSIG(status)));
+		}
+
+
+	}
+}
+
+
+
+// TODO Max chhildred thing and a LIFO structure that keeps that of the cgi's that wont fit in the Max-child spec
 void CGI::start(std::string path)
 {
 	_is_running = true;
-	LOG_NOTICE(_socket << " starting CGI with path: " << path);
 	if (pipe(_pipes) == -1)
 	{
 		UNIMPLEMENTED("pipe failed" << strerror(errno));
@@ -41,12 +74,12 @@ void CGI::start(std::string path)
 	else if (_pid == 0)
 	{
 		// Attach "this" proccess's STDOUT_FILENO to pipe.
-		if (dup2(_pipes[PipeFD::WRITE], STDOUT_FILENO) == -1)
+		if (dup2(_pipes[int(PipeFD::WRITE)], STDOUT_FILENO) == -1)
 		{
 			UNIMPLEMENTED("dup2 failed" << strerror(errno));
 		}
 
-		close(_pipes[PipeFD::WRITE]);
+		close(_pipes[int(PipeFD::WRITE)]);
 
 
 		char *args[] =
@@ -68,7 +101,11 @@ void CGI::start(std::string path)
 		}
 		exit(123);
 	}
-	close(_pipes[PipeFD::WRITE]);
+	else
+	{
+		LOG_NOTICE(_socket << " starting CGI with path: " << path << " PID " << _pid);
+	}
+	close(_pipes[int(PipeFD::WRITE)]);
 }
 
 
@@ -88,19 +125,26 @@ bool CGI::poll()
 	}
 
 	// NOTE maybe we can just straight up attach the pipe from the CGI to the client's socket_fd.
-	if (WIFEXITED(status))
+	else if (WIFEXITED(status))
 	{
-		LOG_NOTICE(_socket << " CGI exited with code: " << WEXITSTATUS(status));
-		// usleep(1);
-
-		// read until the pipe is empty.
-		while (_read() == PIPE_READ_SIZE - 1)
+		if (WIFSIGNALED(status))
 		{
-			;
+			LOG_DEBUG("child with pid: " << _pid << " was signalled : " << strsignal(WTERMSIG(status)));
 		}
-		close(_pipes[PipeFD::READ]);
-		_is_running = false;
-		return true;
+		else
+		{
+			LOG_NOTICE(_socket << " CGI exited with code: " << WEXITSTATUS(status));
+			// usleep(1);
+
+			// read until the pipe is empty.
+			while (_read() == PIPE_READ_SIZE - 1)
+			{
+				;
+			}
+			close(_pipes[int(PipeFD::READ)]);
+			_is_running = false;
+			return true;
+		}
 	}
 	return false;	
 }
@@ -115,7 +159,7 @@ int32_t CGI::_read()
 {
 	char buffer[PIPE_READ_SIZE];
 
-	int32_t read_count = read(_pipes[PipeFD::READ], &buffer, PIPE_READ_SIZE - 1);
+	int32_t read_count = read(_pipes[int(PipeFD::READ)], &buffer, PIPE_READ_SIZE - 1);
 	if (read_count == -1)
 	{
 		UNIMPLEMENTED("read failed " << strerror(errno));
@@ -123,10 +167,4 @@ int32_t CGI::_read()
 
 	_buffer += buffer;
 	return read_count;
-}
-
-
-CGI::~CGI()
-{
-
 }
