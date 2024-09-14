@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <poll.h>
+#include <vector>
 
 enum class SocketType 
 {
@@ -26,7 +27,7 @@ class Socket
 		
 		// Funcs
 		Socket 						accept();
-		std::string 				read();
+		std::vector<char> 			read();
 		void 						write(const std::string s);
 
 		// Getters

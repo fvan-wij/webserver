@@ -21,13 +21,18 @@ HttpServer::HttpServer(const HttpServer &other) : _header_buffer(other._header_b
 }
 
 
-void	HttpServer::handle(std::string_view data)
+void	HttpServer::handle(std::vector<char> data)
 {
 	on_data_received(data);
 }
 
-void		HttpServer::on_data_received(std::string_view data)
+void		HttpServer::on_data_received(std::vector<char> data)
 {
+	if (data.empty())
+	{
+		generate_response();
+		LOG_WARNING("IT'S EMPTY NOW");
+	}
 	switch (_current_state)
 	{
 		case State::ReadingHeaders:
@@ -45,27 +50,28 @@ void		HttpServer::on_data_received(std::string_view data)
 	}
 }
 
-void		HttpServer::handle_headers(std::string_view data)
+void		HttpServer::handle_headers(std::vector<char> data)
 {
 	static int iterations;
 	LOG_DEBUG("handle_headers #" << iterations);
 	iterations++;
-	size_t	header_size = data.find("\r\n\r\n");
+	std::string_view str = data.data();
+	size_t	header_size = str.find("\r\n\r\n");
 	if (header_size != std::string::npos)
 	{
-		_header_buffer += data.substr(0, header_size);
+		_header_buffer += str.substr(0, header_size);
 		_b_headers_complete = true;
-		_body_buffer += data.substr(header_size + 4, data.length() - _header_buffer.length());
+		_body_buffer.insert(_body_buffer.end(), data.begin() + (header_size + 4), data.end());
 		request.parse_header(_header_buffer);
-		// LOG_INFO("==HEADER_BUFFER==\n" << _header_buffer);
-		// LOG_INFO("==BODY_BUFFER==\n" << _body_buffer);
-		if (data.find("WebKitFormBoundary") != std::string::npos){
-			size_t i = data.find("WebKitFormBoundary");
+		LOG_INFO("==HEADER_BUFFER==\n" << _header_buffer);
+		LOG_INFO("==BODY_BUFFER==\n" << _body_buffer.data());
+		if (str.find("WebKitFormBoundary") != std::string::npos){
+			size_t i = str.find("WebKitFormBoundary");
 			_current_state = State::ReadingBody;
-			handle_body(&data.data()[i]);
+			handle_body(static_cast<std::vector<char>>(data.data()[i]));
 			return;
 		}
-		else if ((header_size + 4) == data.length())
+		else if ((header_size + 4) == str.length())
 		{
 			// _current_state = State::ReadingBody;
 			_current_state = State::GeneratingResponse;
@@ -75,39 +81,61 @@ void		HttpServer::handle_headers(std::string_view data)
 		std::string str = request.get_value("Content-Length");
 		if (!str.empty())
 		{
-			size_t content_length = std::stoi(request.get_value("Content-Length"));
-			if (content_length == _body_buffer.length())
-			{
-				_current_state = State::GeneratingResponse;
-				_b_body_complete = true;
-				generate_response();
+			try {
+				size_t content_length = std::stoi(str);
+				if (content_length == _body_buffer.size())
+				{
+					_current_state = State::GeneratingResponse;
+					_b_body_complete = true;
+					generate_response();
+				}
+				else
+				{
+					_current_state = State::ReadingBody;
+					return;
+				}
+			}
+			catch (std::invalid_argument &e){
+				LOG_ERROR("Hmv'e" << e.what());
+				exit(123);
 			}
 		}
-		// for (auto c : _body_buffer)
-		// 	LOG_ERROR((int)c);
-		// LOG_ERROR(_body_buffer.length());
 	}
 	else {
-		_header_buffer += data;
+		_header_buffer.append(data.data(), data.size());
 	}
 }
 
 
-void		HttpServer::handle_body(std::string_view data)
+void		HttpServer::handle_body(std::vector<char> data)
 {
 	static int it;
+	static size_t len;
 	LOG_DEBUG("handle_body #" << it);
 	it++;
 
+	len = _body_buffer.size();
 	if (data.empty())
 	{
 		_current_state = State::GeneratingResponse;
 		_b_body_complete = true;
 		LOG_INFO("==HEADER_BUFFER==\n" << _header_buffer);
-		LOG_INFO("==BODY_BUFFER==\n" << _body_buffer);
+		LOG_INFO("==BODY_BUFFER==\n" << _body_buffer.data());
 		request.parse_body(_body_buffer);
 	} else
-		_body_buffer += data;
+	{
+		_body_buffer.insert(_body_buffer.end(), data.begin(), data.end());
+	}
+
+	if (_body_buffer.size() == len)
+	{
+		_current_state = State::GeneratingResponse;
+		generate_response();
+	}else if (data.size() < SOCKET_READ_SIZE)
+	{
+		_current_state = State::GeneratingResponse;
+		generate_response();
+	}
 }
 
 void		HttpServer::generate_response()
@@ -142,9 +170,7 @@ bool		HttpServer::is_ready()
 
 void 		HttpServer::poll_cgi()
 {
-	if (response.get_type() == ResponseType::REGULAR)
-		return;
-	else
+	if (response.get_type() == ResponseType::CGI)
 		response.set_state(_cgi.poll());
 }
 

@@ -41,9 +41,9 @@ void Server::handle_events()
 		}
 		else if (s.is_client() && ready_to_read(pfd.revents))
 		{
-			// LOG("fd: " << pfd.fd << " POLLIN");
+			LOG_INFO("fd: " << pfd.fd << " POLLIN");
 
-			std::string data = s.read();
+			std::vector<char> data = s.read();
 			auto http_server = _fd_map.at(s.get_fd());
 			http_server->handle(data);
 		}

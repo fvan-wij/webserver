@@ -60,16 +60,30 @@ Socket Socket::accept()
 
 }
 
-std::string Socket::read()
+std::vector<char> Socket::read()
 {
+	// std::vector<char> buffer(SOCKET_READ_SIZE);
 	char buffer[SOCKET_READ_SIZE];
 
+	LOG_ERROR("READING FROM SOCKET...");
 	bzero(&buffer, sizeof(buffer));
-	if (recv(_fd, buffer, SOCKET_READ_SIZE - 1, 0) == -1)
+	int n;
+	// if ((n = recv(_fd, buffer.data(), SOCKET_READ_SIZE - 1, 0)) == -1)
+	if ((n = ::read(_fd, buffer, SOCKET_READ_SIZE)) == -1)
 	{
+		LOG_ERROR("n of bytes received" << n);
 		UNIMPLEMENTED("recv failed");
 	}
-	return buffer;
+	LOG_ERROR("n of bytes read from socket" << n);
+	if (n != 0)
+	{
+		std::vector<char> yeet(buffer, buffer + n);
+		return yeet;
+	}
+	else {
+		return std::vector<char>();
+	}
+	// return buffer;
 }
 
 void Socket::write(const std::string s)

@@ -25,12 +25,12 @@ class HttpServer
 			ProcessingCGI,
 		};
 
-		void		handle(std::string_view data);
+		void		handle(std::vector<char> data);
 		void 		poll_cgi();
 		void		respond();
-		void		on_data_received(std::string_view data);
-		void		handle_headers(std::string_view data);
-		void		handle_body(std::string_view data);
+		void		on_data_received(std::vector<char> data);
+		void		handle_headers(std::vector<char> data);
+		void		handle_body(std::vector<char> data);
 		void		generate_response();
 
 		bool		is_ready();
@@ -41,7 +41,7 @@ class HttpServer
 
 	private:
 		std::string	_header_buffer;
-		std::string _body_buffer;
+		std::vector<char> _body_buffer;
 		// Socket		&_socket;
 		CGI			_cgi;
 		bool		_b_headers_complete;

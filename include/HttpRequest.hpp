@@ -29,7 +29,7 @@ class HttpRequest
 		std::string 									get_method() const;
 		std::string 									get_uri() const;
 		std::string 									get_protocol() const;
-		const std::string 								get_body() const {return _body;};
+		std::vector<char> 								get_body() const {return _body;};
 		const std::string 								get_buffer() const {return _buffer;};
 		std::unordered_map<std::string, std::string>	get_headers() const {return _header;};
 		std::string										get_value(const std::string &key) const;
@@ -44,7 +44,7 @@ class HttpRequest
 
 		void											parse(const std::string &data);
 		void											parse_header(const std::string &data);
-		void 											parse_body(const std::string &data);
+		void 											parse_body(std::vector<char> data);
 
 		class HttpException : public std::exception
 	{
@@ -68,7 +68,7 @@ class HttpRequest
 		std::string _method;
 		std::string _protocol;
 		std::string _uri;
-		std::string _body;
+		std::vector<char> _body;
 		void		_parse_request_line(std::istringstream 	&stream);
 		std::unordered_map<std::string, std::string>	_header;
 		RequestType	_type;

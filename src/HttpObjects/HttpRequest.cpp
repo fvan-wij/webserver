@@ -56,8 +56,8 @@ void	HttpRequest::parse(const std::string &buffer)
 			if (line[0] == '\r')
 				body = true;
 		}
-		else if (body)
-			_body += line;
+		// else if (body)
+		// 	_body += line;
 	}
 }
 
@@ -85,9 +85,9 @@ void	HttpRequest::parse_header(const std::string &data)
 	LOG_NOTICE("HEADER IS PARSED!");
 }
 
-void HttpRequest::parse_body(const std::string &data)
+void HttpRequest::parse_body(std::vector<char> data)
 {
-	_body += data;
+	_body.insert(_body.end(), data.begin(), data.end());
 	_b_body_parsed = true;
 	LOG_NOTICE("BODY IS PARSED!");
 }
@@ -137,7 +137,7 @@ std::ostream & operator << (std::ostream &out, HttpRequest &request)
 		out << YELLOW << request.get_method() << " " << request.get_uri() << " " << request.get_protocol() << std::endl;
 	for (const auto& [key, value] : request.get_headers())
 		out << key <<  ":" << value << "\n";
-	out << END << "\n" << RED << request.get_body() << END << std::endl;
+	out << END << "\n" << RED << request.get_body().data() << END << std::endl;
 	return out;
 }
 
@@ -147,6 +147,6 @@ std::ostream & operator << (std::ostream &out, const HttpRequest &request)
 		out << YELLOW << request.get_method() << " " << request.get_uri() << " " << request.get_protocol() << std::endl;
 	for (const auto& [key, value] : request.get_headers())
 		out << key <<  ":" << value << "\n";
-	out << END << "\n" << RED << request.get_body() << END << std::endl;
+	out << END << "\n" << RED << request.get_body().data() << END << std::endl;
 	return out;
 }

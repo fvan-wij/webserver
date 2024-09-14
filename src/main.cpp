@@ -17,7 +17,6 @@ int main()
 	servers.push_back({{8080, 8081}}); 
 	servers.push_back({{9090, 9091}}); 
 
-
 	LOG_NOTICE("Starting server(s)");
 	for(const Server &s : servers)
 	{
@@ -136,6 +135,20 @@ const std::string dummy_upload =
     "\r\n"
     "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
 
+const std::string img = {
+"POST /upload HTTP/1.1\r\n"
+"Host: example.com\r\n"
+"Content-Type: multipart/form-data; boundary=---------------------------123456789\r\n"
+"Content-Length: [LENGTH_OF_CONTENT]\r\n"
+"\r\n"
+"-----------------------------123456789\r\n"
+"Content-Disposition: form-data; name='file'; filename='small_image.png'\r\n"
+"Content-Type: image/png\r\n"
+"\r\n"
+"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/DFZZQAAAABJRU5ErkJggg==\r\n"
+"-----------------------------123456789--\r\n"
+};
+
 #include "Config.hpp"
 
 
@@ -165,15 +178,17 @@ const std::string dummy_upload =
 // 	}
 // }
 
-void	test_from_string(HttpServer &http_server)
+void	test_from_string(HttpServer &http_server, std::string test)
 {
 	size_t i = 0;
 	size_t chunk_size = 16;
 	while (!http_server.response.is_ready())
 	{
-		std::string chunk = post.substr(i, i + chunk_size);
-		http_server.handle(chunk);
-		i += chunk.length();
+		size_t remaining = test.size() - i;
+		size_t current_chunk = std::min(chunk_size, remaining);
+		std::vector<char> char_vec(test.begin() + i, test.begin() + i + current_chunk);
+		http_server.handle(char_vec);
+		i += current_chunk;
 	}
 	LOG_INFO("==SENDING RESPONSE==\n" << http_server.response.to_string());
 }
@@ -181,7 +196,7 @@ void	test_from_string(HttpServer &http_server)
 int main () {
 	HttpServer http_server = HttpServer();
 
-	test_from_string(http_server);
+	test_from_string(http_server, dummy_upload);
 
 	// auto handler = HandlerFactory::create_handler(request.get_type());
 	// HttpResponse response = handler->handle_request(request, TEST_CONFIG);
