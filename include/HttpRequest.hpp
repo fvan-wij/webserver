@@ -41,6 +41,7 @@ class HttpRequest
 		void											set_type(RequestType type);
 		void											set_header_parsed(bool state) {_b_header_parsed = state;};
 		void											set_body_parsed(bool state) {_b_body_parsed = state;};
+		void											set_body(std::vector<char> body) {_body = body;};
 		void											append_buffer(std::string &data);
 
 		void											parse(const std::string &data);

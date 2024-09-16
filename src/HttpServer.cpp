@@ -141,6 +141,8 @@ void		HttpServer::handle_body(std::vector<char> data)
 
 void		HttpServer::generate_response()
 {
+	_body_buffer.push_back('\0');
+	request.set_body(_body_buffer);
 	auto handler = HandlerFactory::create_handler(request.get_type());
 	response = handler->handle_request(request, TEST_CONFIG);
 	if (response.get_type() == ResponseType::CGI)

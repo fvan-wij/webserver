@@ -27,18 +27,19 @@ HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_co
 	else
 	{
 		std::vector<char> buffer = request.get_body();
-		std::string_view raw(buffer.data(), buffer.size());
-		size_t pos = raw.find("filename=");
-		LOG_WARNING("POS: " << pos);
-		LOG_WARNING("BUFFER" << buffer.data());
+		std::string_view sv_buffer(buffer.data(), buffer.size());
+		size_t pos = sv_buffer.find("filename=");
 		if (pos != std::string::npos)
 		{
-			std::string_view filename(&raw[pos + 10], raw.find('"', pos));
-			std::ofstream outfile(filename.data());
-			outfile << buffer.data();
+			size_t end = sv_buffer.find(10, pos);
+			pos+=10;
+			std::string filename(&sv_buffer[pos], (end - 2) - (pos));
+			filename.push_back('\0');
+			std::ofstream outfile("." + request.get_uri() + "/" + filename.data(), std::ios::binary);
+			outfile.write(buffer.data(), buffer.size());
 			outfile.close();
 		}
-		std::string mssg = "<h1>Uploading file</h1>";
+		std::string mssg = "<h1>File uploaded successfully</h1>";
 		response.set_body("\r\n" + mssg + "\r\n");
 		response.set_state(READY);
 		response.set_type(ResponseType::REGULAR);
