@@ -7,6 +7,7 @@
 #include "HttpResponse.hpp"
 #include "HandlerFactory.hpp"
 #include "Config.hpp"
+#include <charconv>
 
 class HttpServer
 {

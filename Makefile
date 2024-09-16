@@ -1,7 +1,7 @@
 NAME		:= app
 RUN_CMD		:= ./$(NAME) 
 
-CFLAGS		+= -Wall -Wextra -std=c++17 
+CFLAGS		+= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
 
 IFLAGS		:=	-Iinclude
 
@@ -19,7 +19,8 @@ SRCS		:=	Server.cpp \
 				RequestHandlers/BadRequestHandler.cpp \
 				RequestHandlers/RequestHandler.cpp \
 				RequestHandlers/HandlerFactory.cpp \
-				logging/Logger.cpp
+				logging/Logger.cpp					\
+				Utility.cpp							\
 
 
 HEADER_DIR	:=	include
@@ -35,6 +36,7 @@ HEADERS 	:=	Server.hpp \
 				DeleteRequestHandler.hpp \
 				RequestHandler.hpp	\
 				HandlerFactory.hpp \
+				Utility.hpp				\
 
 OBJ_DIR		:=	obj
 

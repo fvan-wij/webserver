@@ -16,14 +16,14 @@ std::string	HttpRequest::get_protocol() const
 	return _protocol;
 }
 
-std::string	HttpRequest::get_value(const std::string &key) const
+std::optional<std::string_view>	HttpRequest::get_value(const std::string &key) const
 {
 	if (_header.find(key) != _header.end())
 	{
 		return _header.at(key);
 	}
-	LOG_DEBUG("value for given key " << key << "is empty");
-	return std::string();
+	LOG_DEBUG("value for given key " << key << " is empty");
+	return std::nullopt;
 }
 
 void	HttpRequest::set_type(RequestType type)

@@ -51,3 +51,16 @@ bool	RequestHandler::validate_method(const HttpRequest &request, t_config &confi
 	return false;
 }
 
+bool RequestHandler::content_length_exceeded(const HttpRequest &request, t_config &config)
+{
+	std::optional<std::string_view> sv_conlen = request.get_value("Content-Length");
+	if (sv_conlen)
+	{
+		if (Utility::svtoi(sv_conlen) > config.client_max_body_size)
+		{
+			LOG_ERROR("client max body exceeded");
+			return true;
+		}
+	}
+	return false;
+}

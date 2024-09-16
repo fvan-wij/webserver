@@ -8,8 +8,7 @@ HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_co
 	LOG_NOTICE("Handling POST request...\n" << request);
 	response.set_status_code(200);
 	response.set_status_mssg("OK");
-	std::string size = request.get_value("Content-Length");
-	if (!size.empty() && std::stoi(size) > config.client_max_body_size)
+	if (content_length_exceeded(request, config))
 	{
 		std::string mssg = "<h1>400 Bad Request - client_max_body_size exceeded</h1>";
 		response.set_body("\r\n" + mssg + "\r\n");

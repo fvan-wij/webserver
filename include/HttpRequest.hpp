@@ -5,6 +5,7 @@
 #include <vector>
 #include <sstream>
 #include <exception>
+#include <optional>
 
 #include "meta.hpp"
 
@@ -32,7 +33,7 @@ class HttpRequest
 		std::vector<char> 								get_body() const {return _body;};
 		const std::string 								get_buffer() const {return _buffer;};
 		std::unordered_map<std::string, std::string>	get_headers() const {return _header;};
-		std::string										get_value(const std::string &key) const;
+		std::optional<std::string_view>					get_value(const std::string &key) const;
 		RequestType										get_type() const {return _type;};
 		bool											get_header_parsed() {return _b_header_parsed;};
 		bool											get_body_parsed() {return _b_body_parsed;};

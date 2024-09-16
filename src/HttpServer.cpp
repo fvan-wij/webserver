@@ -28,11 +28,6 @@ void	HttpServer::handle(std::vector<char> data)
 
 void		HttpServer::on_data_received(std::vector<char> data)
 {
-	if (data.empty())
-	{
-		generate_response();
-		LOG_WARNING("IT'S EMPTY NOW");
-	}
 	switch (_current_state)
 	{
 		case State::ReadingHeaders:
@@ -55,8 +50,10 @@ void		HttpServer::handle_headers(std::vector<char> data)
 	static int iterations;
 	LOG_DEBUG("handle_headers #" << iterations);
 	iterations++;
-	std::string_view str = data.data();
-	size_t	header_size = str.find("\r\n\r\n");
+
+	std::string_view str(data.data(), data.size());
+	size_t	header_size = str.find("\r\n\r\n", 0);
+
 	if (header_size != std::string::npos)
 	{
 		_header_buffer += str.substr(0, header_size);
@@ -78,12 +75,12 @@ void		HttpServer::handle_headers(std::vector<char> data)
 			_b_body_complete = true;
 			generate_response();
 		}
-		std::string str = request.get_value("Content-Length");
-		if (!str.empty())
+		std::optional<std::string_view> val = request.get_value("Content-Length");
+		if (val)
 		{
 			try {
-				size_t content_length = std::stoi(str);
-				if (content_length == _body_buffer.size())
+				auto len = Utility::svtoi(val);
+				if (len && len == _body_buffer.size())
 				{
 					_current_state = State::GeneratingResponse;
 					_b_body_complete = true;
