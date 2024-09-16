@@ -4,7 +4,8 @@
 HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
 	HttpResponse response;
-	LOG_NOTICE("Handling GET request...\n" << request);
+	// LOG_NOTICE("Handling GET request...\n" << request);
+	LOG_NOTICE("Handling GET request...\n");
 	if (request.get_uri() == "/cgi-bin")
 	{
 		response.set_status_code(200);

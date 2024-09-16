@@ -5,7 +5,8 @@ HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_co
 	(void) config;
 	HttpResponse response;
 	//Should trigger CGI
-	LOG_NOTICE("Handling POST request...\n" << request);
+	// LOG_NOTICE("Handling POST request...\n" << request);
+	LOG_NOTICE("Handling POST request...\n");
 	response.set_status_code(200);
 	response.set_status_mssg("OK");
 	if (content_length_exceeded(request, config))
@@ -25,6 +26,18 @@ HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_co
 	}
 	else
 	{
+		std::vector<char> buffer = request.get_body();
+		std::string_view raw(buffer.data(), buffer.size());
+		size_t pos = raw.find("filename=");
+		LOG_WARNING("POS: " << pos);
+		LOG_WARNING("BUFFER" << buffer.data());
+		if (pos != std::string::npos)
+		{
+			std::string_view filename(&raw[pos + 10], raw.find('"', pos));
+			std::ofstream outfile(filename.data());
+			outfile << buffer.data();
+			outfile.close();
+		}
 		std::string mssg = "<h1>Uploading file</h1>";
 		response.set_body("\r\n" + mssg + "\r\n");
 		response.set_state(READY);

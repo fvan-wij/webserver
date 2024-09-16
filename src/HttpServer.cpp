@@ -63,15 +63,14 @@ void		HttpServer::handle_headers(std::vector<char> data)
 		std::string_view sv_body(_body_buffer.data(), _body_buffer.size());
 		LOG_INFO("==HEADER_BUFFER==\n" << _header_buffer);
 		LOG_INFO("==BODY_BUFFER==\n" << sv_body);
-		if (str.find("WebKitFormBoundary") != std::string::npos){
-			size_t i = str.find("WebKitFormBoundary");
+		if (str.find("WebKitFormBoundary") != std::string::npos)
+		{
+			LOG_ERROR("BODYYYYYYYYYYY");
 			_current_state = State::ReadingBody;
-			handle_body(static_cast<std::vector<char>>(data.data()[i]));
 			return;
 		}
 		else if ((header_size + 4) == str.length())
 		{
-			// _current_state = State::ReadingBody;
 			_current_state = State::GeneratingResponse;
 			_b_body_complete = true;
 			generate_response();
@@ -86,6 +85,7 @@ void		HttpServer::handle_headers(std::vector<char> data)
 					_current_state = State::GeneratingResponse;
 					_b_body_complete = true;
 					generate_response();
+					return;
 				}
 				else
 				{
@@ -108,31 +108,34 @@ void		HttpServer::handle_headers(std::vector<char> data)
 void		HttpServer::handle_body(std::vector<char> data)
 {
 	static int it;
-	static size_t len;
 	LOG_DEBUG("handle_body #" << it);
 	it++;
 
-	len = _body_buffer.size();
-	if (data.empty())
+	std::string_view sv(_body_buffer.data(), _body_buffer.size());
+	// if (sv.find("\r\n\r\n", 0) != std::string::npos)
+	// {
+	// 		_current_state = State::GeneratingResponse;
+	// 		LOG_ERROR("Generating response... ");
+	// 		generate_response();
+	// 		return;
+	// }
+	if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
 	{
-		_current_state = State::GeneratingResponse;
-		_b_body_complete = true;
-		LOG_INFO("==HEADER_BUFFER==\n" << _header_buffer);
-		LOG_INFO("==BODY_BUFFER==\n" << _body_buffer.data());
-		request.parse_body(_body_buffer);
-	} else
+			_current_state = State::GeneratingResponse;
+			LOG_ERROR("Generating response... ");
+			generate_response();
+			return;
+	}
+	else
 	{
 		_body_buffer.insert(_body_buffer.end(), data.begin(), data.end());
-	}
-
-	if (_body_buffer.size() == len)
-	{
-		_current_state = State::GeneratingResponse;
-		generate_response();
-	}else if (data.size() < SOCKET_READ_SIZE)
-	{
-		_current_state = State::GeneratingResponse;
-		generate_response();
+		LOG_ERROR("Body buffer size: " << _body_buffer.size());
+		if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
+		{
+			LOG_ERROR("Generating response... ");
+			generate_response();
+			return;
+		}
 	}
 }
 
