@@ -12,13 +12,13 @@ void	print_listen(t_config config)
 	listen = config.listen;
 	for (unsigned int x = 0; x < listen.size(); x++)
 	{
-		std::cout << "listen: " << listen[x].first << " " << listen[x].second << std::endl;
+		std::cout << " - listen: " << listen[x].first << " " << listen[x].second << std::endl;
 	}
 }
 
 void	print_server_name(t_config config)
 {
-	std::cout << "server_name(s):";
+	std::cout << " - server_name(s):";
 	for (unsigned int x = 0; x < config.server_name.size(); x++)
 	{
 		std::cout << ", " << config.server_name[x];
@@ -28,7 +28,7 @@ void	print_server_name(t_config config)
 
 void	print_methods(std::vector<std::string> methods)
 {
-	std::cout << "methods(s):";
+	std::cout << " - methods(s):";
 	for (unsigned int x = 0; x < methods.size(); x++)
 	{
 		std::cout << ", " << methods[x];
@@ -38,13 +38,16 @@ void	print_methods(std::vector<std::string> methods)
 
 void	print_location(t_config config)
 {
-	std::cout << "Locations: {" << std::endl;
+	t_location location;
+	std::cout << " - Locations {" << std::endl;
 	for (auto& [path, location]: config.location)
 	{
-		std::cout << path << " {" << std::endl;
-		std::cout << "index: " << location.index << std::endl;
+		std::cout << "   - " << path << " {" << std::endl;
+		std::cout << "     - index: " << location.index << std::endl;
+		std::cout << "    ";
 		print_methods(location.allowed_methods);
-		std::cout << "root: " << location.root << std::endl;
-		std::cout << "}" << std::endl;
+		std::cout << "     - root: " << location.root << std::endl;
+		std::cout << "   - }" << std::endl;
 	}
+	std::cout << " - }" << std::endl;
 }

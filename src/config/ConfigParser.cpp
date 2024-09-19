@@ -40,7 +40,7 @@ std::pair<std::string, int> parse_listen(std::vector<std::string> tokens, unsign
 	std::pair<std::string, int> listen;
 	i++;
 	listen.first = tokens[i].substr(0, tokens[i].find(":"));
-	listen.second = std::stoi(tokens[i].substr(tokens[i].find(":"), tokens[i].size()));
+	listen.second = std::stoi(tokens[i].substr(tokens[i].find(":") + 1, tokens[i].size()));
 	i++;
 	return (listen);
 }
@@ -92,9 +92,15 @@ std::pair<std::string, t_location> parse_location(std::vector<std::string> token
 	while (tokens[i] != "}")
 	{
 		if (tokens[i] == "root")
+		{
 			location.root = parse_root(tokens, i);
+			continue;
+		}
 		if (tokens[i] == "index")
+		{
 			location.index = parse_index(tokens, i);
+			continue;
+		}
 		i++;
 	}
 	i++;
@@ -127,12 +133,13 @@ void	print_config(t_config config)
 {
 	std::cout << "config {" << std::endl;
 	print_listen(config);
-	std::cout << "root: " << config.root << std::endl;
-	std::cout << "index: " << config.index << std::endl;
+	std::cout << " - root: " << config.root << std::endl;
+	std::cout << " - index: " << config.index << std::endl;
 	print_server_name(config);
 	print_methods(config.methods);
 	print_location(config);
-	std::cout << "client_max_body_size: " << config.client_max_body_size << std::endl;
+	std::cout << " - client_max_body_size: " << config.client_max_body_size << std::endl;
+	std::cout << "}" << std::endl;
 }
 
 t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
@@ -140,28 +147,50 @@ t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
 	t_config server_config;
 	while (i < tokens.size())
 	{
-		std::cout << "test";
+		// std::cout << "test";
 		if (tokens[i] == "root")
+		{
 			server_config.root = parse_root(tokens, i);
+			continue ;
+		}
 		if (tokens[i] == "listen")
+		{
 			server_config.listen.push_back(parse_listen(tokens, i));
+			continue;
+		}
 		if (tokens[i] == "index")
+		{
 			server_config.index = parse_index(tokens, i);
+			continue;
+		}
 		if (tokens[i] == "server_name")
+		{
 			server_config.server_name = parse_server_name(tokens, i);
+			continue;
+		}
 		if (tokens[i] == "location")
 		{
-			std::cout << " location found" << std::endl;
 			std::pair<std::string, t_location>	location;
 			location = parse_location(tokens, i);
 			server_config.paths.push_back(location.first);
 			server_config.location.insert(location);
-
+			continue;
 		}
 		if (tokens[i] == "allow_methods")
+		{
 			server_config.methods = parse_allow_methods(tokens, i);
+			continue;
+		}
 		if (tokens[i] == "error_page")
+		{
 			server_config.error_page.push_back(parse_error_page(tokens, i));
+			continue;
+		}
+		if (tokens[i] == "client_max_body_size")
+		{
+			server_config.client_max_body_size = parse_client_max_body_size(tokens, i);
+			continue;
+		}
 		if (tokens[i] == "}")
 		{
 			break ;
