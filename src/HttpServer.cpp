@@ -45,6 +45,15 @@ void		HttpServer::on_data_received(std::vector<char> data)
 	}
 }
 
+// std::optional<size_t> HttpServer::validate_content_length()
+// {
+// 	auto it = request.get_value("Content-Length");
+// 	if (it)
+// 	{
+// 	}
+//
+// }
+
 void		HttpServer::handle_headers(std::vector<char> data)
 {
 	static int iterations;
@@ -61,8 +70,6 @@ void		HttpServer::handle_headers(std::vector<char> data)
 		_body_buffer.insert(_body_buffer.end(), data.begin() + (header_size + 4), data.end());
 		request.parse_header(_header_buffer);
 		std::string_view sv_body(_body_buffer.data(), _body_buffer.size());
-		LOG_INFO("==HEADER_BUFFER==\n" << _header_buffer);
-		LOG_INFO("==BODY_BUFFER==\n" << sv_body);
 		if (str.find("WebKitFormBoundary") != std::string::npos)
 		{
 			LOG_ERROR("BODYYYYYYYYYYY");

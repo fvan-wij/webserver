@@ -34,6 +34,15 @@ class HttpServer
 		void		handle_body(std::vector<char> data);
 		void		generate_response();
 
+		// std::optional<size_t> validate_content_length(); //413 Payload Too Large
+		// std::optional<size_t> validate_path();
+		// std::optional<size_t> validate_content_type();
+		// std::optional<size_t> validate_methods();
+		// std::optional<size_t> validate_version(); //505 HTTP Version Not Supported
+		// std::optional<size_t> validate_host(); //400 Bad Request
+		// std::optional<size_t> validate_method_body_consistency();
+		// std::optional<size_t> validate_multipart_form_data();
+
 		bool		is_ready();
 		std::string	get_data();
 
