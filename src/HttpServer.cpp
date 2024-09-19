@@ -3,43 +3,159 @@
 #include <cwchar>
 #include <string>
 
-HttpServer::HttpServer()
+HttpServer::HttpServer() : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders)
 {
 	response.set_state(NOT_READY);
+	// request.set_header_parsed(false);
+	// request.set_body_parsed(false);
 }
-
-// HttpServer::HttpServer(Socket &s) : _socket(s)
-// {
-// 	response.set_state(NOT_READY);
-// }
 
 HttpServer::~HttpServer()
 {
 	// LOG(RED << "DELETING HTTPSERVER!" << END);
 }
 
-HttpServer::HttpServer(const HttpServer &other) : _request_buffer(other._request_buffer) 
+HttpServer::HttpServer(const HttpServer &other) : _header_buffer(other._header_buffer), _body_buffer(other._body_buffer), _b_headers_complete(other._b_headers_complete), _b_body_complete(other._b_body_complete), _current_state(other._current_state)
 {
 	// LOG("HttpServer : copied for sock_fd: " << _socket.get_fd());
 }
 
 
-void	HttpServer::handle(HttpRequest &request)
+void	HttpServer::handle(std::vector<char> data)
 {
-	if (request.get_method() == "POST")
+	on_data_received(data);
+}
+
+void		HttpServer::on_data_received(std::vector<char> data)
+{
+	switch (_current_state)
 	{
-		_cgi.start("sleep_echo_var");
-		auto handler = HandlerFactory::create_handler(request.get_method());
-		this->response = handler->handle_request(request);
-		this->response.set_state(NOT_READY);
-		this->response.set_type(ResponseType::CGI);
+		case State::ReadingHeaders:
+			handle_headers(data);
+			break;
+		case State::ReadingBody:
+			handle_body(data);
+			break;
+		case State::GeneratingResponse:
+			generate_response();
+			break;
+		case State::ProcessingCGI:
+			response.set_state(_cgi.poll());
+			break;
 	}
-	else 
+}
+
+// std::optional<size_t> HttpServer::validate_content_length()
+// {
+// 	auto it = request.get_value("Content-Length");
+// 	if (it)
+// 	{
+// 	}
+//
+// }
+
+void		HttpServer::handle_headers(std::vector<char> data)
+{
+	static int iterations;
+	LOG_DEBUG("handle_headers #" << iterations);
+	iterations++;
+
+	std::string_view str(data.data(), data.size());
+	size_t	header_size = str.find("\r\n\r\n", 0);
+
+	if (header_size != std::string::npos)
 	{
-		auto handler = HandlerFactory::create_handler(request.get_method());
-		this->response = handler->handle_request(request);
-		this->response.set_state(READY);
-		this->response.set_type(ResponseType::REGULAR);
+		_header_buffer += str.substr(0, header_size);
+		_b_headers_complete = true;
+		_body_buffer.insert(_body_buffer.end(), data.begin() + (header_size + 4), data.end());
+		request.parse_header(_header_buffer);
+		std::string_view sv_body(_body_buffer.data(), _body_buffer.size());
+		if (str.find("WebKitFormBoundary") != std::string::npos)
+		{
+			LOG_ERROR("BODYYYYYYYYYYY");
+			_current_state = State::ReadingBody;
+			return;
+		}
+		else if ((header_size + 4) == str.length())
+		{
+			_current_state = State::GeneratingResponse;
+			_b_body_complete = true;
+			generate_response();
+		}
+		std::optional<std::string_view> val = request.get_value("Content-Length");
+		if (val)
+		{
+			try {
+				auto len = Utility::svtoi(val);
+				if (len && len == _body_buffer.size())
+				{
+					_current_state = State::GeneratingResponse;
+					_b_body_complete = true;
+					generate_response();
+					return;
+				}
+				else
+				{
+					_current_state = State::ReadingBody;
+					return;
+				}
+			}
+			catch (std::invalid_argument &e){
+				LOG_ERROR("Hmv'e" << e.what());
+				exit(123);
+			}
+		}
+	}
+	else {
+		_header_buffer.append(data.data(), data.size());
+	}
+}
+
+
+void		HttpServer::handle_body(std::vector<char> data)
+{
+	static int it;
+	LOG_DEBUG("handle_body #" << it);
+	it++;
+
+	std::string_view sv(_body_buffer.data(), _body_buffer.size());
+	// if (sv.find("\r\n\r\n", 0) != std::string::npos)
+	// {
+	// 		_current_state = State::GeneratingResponse;
+	// 		LOG_ERROR("Generating response... ");
+	// 		generate_response();
+	// 		return;
+	// }
+	if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
+	{
+			_current_state = State::GeneratingResponse;
+			LOG_ERROR("Generating response... ");
+			generate_response();
+			return;
+	}
+	else
+	{
+		_body_buffer.insert(_body_buffer.end(), data.begin(), data.end());
+		LOG_ERROR("Body buffer size: " << _body_buffer.size());
+		if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
+		{
+			LOG_ERROR("Generating response... ");
+			generate_response();
+			return;
+		}
+	}
+}
+
+void		HttpServer::generate_response()
+{
+	_body_buffer.push_back('\0');
+	request.set_body(_body_buffer);
+	auto handler = HandlerFactory::create_handler(request.get_type());
+	response = handler->handle_request(request, TEST_CONFIG);
+	if (response.get_type() == ResponseType::CGI)
+	{
+		_current_state = State::ProcessingCGI;
+		_cgi.start("sleep_echo_var");
 	}
 }
 
@@ -64,9 +180,7 @@ bool		HttpServer::is_ready()
 
 void 		HttpServer::poll_cgi()
 {
-	if (response.get_type() == ResponseType::REGULAR)
-		return;
-	else
+	if (response.get_type() == ResponseType::CGI)
 		response.set_state(_cgi.poll());
 }
 

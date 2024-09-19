@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <poll.h>
+#include <vector>
+#include <optional>
 
 enum class SocketType 
 {
@@ -25,25 +27,25 @@ class Socket
 		~Socket();
 		
 		// Funcs
-		Socket 						accept();
-		std::string 				read();
-		void 						write(const std::string s);
+		Socket 								accept();
+		std::optional<std::vector<char>> 	read();
+		void 								write(const std::string s);
 
 		// Getters
-		int 						get_fd() const;
- 		int							get_port() const;
-		std::string					get_address_str() const;
-		bool						is_listener() const {return _type == SocketType::LISTENER;};
-		bool						is_client() const {return _type == SocketType::CLIENT;};
+		int 								get_fd() const;
+ 		int									get_port() const;
+		std::string							get_address_str() const;
+		bool								is_listener() const {return _type == SocketType::LISTENER;};
+		bool								is_client() const {return _type == SocketType::CLIENT;};
 
 
 	private:
-		int							_fd;
-		struct sockaddr_in			_address;
-		SocketType					_type;
+		int									_fd;
+		struct sockaddr_in					_address;
+		SocketType							_type;
 
-		void						_init_listener(int port);
-		void						_init_client(int fd);
+		void								_init_listener(int port);
+		void								_init_client(int fd);
 };
 
 std::ostream& operator<< (std::ostream& stream, const Socket& rhs);

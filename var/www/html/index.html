@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>index.html</title>
+		<style>
+body {
+	background-color: linen;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	font-size: 1.5em;
+
+}
+
+.headerBlock {
+	<!-- padding: 2.5%; -->
+}
+
+.buttonBlock {
+	padding: 2.5%;
+}
+
+		</style>	
+	</head>
+	<body>
+		<div class="headerBlock">
+			<h1>Welcome to our Webserver</h1>
+			<p>This is the default page</p>
+		</div>
+		<div class="buttonBlock">
+			<h2>Tests</h1>
+			<h4>Upload a file</h1>
+			<form action='/uploads' method="post" enctype="multipart/form-data">
+				<input type="file" name="filename">
+				<input type="submit">
+			</form>
+			<h4>Send post request and trigger CGI</h1>
+			<form action='/cgi-bin' method='post'><button name='foo' value='Yeet'>Test Post (trigger CGI)</button></form>
+		</div>
+	</body>
+</html>

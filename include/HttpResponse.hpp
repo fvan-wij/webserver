@@ -12,6 +12,7 @@ enum class ResponseType:int {
 	REGULAR = 0,
 	UPLOAD = 1,
 	CGI = 2,
+	ERROR = 3,
 };
 
 class HttpResponse 
@@ -28,6 +29,8 @@ class HttpResponse
 		bool			is_ready(){return _ready;};
 
 		ResponseType	get_type(){return _type;};
+		int				get_status_code() const {return _status_code;};
+		std::string		get_status_mssg() const {return _status_message;};
 
 		std::string		to_string() const;
 

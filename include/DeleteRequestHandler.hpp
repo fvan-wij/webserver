@@ -2,7 +2,7 @@
 
 #include "RequestHandler.hpp"
 
-class BadRequestHandler : public RequestHandler
+class DeleteRequestHandler : public RequestHandler
 {
 	public:
 		HttpResponse	handle_request(const HttpRequest &request, t_config &config);

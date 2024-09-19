@@ -41,13 +41,15 @@ void Server::handle_events()
 		}
 		else if (s.is_client() && ready_to_read(pfd.revents))
 		{
-			// LOG("fd: " << pfd.fd << " POLLIN");
+			LOG_INFO("fd: " << pfd.fd << " POLLIN");
 
-			std::string data = s.read();
-			HttpRequest request = HttpRequest();
-			request.parse(data);
-			auto http_server = _fd_map.at(s.get_fd());
-			http_server->handle(request);
+			std::optional<std::vector<char>> read_data = s.read();
+			if (read_data)
+			{
+				auto http_server = _fd_map.at(s.get_fd());
+				std::vector<char> data = read_data.value_or(std::vector<char>{});
+				http_server->handle(data);
+			}
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
@@ -120,10 +122,6 @@ void Server::_add_client(Socket s)
 
 	if (s.is_client())
 	{
-		// OOF
-		// _server_instances.insert(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
-		// _server_instances.emplace(SocketRef_HttpServer_map::value_type(std::cref(r_s), HttpServer(r_s)));
-		// _fd_map[r_s.get_fd()] = std::make_unique<HttpServer>();
 		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>();
 		mask = POLLIN | POLLOUT;
 	}
