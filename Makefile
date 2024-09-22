@@ -17,9 +17,11 @@ SRCS		:=	Server.cpp \
 				RequestHandlers/PostRequestHandler.cpp \
 				RequestHandlers/DeleteRequestHandler.cpp \
 				RequestHandlers/BadRequestHandler.cpp \
-				RequestHandlers/RequestHandler.cpp \
-				RequestHandlers/HandlerFactory.cpp \
+				RequestHandlers/RequestHandler.cpp 	\
+				RequestHandlers/HandlerFactory.cpp 	\
 				logging/Logger.cpp					\
+				Config/ConfigParser.cpp				\
+				Config/print_config.cpp				\
 				Utility.cpp							\
 
 
@@ -37,6 +39,8 @@ HEADERS 	:=	Server.hpp \
 				RequestHandler.hpp	\
 				HandlerFactory.hpp \
 				Utility.hpp				\
+				Config.hpp				\
+				ConfigParser.hpp		\
 
 OBJ_DIR		:=	obj
 
@@ -52,6 +56,7 @@ OBJ_DIRS 	:=	$(dir $(OBJS))
 
 all: 
 	$(MAKE) $(NAME) -j4
+	@mkdir uploads
 
 $(NAME): $(OBJS) $(SRC_DIR)/$(SRC_ENTRY)
 	$(CXX) $(SRC_DIR)/$(SRC_ENTRY) $(OBJS) $(CFLAGS) $(IFLAGS) -o $(NAME)
@@ -62,6 +67,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS)
 
 clean:
 	rm -rf $(OBJ_DIR)
+	rm -rf uploads
 
 fclean: clean
 	rm -f $(NAME)

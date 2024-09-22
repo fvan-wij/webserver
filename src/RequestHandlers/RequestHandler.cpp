@@ -37,14 +37,27 @@ bool			RequestHandler::is_method_allowed(std::string_view method, std::vector<st
 
 bool	RequestHandler::validate_method(const HttpRequest &request, t_config &config)
 {
-	if (config.methods.empty() || is_method_allowed(request.get_method(), config.methods))
+
+	//This is all sooo scuffed and redundant, I know :P
+	if (!config.methods.empty() && is_method_allowed(request.get_method(), config.methods)) //Global methods present but no methods present in local directive
 	{
-		if (config.location_map.find(request.get_uri()) != config.location_map.end() && is_method_allowed(request.get_method(), config.location_map[request.get_uri()].allowed_methods))
+		t_location loc;
+		auto it = config.location.find(request.get_uri());
+		if (it != config.location.end())
+		{
+			loc = it->second;
+			if (loc.allowed_methods.empty())
+				return true;
+		}
+	}
+	else if (config.methods.empty() || is_method_allowed(request.get_method(), config.methods)) //Global methods not present or global method allowed and local directive allowed
+	{
+		if (config.location.find(request.get_uri()) != config.location.end() && is_method_allowed(request.get_method(), config.location[request.get_uri()].allowed_methods))
 		{
 			return true;
 		}
 	}
-	else if (config.location_map.find(request.get_uri()) != config.location_map.end() && is_method_allowed(request.get_method(), config.location_map[request.get_uri()].allowed_methods))
+	else if (config.location.find(request.get_uri()) != config.location.end() && is_method_allowed(request.get_method(), config.location[request.get_uri()].allowed_methods)) //Method is allowed in local directive
 	{
 		return true;
 	}

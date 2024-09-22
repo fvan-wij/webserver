@@ -2,21 +2,32 @@
 #include "Server.hpp"
 #include "HttpRequest.hpp"
 #include "HandlerFactory.hpp"
+#include "ConfigParser.hpp"
+
 #include <cstring>
 
 // #define USE_TEST_MAIN
 
 #ifndef USE_TEST_MAIN
-int main()
+int main(int argc, char *argv[])
 {
-	std::vector<Server> servers;
+	std::vector<t_config> 	configs;
+	std::vector<Server> 	servers;
 
 	// parse config
-	// for each server_config in config.serverblock
-	// servers.push_back(server(serverrconfig))
-	servers.push_back({{8080, 8081}}); 
-	servers.push_back({{9090, 9091}}); 
+	if (argc > 1)
+		configs = parse_config(argv[1]);
 
+	if (!configs.empty())
+	{
+		for (auto &it : configs)
+			servers.push_back(it);
+	}
+	else
+	{
+		LOG_ERROR("Could not create server(s) from given config file. Did you supply a config file?");
+		return 1;
+	}
 	LOG_NOTICE("Starting server(s)");
 	for(const Server &s : servers)
 	{

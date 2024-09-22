@@ -18,6 +18,16 @@ Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 
 }
 
+Server::Server(t_config &config) : _exit_server(false)
+{
+	for (const auto& [name, port] : config.listen)
+	{
+		LOG_NOTICE("Adding listener socket for " << name << " on port: " << port);
+		_add_client({SocketType::LISTENER, port});
+	}
+	_config = config;
+}
+
 Server::Server(std::vector<uint16_t> ports) : _exit_server(false)
 {
 	for (uint16_t p : ports)
@@ -47,7 +57,7 @@ void Server::handle_events()
 			if (read_data)
 			{
 				auto http_server = _fd_map.at(s.get_fd());
-				std::vector<char> data = read_data.value_or(std::vector<char>{});
+				std::vector<char> data = read_data.value();
 				http_server->handle(data);
 			}
 		}
@@ -122,7 +132,7 @@ void Server::_add_client(Socket s)
 
 	if (s.is_client())
 	{
-		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>();
+		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>(_config);
 		mask = POLLIN | POLLOUT;
 	}
 

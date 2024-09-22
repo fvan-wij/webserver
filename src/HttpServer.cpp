@@ -6,8 +6,11 @@
 HttpServer::HttpServer() : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders)
 {
 	response.set_state(NOT_READY);
-	// request.set_header_parsed(false);
-	// request.set_body_parsed(false);
+}
+
+HttpServer::HttpServer(t_config &config) : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders), _config(config)
+{
+	response.set_state(NOT_READY);
 }
 
 HttpServer::~HttpServer()
@@ -44,15 +47,6 @@ void		HttpServer::on_data_received(std::vector<char> data)
 			break;
 	}
 }
-
-// std::optional<size_t> HttpServer::validate_content_length()
-// {
-// 	auto it = request.get_value("Content-Length");
-// 	if (it)
-// 	{
-// 	}
-//
-// }
 
 void		HttpServer::handle_headers(std::vector<char> data)
 {
@@ -100,7 +94,8 @@ void		HttpServer::handle_headers(std::vector<char> data)
 					return;
 				}
 			}
-			catch (std::invalid_argument &e){
+			catch (std::invalid_argument &e)
+			{
 				LOG_ERROR("Hmv'e" << e.what());
 				exit(123);
 			}
@@ -151,7 +146,7 @@ void		HttpServer::generate_response()
 	_body_buffer.push_back('\0');
 	request.set_body(_body_buffer);
 	auto handler = HandlerFactory::create_handler(request.get_type());
-	response = handler->handle_request(request, TEST_CONFIG);
+	response = handler->handle_request(request, _config);
 	if (response.get_type() == ResponseType::CGI)
 	{
 		_current_state = State::ProcessingCGI;

@@ -19,8 +19,8 @@ HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_con
 	else if (validate_method(request, config))
 	{
 		std::string path = "." + config.root + request.get_uri();
-		if (!config.location_map["/"].index.empty())
-			path += config.location_map["/"].index;
+		if (!config.location["/"].index.empty())
+			path += config.location["/"].index;
 		LOG_DEBUG(path);
 		response.set_body("\r\n" + retrieve_html(path) + "\r\n");
 		response.set_state(READY);

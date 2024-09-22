@@ -22,6 +22,7 @@ public:
 	//Custom constructors
 	Server(uint16_t port);
 	Server(std::vector<uint16_t> ports);
+	Server(t_config &config);
 
 	//Methods
 	void 										handle_events();
@@ -40,6 +41,7 @@ private:
 	std::vector<pollfd> 						_pfds;
 	std::vector<Socket> 						_sockets;
 	bool										_exit_server;
+	t_config									_config;
 
 	int											_poll_events();
 	void 										_add_client(Socket s);

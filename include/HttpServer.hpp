@@ -13,6 +13,7 @@ class HttpServer
 {
 	public:
 		HttpServer();
+		HttpServer(t_config &config);
 		HttpServer(const HttpServer &);
 		HttpServer &operator=(const HttpServer &) = delete;
 		~HttpServer();
@@ -57,5 +58,6 @@ class HttpServer
 		bool		_b_headers_complete;
 		bool		_b_body_complete;
 		State		_current_state;
+		t_config	_config;
 
 };
