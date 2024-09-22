@@ -3,8 +3,9 @@
 #include <string>
 #include <vector>
 #include <Config.hpp>
+#include <optional>
 
-std::vector<t_config>	parse_config(std::string config_path);
+std::optional<std::vector<t_config>>	parse_config(int argc, std::string config_path);
 
 class ConfigParser {
 	public:

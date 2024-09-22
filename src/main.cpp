@@ -5,46 +5,59 @@
 #include "ConfigParser.hpp"
 
 #include <cstring>
+#include <optional>
 
 // #define USE_TEST_MAIN
 
 #ifndef USE_TEST_MAIN
+
+std::optional<std::vector<Server>> create_servers(std::vector<t_config> &configs) {
+    if (!configs.empty()) {
+        LOG_NOTICE("Creating server(s):");
+        std::vector<Server> servers;
+        for (auto &config : configs) {
+            servers.emplace_back(config);
+        }
+        return servers;
+    } else {
+        LOG_ERROR("Could not create server(s) from the given config file. Did you supply a config file?");
+        return std::nullopt;
+    }
+}
+
+int	run_servers(std::vector<Server> &servers)
+{
+	bool should_exit = false;
+
+	while (!should_exit)
+	{
+		for(Server &s : servers)
+		{
+			if (s.should_exit())
+			{
+				should_exit = true;
+				return 0;
+			}
+			else if (s.poll() > 0)
+			{
+				s.handle_events();
+			}
+		}
+	}
+	return 1;
+}
+
 int main(int argc, char *argv[])
 {
 	std::vector<t_config> 	configs;
-	std::vector<Server> 	servers;
 
-	// parse config
-	if (argc > 1)
-		configs = parse_config(argv[1]);
-
-	if (!configs.empty())
+	configs = parse_config(argc, argv[1]).value_or(std::vector<t_config>{DEFAULT_CONFIG});
+	auto initialized_servers = create_servers(configs);
+	if (initialized_servers)
 	{
-		for (auto &it : configs)
-			servers.push_back(it);
+		return (run_servers(*initialized_servers));
 	}
-	else
-	{
-		LOG_ERROR("Could not create server(s) from given config file. Did you supply a config file?");
-		return 1;
-	}
-	LOG_NOTICE("Starting server(s)");
-	for(const Server &s : servers)
-	{
-		LOG_NOTICE(s);
-	}
-
-	while (1)
-	{
-		for(auto &s : servers)
-		{
-			if (s.should_exit())
-				return 0;
-			else if (s.poll() > 0)
-				s.handle_events();
-		}
-	}
-	return 0;
+	return 1;
 }
 #endif
 

@@ -56,6 +56,7 @@ OBJ_DIRS 	:=	$(dir $(OBJS))
 
 all: 
 	$(MAKE) $(NAME) -j4
+	@rm -rf uploads
 	@mkdir uploads
 
 $(NAME): $(OBJS) $(SRC_DIR)/$(SRC_ENTRY)

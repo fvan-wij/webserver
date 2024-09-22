@@ -202,13 +202,15 @@ t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
 	return (server_config);
 }
 
-std::vector<t_config>	parse_config(std::string config_path)
+std::optional<std::vector<t_config>>	parse_config(int argc, std::string config_path)
 {
 	std::vector<t_config>		configs;
 	std::ifstream				in(config_path, std::ios_base::in);
 	std::vector<std::string>	tokenized_line;
 	std::string					line;
 	std::vector<std::string>	tokens;
+	if (argc != 2 || config_path.empty())
+		return std::nullopt;
 
 	while (getline(in, line))
 	{
@@ -220,10 +222,10 @@ std::vector<t_config>	parse_config(std::string config_path)
 			tokens.push_back(tokenized_line[x]);
 		}
 	}
-	for (unsigned i = 0; i < tokens.size(); i++)
-	{
-		std::cout << tokens[i] << ' ';
-	}
+	// for (unsigned i = 0; i < tokens.size(); i++)
+	// {
+	// 	std::cout << tokens[i] << ' ';
+	// }
 	unsigned long	i;
 	i = 0;
 	while (i < tokens.size())
@@ -234,7 +236,6 @@ std::vector<t_config>	parse_config(std::string config_path)
 			// std::cout << "server start" << std::endl;
 			server_config = read_config(tokens, i);
 			configs.push_back(server_config);
-			LOG_DEBUG("i: " << i);
 		}
 		i++;
 	}
