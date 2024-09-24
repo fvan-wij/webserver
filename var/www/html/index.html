@@ -24,6 +24,32 @@ body {
 }
 
 		</style>	
+		<script>
+			async function deleteFile() {
+				const fileName = document.getElementById('deleteFileName').value;
+				if (fileName) {
+					await fetch(`/uploads/${fileName}`, {
+						method: 'DELETE'
+					})
+						.then(response => {
+							if (response.ok) {
+								console.log('File deleted successfully.');
+							} else {
+								// alert('FILE DELETION FAIED');
+								console.log('File deletion failed.');
+							}
+						})
+						.catch(error => {
+							// alert('FILE DELETION FAIED');
+							console.error('Error:', error);
+							console.log('File deletion failed.');
+						});
+				} else {
+					console.log('Please enter a file name.');
+				}
+			}
+
+		</script>
 	</head>
 	<body>
 		<div class="headerBlock">
@@ -32,11 +58,17 @@ body {
 		</div>
 		<div class="buttonBlock">
 			<h2>Tests</h1>
+
 			<h4>Upload a file</h1>
 			<form action='/uploads' method="post" enctype="multipart/form-data">
 				<input type="file" name="filename">
 				<input type="submit">
 			</form>
+
+			<h4>Delete a file</h1>
+			<input type="text" id="deleteFileName" placeholder="Enter the file to delete">
+			<button onclick="deleteFile()">Delete file</button>
+
 			<h4>Send post request and trigger CGI</h1>
 			<form action='/cgi-bin' method='post'><button name='foo' value='Yeet'>Test Post (trigger CGI)</button></form>
 		</div>
