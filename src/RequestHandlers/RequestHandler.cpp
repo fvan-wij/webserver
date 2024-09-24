@@ -1,4 +1,5 @@
 #include "RequestHandler.hpp"
+#include "HttpResponse.hpp"
 
 RequestHandler::~RequestHandler()
 {
@@ -26,38 +27,38 @@ std::string RequestHandler::retrieve_html(std::string_view path)
 	return out;
 }
 
-bool			RequestHandler::is_method_allowed(std::string_view method, std::vector<std::string> v)
+bool			RequestHandler::method_is_allowed(std::string_view method, std::vector<std::string> v)
 {
 	bool	allowed = false;
 
 	if (v.size() > 0 && std::find(v.begin(), v.end(), method) != v.end())
+	{
 		allowed = true;
+	}
 	return allowed;
 }
 
-bool	RequestHandler::validate_method(const HttpRequest &request, t_config &config)
+bool	RequestHandler::method_is_valid(std::string_view uri, std::string_view method, t_config &config)
 {
-
-	//This is all sooo scuffed and redundant, I know :P
-	if (!config.methods.empty() && is_method_allowed(request.get_method(), config.methods)) //Global methods present but no methods present in local directive
+	t_location loc;
+	auto it = config.location.find(uri.data());
+	if (it != config.location.end())
 	{
-		t_location loc;
-		auto it = config.location.find(request.get_uri());
-		if (it != config.location.end())
-		{
-			loc = it->second;
-			if (loc.allowed_methods.empty())
-				return true;
-		}
-	}
-	else if (config.methods.empty() || is_method_allowed(request.get_method(), config.methods)) //Global methods not present or global method allowed and local directive allowed
-	{
-		if (config.location.find(request.get_uri()) != config.location.end() && is_method_allowed(request.get_method(), config.location[request.get_uri()].allowed_methods))
+		loc = it->second; //Assign found location to loc;
+		if (method_is_allowed(method, loc.allowed_methods))
 		{
 			return true;
 		}
+		else if (loc.allowed_methods.empty() && (config.methods.empty() || method_is_allowed(method, config.methods)))
+		{
+			return true;
+		}
+		else if (!method_is_allowed(method, loc.allowed_methods))
+		{
+			return false;
+		}
 	}
-	else if (config.location.find(request.get_uri()) != config.location.end() && is_method_allowed(request.get_method(), config.location[request.get_uri()].allowed_methods)) //Method is allowed in local directive
+	else if (config.methods.empty() || method_is_allowed(method, config.methods))
 	{
 		return true;
 	}
@@ -77,3 +78,28 @@ bool RequestHandler::content_length_exceeded(const HttpRequest &request, t_confi
 	}
 	return false;
 }
+
+HttpResponse	RequestHandler::generate_error_response(int error_code, std::string_view message)
+{
+	HttpResponse	response;
+	response.set_status_code(error_code);
+	response.set_status_mssg(message.data());
+	std::string mssg = "\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n";
+	response.set_body(mssg);
+	response.set_state(READY);
+	response.set_type(ResponseType::ERROR);
+	return response;
+}
+
+bool	RequestHandler::contains_body(const HttpRequest &request)
+{
+	return (request.get_body().size() <= 1);
+}
+
+//Check if there's a body and/or Content-Length key-value pair
+//	This should not be present in a GET request, either ignore or generate appropriate error response
+//Get root location
+//	What if there's no root location? Perhaps this needs to be checked before setting up the server
+//Generate path to retrieve from, check if exists
+//Retrieve HTML
+//	If path to HTML does not exist: error!

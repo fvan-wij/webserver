@@ -9,7 +9,7 @@ HttpResponse	DeleteRequestHandler::handle_request(const HttpRequest &request, t_
 	response.set_status_code(200);
 	response.set_status_mssg("OK");
 
-	if (validate_method(request, config))
+	if (method_is_valid(request.get_uri(), request.get_method(), config))
 	{
 		std::string path = "." + config.root + request.get_uri();
 		if (!config.location["/"].index.empty())

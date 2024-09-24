@@ -102,6 +102,11 @@ std::pair<std::string, t_location> parse_location(std::vector<std::string> token
 			location.index = parse_index(tokens, i);
 			continue;
 		}
+		if (tokens[i] == "allow_methods")
+		{
+			location.allowed_methods = parse_allow_methods(tokens, i);
+			continue;
+		}
 		i++;
 	}
 	i++;
@@ -148,7 +153,6 @@ t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
 	t_config server_config;
 	while (i < tokens.size())
 	{
-		// std::cout << "test";
 		if (tokens[i] == "root")
 		{
 			server_config.root = parse_root(tokens, i);
@@ -202,15 +206,13 @@ t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
 	return (server_config);
 }
 
-std::optional<std::vector<t_config>>	parse_config(int argc, std::string config_path)
+std::vector<t_config>	parse_config(std::string_view config_path)
 {
 	std::vector<t_config>		configs;
-	std::ifstream				in(config_path, std::ios_base::in);
+	std::ifstream				in(config_path.data(), std::ios_base::in);
 	std::vector<std::string>	tokenized_line;
 	std::string					line;
 	std::vector<std::string>	tokens;
-	if (argc != 2 || config_path.empty())
-		return std::nullopt;
 
 	while (getline(in, line))
 	{
@@ -222,10 +224,6 @@ std::optional<std::vector<t_config>>	parse_config(int argc, std::string config_p
 			tokens.push_back(tokenized_line[x]);
 		}
 	}
-	// for (unsigned i = 0; i < tokens.size(); i++)
-	// {
-	// 	std::cout << tokens[i] << ' ';
-	// }
 	unsigned long	i;
 	i = 0;
 	while (i < tokens.size())
@@ -233,13 +231,13 @@ std::optional<std::vector<t_config>>	parse_config(int argc, std::string config_p
 		if (tokens[i] == "server\0")
 		{
 			t_config server_config;
-			// std::cout << "server start" << std::endl;
 			server_config = read_config(tokens, i);
 			configs.push_back(server_config);
+			LOG_DEBUG("i: " << i);
 		}
 		i++;
 	}
 	std::cout << std::endl;
 	std::cout << std::endl;
 	return (configs);
-};
+}

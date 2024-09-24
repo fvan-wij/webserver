@@ -60,6 +60,9 @@ void Server::handle_events()
 				std::vector<char> data = read_data.value();
 				http_server->handle(data);
 			}
+			else
+				_client_remove(i);
+
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{

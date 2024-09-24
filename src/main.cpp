@@ -49,16 +49,29 @@ int	run_servers(std::vector<Server> &servers)
 
 int main(int argc, char *argv[])
 {
-	std::vector<t_config> 	configs;
+	std::vector<t_config>	configs;
 
-	configs = parse_config(argc, argv[1]).value_or(std::vector<t_config>{DEFAULT_CONFIG});
-	auto initialized_servers = create_servers(configs);
-	if (initialized_servers)
+	if (argc == 2 && argv[1])
+	{
+		configs = parse_config(argv[1]);
+	}
+	else
+	{
+		LOG_ERROR("Config is invalid or not present, using DEFAULT_CONFIG");
+		configs.push_back(DEFAULT_CONFIG);
+		// return -1;
+	}
+	if (auto initialized_servers = create_servers(configs))
 	{
 		return (run_servers(*initialized_servers));
 	}
-	return 1;
+	else 
+	{
+		LOG_ERROR("Error initializing server(s)");
+		return -1;
+	}
 }
+
 #endif
 
 #ifdef USE_TEST_MAIN
