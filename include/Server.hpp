@@ -34,9 +34,16 @@ public:
 	bool										should_exit(){return _exit_server;};
 
 	std::vector<pollfd>& 						get_pfds();
-	const std::vector<Socket>& 						get_sockets() const;
+	const std::vector<Socket>& 					get_sockets() const;
 
 private:
+	/**
+	 *	_fd_map		: A map of file descriptor keys, with the value being shared pointers to HttpServer objects.
+	 *	_pfds		: A vector of the poll fd objects used in the server loop.
+	 *	_sockets	: A vector of all active sockets. Is somewhat linked to _pfds.
+	 *	_exit_server: Boolean saying if the server should exit.
+	 *	_config		: Struct with the servers configuration.
+	 * */
 	std::unordered_map<int, std::shared_ptr<HttpServer>>	_fd_map;
 	std::vector<pollfd> 						_pfds;
 	std::vector<Socket> 						_sockets;

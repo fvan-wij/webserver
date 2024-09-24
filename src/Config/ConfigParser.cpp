@@ -240,4 +240,4 @@ std::vector<t_config>	parse_config(std::string config_path)
 	std::cout << std::endl;
 	std::cout << std::endl;
 	return (configs);
-};
+}
