@@ -82,6 +82,7 @@ bool RequestHandler::content_length_exceeded(const HttpRequest &request, t_confi
 HttpResponse	RequestHandler::generate_error_response(int error_code, std::string_view message)
 {
 	HttpResponse	response;
+
 	response.set_status_code(error_code);
 	response.set_status_mssg(message.data());
 	std::string mssg = "\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n";
@@ -91,9 +92,44 @@ HttpResponse	RequestHandler::generate_error_response(int error_code, std::string
 	return response;
 }
 
-bool	RequestHandler::contains_body(const HttpRequest &request)
+HttpResponse	RequestHandler::generate_successful_response(int status_code, std::string_view path, ResponseType type)
 {
-	return (request.get_body().size() <= 1);
+	HttpResponse response;
+	response.set_status_code(status_code);
+	response.set_status_mssg("OK");
+	if (type == ResponseType::REGULAR)
+	{
+		response.set_state(READY);
+		response.set_body("\r\n" + retrieve_html(path) + "\r\n");
+	}
+	else if (type == ResponseType::UPLOAD)
+	{
+		response.set_state(READY);
+		response.set_body("\r\n<h1>File uploaded</h1>\r\n");
+	}
+	else if (type == ResponseType::CGI)
+	{
+		response.set_state(NOT_READY);
+		response.set_body("\r\n<h1>CGI data</h1>\r\n");
+	}
+	response.set_type(type);
+	return response;
+}
+
+std::string	RequestHandler::get_path(std::string_view root, std::string_view uri)
+{
+	std::string path = ".";
+	path.append(root.data());
+	path.append(uri.data());
+	return path;
+}
+
+bool	RequestHandler::location_exists(t_config &config, std::string_view loc)
+{
+	auto it = config.location.find(loc.data());
+	if (it != config.location.end())
+		return true;
+	return false;
 }
 
 //Check if there's a body and/or Content-Length key-value pair

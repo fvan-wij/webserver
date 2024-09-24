@@ -16,7 +16,9 @@ static std::vector<std::string> tokenize_string(std::string string, std::string 
         while (pos != std::string::npos)
         {
 			std::string token = string.substr(0, pos);
-			if (!token.empty() && token != "\n") {
+			if (!token.empty() && token != "\n") 
+			{
+				token.erase(0, token.find_first_not_of("\t\r\n "));
                 tokens.push_back(token);
 			}
 			string.erase(0, pos + delimiter.length());

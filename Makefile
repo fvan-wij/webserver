@@ -56,8 +56,8 @@ OBJ_DIRS 	:=	$(dir $(OBJS))
 
 all: 
 	$(MAKE) $(NAME) -j4
-	@rm -rf uploads
-	@mkdir uploads
+	@rm -rf ./var/www/uploads
+	@mkdir -p ./var/www/uploads
 
 $(NAME): $(OBJS) $(SRC_DIR)/$(SRC_ENTRY)
 	$(CXX) $(SRC_DIR)/$(SRC_ENTRY) $(OBJS) $(CFLAGS) $(IFLAGS) -o $(NAME)
