@@ -28,7 +28,7 @@ void	print_server_name(t_config config)
 
 void	print_methods(std::vector<std::string> methods)
 {
-	std::cout << " - methods(s):";
+	std::cout << " - methods:";
 	for (unsigned int x = 0; x < methods.size(); x++)
 	{
 		std::cout << ", " << methods[x];
