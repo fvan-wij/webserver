@@ -19,8 +19,12 @@ body {
 	<!-- padding: 2.5%; -->
 }
 
-.buttonBlock {
+.testsBlock {
 	padding: 2.5%;
+}
+
+.fileBlock {
+	font-size: 0.5em;
 }
 
 		</style>	
@@ -35,12 +39,10 @@ body {
 							if (response.ok) {
 								console.log('File deleted successfully.');
 							} else {
-								// alert('FILE DELETION FAIED');
 								console.log('File deletion failed.');
 							}
 						})
 						.catch(error => {
-							// alert('FILE DELETION FAIED');
 							console.error('Error:', error);
 							console.log('File deletion failed.');
 						});
@@ -56,7 +58,7 @@ body {
 			<h1>Welcome to our Webserver</h1>
 			<p>This is the default page</p>
 		</div>
-		<div class="buttonBlock">
+		<div class="testsBlock">
 			<h2>Tests</h1>
 
 			<h4>Upload a file</h1>
@@ -68,6 +70,7 @@ body {
 			<h4>Delete a file</h1>
 			<input type="text" id="deleteFileName" placeholder="Enter the file to delete">
 			<button onclick="deleteFile()">Delete file</button>
+			<!--FILES-->
 
 			<h4>Send post request and trigger CGI</h1>
 			<form action='/cgi-bin' method='post'><button name='foo' value='Yeet'>Test Post (trigger CGI)</button></form>

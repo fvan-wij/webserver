@@ -1,9 +1,37 @@
 #include "RequestHandler.hpp"
 #include "HttpResponse.hpp"
+#include <filesystem>
 
 RequestHandler::~RequestHandler()
 {
 	// LOG(RED << "Deleting requesthandler" << END);
+}
+
+static std::string generate_list(std::filesystem::path directory)
+{
+	std::string list;
+
+	for (const auto& entry : std::filesystem::directory_iterator(directory))
+	{
+		std::string img = "<li><p>" + entry.path().string().substr(entry.path().string().find_last_of('/'), entry.path().string().length()) + "</p></li>";
+		list += img;
+	}
+	if (list.empty())
+		return {};
+	else 
+	{
+		list.insert(0, "<ul>");
+		list.append("</ul>");
+		return list;
+	}
+}
+
+static void insert_list_of_files(std::string &html)
+{
+	size_t insertion_index = html.find("<!--FILES-->");
+	LOG_ERROR("insertion index:" << insertion_index);
+	std::filesystem::path uploads = std::filesystem::current_path().string() + "/var/www/uploads";
+	html.insert(insertion_index + 13, "<div class=\"fileBlock\">" + generate_list(uploads) + "</div></body></html>");
 }
 
 std::string RequestHandler::retrieve_html(std::string_view path)
@@ -22,6 +50,7 @@ std::string RequestHandler::retrieve_html(std::string_view path)
 			out.append(buf, 0, file_stream.gcount());
 		}
 		out.append(buf, 0, file_stream.gcount());
+		insert_list_of_files(out);
 		return out;
 	}
 	return out;
@@ -101,6 +130,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	{
 		response.set_state(READY);
 		response.set_body("\r\n" + retrieve_html(path) + "\r\n");
+		// response.set_body("\r\n" + generate_index() + "\r\n");
 	}
 	else if (type == ResponseType::UPLOAD)
 	{

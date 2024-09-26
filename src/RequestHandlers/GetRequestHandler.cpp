@@ -12,6 +12,5 @@ HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_con
 
 	std::string path = get_path(config.root, request.get_uri());
 	path += config.location["/"].index;
-
 	return generate_successful_response(200, path, ResponseType::REGULAR);
 }
