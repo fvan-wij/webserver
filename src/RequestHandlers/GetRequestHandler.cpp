@@ -3,38 +3,14 @@
 
 HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
-	HttpResponse response;
-	// LOG_NOTICE("Handling GET request...\n" << request);
-	LOG_NOTICE("Handling GET request...\n");
-	if (request.get_uri() == "/cgi-bin")
-	{
-		response.set_status_code(200);
-		response.set_status_mssg("CGI data");
-		std::string mssg = "\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n";
-		response.set_body(mssg);
-		response.set_state(NOT_READY);
-		response.set_type(ResponseType::CGI);
-		return response;
-	}
-	else if (validate_method(request, config))
-	{
-		std::string path = "." + config.root + request.get_uri();
-		if (!config.location["/"].index.empty())
-			path += config.location["/"].index;
-		LOG_DEBUG(path);
-		response.set_body("\r\n" + retrieve_html(path) + "\r\n");
-		response.set_state(READY);
-		response.set_type(ResponseType::REGULAR);
-		return response;
-	}
-	else
-	{
-		response.set_status_code(400);
-		response.set_status_mssg("Bad Request - Method not allowed");
-		std::string mssg = "\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n";
-		response.set_body(mssg);
-		response.set_state(READY);
-		response.set_type(ResponseType::ERROR);
-		return response;
-	}
+	LOG_NOTICE("Handling GET request:\n" << request);
+
+	if (!location_exists(config, request.get_uri()))
+		return generate_error_response(404, "Not Found - The server cannot find the requested resource");
+	if (!method_is_valid(request.get_uri(), request.get_method(), config))
+		return generate_error_response(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
+
+	std::string path = get_path(config.root, request.get_uri());
+	path += config.location["/"].index;
+	return generate_successful_response(200, path, ResponseType::REGULAR);
 }

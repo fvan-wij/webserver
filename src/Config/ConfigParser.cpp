@@ -16,7 +16,9 @@ static std::vector<std::string> tokenize_string(std::string string, std::string 
         while (pos != std::string::npos)
         {
 			std::string token = string.substr(0, pos);
-			if (!token.empty() && token != "\n") {
+			if (!token.empty() && token != "\n") 
+			{
+				token.erase(0, token.find_first_not_of("\t\r\n "));
                 tokens.push_back(token);
 			}
 			string.erase(0, pos + delimiter.length());
@@ -206,10 +208,10 @@ t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
 	return (server_config);
 }
 
-std::vector<t_config>	parse_config(std::string config_path)
+std::vector<t_config>	parse_config(std::string_view config_path)
 {
 	std::vector<t_config>		configs;
-	std::ifstream				in(config_path, std::ios_base::in);
+	std::ifstream				in(config_path.data(), std::ios_base::in);
 	std::vector<std::string>	tokenized_line;
 	std::string					line;
 	std::vector<std::string>	tokens;
@@ -240,4 +242,4 @@ std::vector<t_config>	parse_config(std::string config_path)
 	std::cout << std::endl;
 	std::cout << std::endl;
 	return (configs);
-};
+}

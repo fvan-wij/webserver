@@ -56,15 +56,18 @@ void Server::handle_events()
 			std::optional<std::vector<char>> read_data = s.read();
 			if (read_data)
 			{
-				auto http_server = _fd_map.at(s.get_fd());
+				auto http_server = _httpserver_map.at(s.get_fd());
 				std::vector<char> data = read_data.value();
 				http_server->handle(data);
 			}
+			else
+				_client_remove(i);
+
 		}
 		else if (s.is_client() && ready_to_write(pfd.revents))
 		{
 			// LOG("fd: " << pfd.fd << " POLLOUT");
-			auto http_server = _fd_map.at(s.get_fd());
+			auto http_server = _httpserver_map.at(s.get_fd());
 			if (http_server->response.is_ready())
 			{
 				std::string data = http_server->get_data();
@@ -88,7 +91,7 @@ int Server::poll()
 	{
 		if (s.is_client())
 		{
-			auto http_server = _fd_map.at(s.get_fd());
+			auto http_server = _httpserver_map.at(s.get_fd());
 			http_server->poll_cgi();
 		}
 	}
@@ -132,7 +135,7 @@ void Server::_add_client(Socket s)
 
 	if (s.is_client())
 	{
-		_fd_map[r_s.get_fd()] =  std::make_shared<HttpServer>(_config);
+		_httpserver_map[r_s.get_fd()] =  std::make_shared<HttpServer>(_config);
 		mask = POLLIN | POLLOUT;
 	}
 
@@ -145,8 +148,8 @@ void Server::_client_remove(int index)
 
 	if (_sockets[index].is_client())
 	{
-		auto http_server = _fd_map.find(_sockets[index].get_fd());
-		_fd_map.erase(http_server);
+		auto http_server = _httpserver_map.find(_sockets[index].get_fd());
+		_httpserver_map.erase(http_server);
 	}
 
 	close(fd);
