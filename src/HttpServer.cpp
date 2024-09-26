@@ -66,7 +66,6 @@ void		HttpServer::handle_headers(std::vector<char> data)
 		std::string_view sv_body(_body_buffer.data(), _body_buffer.size());
 		if (str.find("WebKitFormBoundary") != std::string::npos)
 		{
-			LOG_ERROR("BODYYYYYYYYYYY");
 			_current_state = State::ReadingBody;
 			return;
 		}
@@ -96,7 +95,6 @@ void		HttpServer::handle_headers(std::vector<char> data)
 			}
 			catch (std::invalid_argument &e)
 			{
-				LOG_ERROR("Hmv'e" << e.what());
 				exit(123);
 			}
 		}
@@ -114,13 +112,6 @@ void		HttpServer::handle_body(std::vector<char> data)
 	it++;
 
 	std::string_view sv(_body_buffer.data(), _body_buffer.size());
-	// if (sv.find("\r\n\r\n", 0) != std::string::npos)
-	// {
-	// 		_current_state = State::GeneratingResponse;
-	// 		LOG_ERROR("Generating response... ");
-	// 		generate_response();
-	// 		return;
-	// }
 	if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
 	{
 			_current_state = State::GeneratingResponse;

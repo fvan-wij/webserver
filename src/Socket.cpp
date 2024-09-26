@@ -82,7 +82,6 @@ std::optional<std::vector<char>> Socket::read()
 	if (n != 0)
 	{
 		std::vector<char> data(buffer, buffer + n);
-		LOG_ERROR("Size of vector: " << data.size());
 		return data;
 	}
 	else {

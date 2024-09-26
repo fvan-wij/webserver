@@ -30,7 +30,7 @@ static void insert_list_of_files(std::string &html)
 {
 	size_t insertion_index = html.find("<!--FILES-->");
 	std::filesystem::path uploads = std::filesystem::current_path().string() + "/var/www/uploads";
-	html.insert(insertion_index + 13, "<div class=\"fileBlock\">" + generate_list(uploads) + "</div></body></html>");
+	html.insert(insertion_index + 13, "<div class=\"fileBlock\">" + generate_list(uploads) + "</div>");
 }
 
 std::string RequestHandler::retrieve_html(std::string_view path)
@@ -39,6 +39,7 @@ std::string RequestHandler::retrieve_html(std::string_view path)
 	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
 	auto 			out 		= std::string();
 
+	LOG_DEBUG(path);
 	if (not file_stream)
 		LOG_ERROR("Could not open file");
 	else
@@ -129,12 +130,16 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	{
 		response.set_state(READY);
 		response.set_body("\r\n" + retrieve_html(path) + "\r\n");
-		// response.set_body("\r\n" + generate_index() + "\r\n");
 	}
 	else if (type == ResponseType::UPLOAD)
 	{
 		response.set_state(READY);
-		response.set_body("\r\n<h1>File uploaded</h1>\r\n");
+		response.set_body("\r\n<h1>File uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
+	}
+	else if (type == ResponseType::DELETE)
+	{
+		response.set_state(READY);
+		response.set_body("\r\n<h1>File deleted</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
 	}
 	else if (type == ResponseType::CGI)
 	{
@@ -155,6 +160,8 @@ std::string	RequestHandler::get_path(std::string_view root, std::string_view uri
 
 bool	RequestHandler::location_exists(t_config &config, std::string_view loc)
 {
+	// for (auto& it : config.location)
+	// 	LOG_DEBUG("," << it.first << ",");
 	auto it = config.location.find(loc.data());
 	if (it != config.location.end())
 		return true;
