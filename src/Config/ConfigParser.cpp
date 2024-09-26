@@ -204,7 +204,7 @@ t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
 		}
 		i++;
 	}
-	print_config(server_config);
+	// print_config(server_config);
 	return (server_config);
 }
 

@@ -1,5 +1,5 @@
 NAME		:= app
-RUN_CMD		:= ./$(NAME) 
+RUN_CMD		:= ./$(NAME)
 
 CFLAGS		+= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
 
@@ -54,7 +54,7 @@ OBJ_DIRS 	:=	$(dir $(OBJS))
 
 .PHONY: make_libs fclean
 
-all: 
+all:
 	$(MAKE) $(NAME) -j4
 	@mkdir -p ./var/www/uploads
 
@@ -85,5 +85,5 @@ norm:
 	norminette include src
 
 cgi:
-	mkdir -p ~/.local/bin 
+	mkdir -p ~/.local/bin
 	gcc sleep_echo_prog.c -o ~/.local/bin/sleep_echo_var
