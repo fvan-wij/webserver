@@ -29,7 +29,6 @@ static std::string generate_list(std::filesystem::path directory)
 static void insert_list_of_files(std::string &html)
 {
 	size_t insertion_index = html.find("<!--FILES-->");
-	LOG_ERROR("insertion index:" << insertion_index);
 	std::filesystem::path uploads = std::filesystem::current_path().string() + "/var/www/uploads";
 	html.insert(insertion_index + 13, "<div class=\"fileBlock\">" + generate_list(uploads) + "</div></body></html>");
 }
