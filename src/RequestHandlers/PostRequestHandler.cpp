@@ -50,14 +50,14 @@ HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_co
 	if (content_length_exceeded(request, config))
 		return generate_error_response(413, "Content Too Large");
 	else if (request.get_uri() == "/cgi-bin")
-		return generate_successful_response(200, "", ResponseType::CGI);
+		return generate_successful_response(200, "", ResponseType::CGI, config.root, request.get_location());
 	else
 	{
 		std::string path = get_path(config.root, request.get_uri());
 		path += config.location["/"].index;
 		if (!upload_file(request.get_body(), request.get_uri(), config))
 			LOG_ERROR("Couldn't upload file");
-		return generate_successful_response(200, path, ResponseType::UPLOAD);
+		return generate_successful_response(200, path, ResponseType::UPLOAD, config.root, request.get_location());
 	}
 	return generate_error_response(400, "Bad Request");
 }

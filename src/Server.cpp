@@ -75,6 +75,10 @@ void Server::handle_events()
 				s.write(data);
 				_client_remove(i);
 			}
+			else if (http_server->response.get_type() == ResponseType::FETCH_FILE)
+			{
+				http_server->build_body(http_server->response.get_path());
+			}
 		}
 		else if (error_occurred(pfd.revents))
 		{

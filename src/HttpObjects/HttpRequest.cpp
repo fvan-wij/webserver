@@ -1,5 +1,6 @@
 #include "HttpRequest.hpp"
 #include "Logger.hpp"
+#include <algorithm>
 
 std::string	HttpRequest::get_method() const
 {
@@ -29,36 +30,6 @@ std::optional<std::string_view>	HttpRequest::get_value(const std::string &key) c
 void	HttpRequest::set_type(RequestType type)
 {
 	_type = type;
-}
-
-void	HttpRequest::parse(const std::string &buffer)
-{
-	std::istringstream 			stream(buffer);
-	std::string					line;
-
-	_parse_request_line(stream);
-	size_t			colon_index;
-	bool 			body = false;
-	while (std::getline(stream, line))
-	{
-		if (!body)
-		{
-			if (line[0] == ':')
-				colon_index = line.rfind(':');
-			else
-				colon_index = line.find(':');
-			if (colon_index != std::string::npos)
-			{
-				std::string key = line.substr(0, colon_index);
-				std::string value = line.substr(colon_index + 2, line.length() - colon_index);
-				_header.emplace(key, value);
-			}
-			if (line[0] == '\r')
-				body = true;
-		}
-		// else if (body)
-		// 	_body += line;
-	}
 }
 
 void	HttpRequest::parse_header(const std::string &data)
@@ -126,6 +97,22 @@ void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
 	if (tokens[1][0] != '/')
 		throw HttpException("HttpRequest: URI not present!");
 	_uri = tokens[1];
+	if (_uri.rfind('.') != std::string::npos)
+	{
+		_b_file = true;
+		_filename = _uri.substr(_uri.rfind('/'), _uri.length());
+		if (std::count(_uri.begin(), _uri.end(), '/') == 1)
+			_location = "/";
+		else
+			_location = _uri.substr(0, _uri.find("/", 1));
+		LOG_ERROR("File: " << _filename);
+	}
+	else 
+	{
+		_location = _uri.substr(0, _uri.find("/", 1));
+		_b_file = false;
+	}
+	LOG_ERROR("Location: " << _location);
 	if (tokens[2] != "HTTP/1.1\r")
 		throw HttpException("HttpRequest: Protocol not present!");
 	_protocol = tokens[2];

@@ -24,6 +24,6 @@ std::string		HttpResponse::to_string() const
 {
 	std::string response;
 	response += "HTTP/1.1 " + std::to_string(_status_code) + " " + _status_message + "\r\n";
-	response += _body + "\r\n";
+	response += "\r\n" + _body + "\r\n";
 	return response;
 }

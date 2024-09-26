@@ -13,7 +13,9 @@ static std::string generate_list(std::filesystem::path directory)
 
 	for (const auto& entry : std::filesystem::directory_iterator(directory))
 	{
-		std::string img = "<li><p>" + entry.path().string().substr(entry.path().string().find_last_of('/'), entry.path().string().length()) + "</p></li>";
+		std::string file_path = "/uploads" + entry.path().string().substr(entry.path().string().find_last_of('/'), entry.path().string().length());// Fix this hardcoded shit!
+		LOG_ERROR("generate list bla" << file_path);
+		std::string img = "<li><a href=\"" + file_path + "\">" + file_path + "</a></li>";
 		list += img;
 	}
 	if (list.empty())
@@ -26,14 +28,18 @@ static std::string generate_list(std::filesystem::path directory)
 	}
 }
 
-static void insert_list_of_files(std::string &html)
+static void insert_list_of_files(std::string &html, std::string_view root, std::string_view location)
 {
 	size_t insertion_index = html.find("<!--FILES-->");
-	std::filesystem::path uploads = std::filesystem::current_path().string() + "/var/www/uploads";
-	html.insert(insertion_index + 13, "<div class=\"fileBlock\">" + generate_list(uploads) + "</div>");
+	if (location == "/")
+	{
+		std::filesystem::path uploads = std::filesystem::current_path().string() + root.data() + "/uploads"; // Fix this hardcoded shit!
+		LOG_ERROR("insert bla " << uploads);
+		html.insert(insertion_index + 13, "<div class=\"fileBlock\">" + generate_list(uploads) + "</div>");
+	}
 }
 
-std::string RequestHandler::retrieve_html(std::string_view path)
+std::string RequestHandler::retrieve_html(std::string_view path, std::string_view root, std::string_view location)
 {
 	constexpr auto 	read_size 	= std::size_t(1024);
 	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
@@ -50,7 +56,10 @@ std::string RequestHandler::retrieve_html(std::string_view path)
 			out.append(buf, 0, file_stream.gcount());
 		}
 		out.append(buf, 0, file_stream.gcount());
-		insert_list_of_files(out);
+		if (path.find("index.html") != std::string::npos)
+		{
+			insert_list_of_files(out, root, location);
+		}
 		return out;
 	}
 	return out;
@@ -121,7 +130,7 @@ HttpResponse	RequestHandler::generate_error_response(int error_code, std::string
 	return response;
 }
 
-HttpResponse	RequestHandler::generate_successful_response(int status_code, std::string_view path, ResponseType type)
+HttpResponse	RequestHandler::generate_successful_response(int status_code, std::string_view path, ResponseType type, std::string_view root, std::string_view location)
 {
 	HttpResponse response;
 	response.set_status_code(status_code);
@@ -129,7 +138,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	if (type == ResponseType::REGULAR)
 	{
 		response.set_state(READY);
-		response.set_body("\r\n" + retrieve_html(path) + "\r\n");
+		response.set_body("\r\n" + retrieve_html(path, root, location) + "\r\n");
 	}
 	else if (type == ResponseType::UPLOAD)
 	{
@@ -139,7 +148,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	else if (type == ResponseType::DELETE)
 	{
 		response.set_state(READY);
-		response.set_body("\r\n<h1>File deleted</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
+		response.set_body("\r\n<h1>File deleted</h1>\r\n");
 	}
 	else if (type == ResponseType::CGI)
 	{
@@ -160,8 +169,6 @@ std::string	RequestHandler::get_path(std::string_view root, std::string_view uri
 
 bool	RequestHandler::location_exists(t_config &config, std::string_view loc)
 {
-	// for (auto& it : config.location)
-	// 	LOG_DEBUG("," << it.first << ",");
 	auto it = config.location.find(loc.data());
 	if (it != config.location.end())
 		return true;

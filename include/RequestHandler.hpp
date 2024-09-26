@@ -19,9 +19,9 @@ class RequestHandler {
 		bool 					content_length_exceeded(const HttpRequest &request, t_config &config);
 
 		HttpResponse			generate_error_response(int error_code, std::string_view message);
-		HttpResponse			generate_successful_response(int status_code, std::string_view path, ResponseType type);
+		HttpResponse			generate_successful_response(int status_code, std::string_view path, ResponseType type, std::string_view root, std::string_view location);
 
-		std::string 			retrieve_html(std::string_view path);
+		std::string 			retrieve_html(std::string_view path, std::string_view root, std::string_view location);
 		std::string				get_path(std::string_view root, std::string_view uri);
 		virtual ~RequestHandler();
 };

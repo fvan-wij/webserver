@@ -19,7 +19,7 @@ HttpResponse	DeleteRequestHandler::handle_request(const HttpRequest &request, t_
 			return generate_error_response(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
 		if (std::remove(filepath.c_str()) == 0)
 			LOG_NOTICE("Successfully deleted " << filepath);
-		return generate_successful_response(200, directorypath.string(), ResponseType::DELETE);
+		return generate_successful_response(200, directorypath.string(), ResponseType::DELETE, config.root, request.get_location());
 	}
 	return generate_error_response(400, "Bad Request");
 }

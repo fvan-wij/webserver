@@ -25,6 +25,7 @@ class HttpServer
 			ReadingBody,
 			GeneratingResponse,
 			ProcessingCGI,
+			ProcessingBody,
 		};
 
 		void		handle(std::vector<char> data);
@@ -34,6 +35,7 @@ class HttpServer
 		void		handle_headers(std::vector<char> data);
 		void		handle_body(std::vector<char> data);
 		void		generate_response();
+		bool		build_body(std::string_view path);
 
 		// std::optional<size_t> validate_content_length(); //413 Payload Too Large
 		// std::optional<size_t> validate_path();

@@ -45,6 +45,10 @@ void		HttpServer::on_data_received(std::vector<char> data)
 		case State::ProcessingCGI:
 			response.set_state(_cgi.poll());
 			break;
+		case State::ProcessingBody:
+			response.set_state(build_body(response.get_path()));
+			LOG_DEBUG("Processing body...");
+			break;
 	}
 }
 
@@ -143,6 +147,11 @@ void		HttpServer::generate_response()
 		_current_state = State::ProcessingCGI;
 		_cgi.start("sleep_echo_var");
 	}
+	else if (response.get_type() == ResponseType::FETCH_FILE)
+	{
+		_current_state = State::ProcessingBody;
+		build_body(response.get_path());
+	}
 }
 
 std::string	HttpServer::get_data()
@@ -168,5 +177,39 @@ void 		HttpServer::poll_cgi()
 {
 	if (response.get_type() == ResponseType::CGI)
 		response.set_state(_cgi.poll());
+}
+
+#include <cstring>
+#include <fstream>
+bool	HttpServer::build_body(std::string_view path)
+{
+	char 			buffer[1024];
+	constexpr auto 	read_size 	= std::size_t(1024);
+	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
+	auto 			out 		= std::string();
+
+	LOG_ERROR("BUILDING BODY...");
+
+	if (not file_stream)
+		LOG_ERROR("Could not open file");
+	else
+	{
+		file_stream.seekg(response.get_streamcount());
+		file_stream.read(&buffer[0], read_size);
+		std::streamsize bytes = file_stream.gcount();
+		response.update_streamcount(bytes);
+		LOG_ERROR(bytes << " read and appended to body");
+		std::vector<char> data(buffer, buffer + bytes);
+		std::string str(data.begin(), data.end());
+		response.append_body(str);
+		if (bytes < 1024)
+		{
+			response.set_status_code(200);
+			response.set_state(READY);
+			response.set_streamcount(0);
+			return true;
+		}
+	}
+	return false;
 }
 
