@@ -7,6 +7,7 @@
 #include <string_view>
 #include <fstream>
 #include <algorithm>
+#include <filesystem>
 
 class RequestHandler {
 	public:
@@ -21,6 +22,7 @@ class RequestHandler {
 		HttpResponse			generate_error_response(int error_code, std::string_view message);
 		HttpResponse			generate_successful_response(int status_code, std::string_view path, ResponseType type, std::string_view root, std::string_view location);
 
+		std::string 			generate_directory_list_HTML(std::filesystem::path directory);
 		std::string 			retrieve_html(std::string_view path, std::string_view root, std::string_view location);
 		std::string				get_path(std::string_view root, std::string_view uri);
 		virtual ~RequestHandler();

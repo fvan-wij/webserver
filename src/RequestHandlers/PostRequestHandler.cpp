@@ -23,13 +23,16 @@ static bool	upload_file(std::vector<char> buffer, std::string_view uri, t_config
 		{
 			if (!begin_trimmed && i > 4 && buffer[i - 3] == '\r' && buffer[i - 2] == '\n'&& buffer[i - 1] == '\r' && buffer[i] == '\n')
 			{
+				LOG_ERROR("ERASING THE BEGINNING!!!!");
 				buffer.erase(buffer.begin(), buffer.begin() + i + 1);
 				begin_trimmed = true;
 			}
 			if (begin_trimmed && i > 6 && buffer[i - 5] == '-' && buffer[i - 4] == '-'&& buffer[i - 3] == '-' && buffer[i - 2] == '-' && buffer[i - 1] == '-' && buffer[i] == '-')
 			{
+				LOG_ERROR("ERASING THE ENDDDDDDDDDD!!!!");
 				buffer.erase(buffer.begin() + i - 5, buffer.end());
 			}
+			LOG_ERROR(buffer[i]);
 		}
 		outfile.write(buffer.data(), buffer.size());
 		outfile.close();

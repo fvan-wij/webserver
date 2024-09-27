@@ -34,3 +34,17 @@
 #define GREEN 	"\x1B[32m"
 #define YELLOW 	"\x1B[33m"
 #define END		"\033[0m\t\t"
+
+const std::string HTML_TEMPLATE = 
+{
+		"<!DOCTYPE html>"
+		"<html lang=\"en\">"
+		"<head>"
+		"<meta charset=\"UTF-8\">"
+		"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+		"</head>"
+		"<body>"
+		"<!--CONTENT-->"
+		"</body>"
+		"</html>"
+};

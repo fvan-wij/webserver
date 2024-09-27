@@ -1,7 +1,8 @@
 #include "HttpServer.hpp"
 #include "meta.hpp"
 #include <cwchar>
-#include <string>
+#include <cstring>
+#include <fstream>
 
 HttpServer::HttpServer() : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders)
 {
@@ -179,8 +180,6 @@ void 		HttpServer::poll_cgi()
 		response.set_state(_cgi.poll());
 }
 
-#include <cstring>
-#include <fstream>
 bool	HttpServer::build_body(std::string_view path)
 {
 	char 			buffer[1024];
@@ -188,17 +187,21 @@ bool	HttpServer::build_body(std::string_view path)
 	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
 	auto 			out 		= std::string();
 
-	LOG_ERROR("BUILDING BODY...");
-
 	if (not file_stream)
+	{
+		response.set_status_code(400);
+		response.set_status_mssg("Could not fetch file");
+		response.set_state(READY);
+		response.set_type(ResponseType::ERROR);
+		response.set_streamcount(0);
 		LOG_ERROR("Could not open file");
+	}
 	else
 	{
 		file_stream.seekg(response.get_streamcount());
 		file_stream.read(&buffer[0], read_size);
 		std::streamsize bytes = file_stream.gcount();
 		response.update_streamcount(bytes);
-		LOG_ERROR(bytes << " read and appended to body");
 		std::vector<char> data(buffer, buffer + bytes);
 		std::string str(data.begin(), data.end());
 		response.append_body(str);

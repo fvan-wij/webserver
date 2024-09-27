@@ -1,6 +1,5 @@
 #include "RequestHandler.hpp"
 #include "HttpResponse.hpp"
-#include <filesystem>
 
 RequestHandler::~RequestHandler()
 {
@@ -140,6 +139,11 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 		response.set_state(READY);
 		response.set_body("\r\n" + retrieve_html(path, root, location) + "\r\n");
 	}
+	else if (type == ResponseType::AUTOINDEX)
+	{
+		response.set_state(READY);
+		response.set_body("\r\n" + generate_directory_list_HTML(path) + "\r\n");
+	}
 	else if (type == ResponseType::UPLOAD)
 	{
 		response.set_state(READY);
@@ -173,12 +177,27 @@ bool	RequestHandler::location_exists(t_config &config, std::string_view loc)
 	if (it != config.location.end())
 		return true;
 	return false;
+
 }
 
-//Check if there's a body and/or Content-Length key-value pair
-//	This should not be present in a GET request, either ignore or generate appropriate error response
-//Get root location
-//	What if there's no root location? Perhaps this needs to be checked before setting up the server
-//Generate path to retrieve from, check if exists
-//Retrieve HTML
-//	If path to HTML does not exist: error!
+std::string RequestHandler::generate_directory_list_HTML(std::filesystem::path directory)
+{
+	std::string list;
+
+	for (const auto& entry : std::filesystem::directory_iterator(directory))
+	{
+		std::string img = "<li>" + entry.path().string() + "</li>";
+		list += img;
+	}
+	if (list.empty())
+		return {};
+	else 
+	{
+		std::string html = HTML_TEMPLATE;
+		list.insert(0, "<ul>");
+		list.append("</ul>");
+		html.insert(html.find("<!--CONTENT-->") + 14, list);
+		return html;
+	}
+}
+

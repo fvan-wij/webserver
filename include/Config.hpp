@@ -31,8 +31,8 @@ typedef struct s_config {
 } t_config;
 
 const t_config DEFAULT_CONFIG = {
-    {"default_server"},                        // server_name
-    {{"0.0.0.0", 9090}},                    // listen (IP, port)
+    {"default_server"},                   // server_name
+    {{"0.0.0.0", 9090}},                  // listen (IP, port)
     {"GET", "POST"},                      // methods
     { {"/", DEFAULT_LOCATION} },          // location map
     "/var/www/html",                      // root

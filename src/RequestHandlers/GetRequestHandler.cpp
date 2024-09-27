@@ -11,8 +11,15 @@ HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_con
 	std::string path = get_path(config.root, request.get_uri());
 	if (!request.is_file())
 	{
-		path += config.location[request.get_location()].index;
-		return generate_successful_response(200, path, ResponseType::REGULAR, config.root, request.get_location());
+		if (config.location[request.get_location()].index.empty())
+		{
+			return generate_successful_response(200, path, ResponseType::AUTOINDEX, config.root, request.get_location());
+		}
+		else
+		{
+			path += config.location[request.get_location()].index;
+			return generate_successful_response(200, path, ResponseType::REGULAR, config.root, request.get_location());
+		}
 	}
 	else
 	{

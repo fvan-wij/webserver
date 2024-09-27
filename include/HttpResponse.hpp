@@ -14,7 +14,8 @@ enum class ResponseType:int {
 	DELETE = 2,
 	FETCH_FILE = 3,
 	CGI = 4,
-	ERROR = 5,
+	AUTOINDEX = 5,
+	ERROR = 6,
 };
 
 class HttpResponse 
