@@ -11,18 +11,23 @@
 
 #ifndef USE_TEST_MAIN
 
-std::optional<std::vector<Server>> create_servers(std::vector<t_config> &configs) {
-    if (!configs.empty()) {
-        LOG_NOTICE("Creating server(s):");
-        std::vector<Server> servers;
-        for (auto &config : configs) {
-            servers.emplace_back(config);
-        }
-        return servers;
-    } else {
-        LOG_ERROR("Could not create server(s) from the given config file. Did you supply a config file?");
-        return std::nullopt;
-    }
+std::optional<std::vector<Server>> create_servers(std::vector<t_config> &configs)
+{
+	if (!configs.empty())
+	{
+		LOG_NOTICE("Creating server(s):");
+		std::vector<Server> servers;
+		for (auto &config : configs)
+		{
+			servers.emplace_back(config);
+		}
+		return servers;
+	}
+	else
+	{
+		LOG_ERROR("Could not create server(s) from the given config file. Did you supply a config file?");
+		return std::nullopt;
+	}
 }
 
 int	run_servers(std::vector<Server> &servers)
@@ -31,7 +36,7 @@ int	run_servers(std::vector<Server> &servers)
 
 	while (!should_exit)
 	{
-		for(Server &s : servers)
+		for (Server &s : servers)
 		{
 			if (s.should_exit())
 			{
@@ -47,9 +52,19 @@ int	run_servers(std::vector<Server> &servers)
 	return 1;
 }
 
+void write_pid_to_file(const std::string name)
+{
+	std::ofstream file(name);
+
+	file << getpid() << std::endl;
+	file.close();
+}
+
 int main(int argc, char *argv[])
 {
 	std::vector<t_config>	configs;
+
+	write_pid_to_file("pid.txt");
 
 	if (argc == 2 && argv[1])
 	{
@@ -57,9 +72,8 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		LOG_ERROR("Config is invalid or not present, using DEFAULT_CONFIG");
+		LOG_NOTICE("Config is invalid or not present, using DEFAULT_CONFIG");
 		configs.push_back(DEFAULT_CONFIG);
-		// return -1;
 	}
 	if (auto initialized_servers = create_servers(configs))
 	{
@@ -127,63 +141,63 @@ const std::string get =
 };
 
 const std::string get_real = 
-    "GET / HTTP/1.1\r\n"
-    "Host: localhost:9090\r\n"
-    "Connection: keep-alive\r\n"
-    "Cache-Control: max-age=0\r\n"
-    "sec-ch-ua: \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"\r\n"
-    "sec-ch-ua-mobile: ?0\r\n"
-    "sec-ch-ua-platform: \"Linux\"\r\n"
-    "Upgrade-Insecure-Requests: 1\r\n"
-    "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n"
-    "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\r\n"
-    "Sec-Fetch-Site: none\r\n"
-    "Sec-Fetch-Mode: navigate\r\n"
-    "Sec-Fetch-User: ?1\r\n"
-    "Sec-Fetch-Dest: document\r\n"
-    "Accept-Encoding: gzip, deflate, br\r\n"
-    "Accept-Language: en-GB,en;q=0.9,en-US;q=0.8,nl;q=0.7\r\n\r\n";
+"GET / HTTP/1.1\r\n"
+"Host: localhost:9090\r\n"
+"Connection: keep-alive\r\n"
+"Cache-Control: max-age=0\r\n"
+"sec-ch-ua: \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"\r\n"
+"sec-ch-ua-mobile: ?0\r\n"
+"sec-ch-ua-platform: \"Linux\"\r\n"
+"Upgrade-Insecure-Requests: 1\r\n"
+"User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n"
+"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\r\n"
+"Sec-Fetch-Site: none\r\n"
+"Sec-Fetch-Mode: navigate\r\n"
+"Sec-Fetch-User: ?1\r\n"
+"Sec-Fetch-Dest: document\r\n"
+"Accept-Encoding: gzip, deflate, br\r\n"
+"Accept-Language: en-GB,en;q=0.9,en-US;q=0.8,nl;q=0.7\r\n\r\n";
 
 const std::string dummy_upload =
-    "POST /upload HTTP/1.1\r\n"
-    "Host: example.com\r\n"
-    "Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
-    "Content-Length: 1024\r\n"
-    "\r\n"
-    "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
-    "Content-Disposition: form-data; name=\"file\"; filename=\"dummy_image.png\"\r\n"
-    "Content-Type: image/png\r\n"
-    "\r\n"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-    "\r\n"
-    "------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
-
-const std::string img = {
 "POST /upload HTTP/1.1\r\n"
 "Host: example.com\r\n"
-"Content-Type: multipart/form-data; boundary=---------------------------123456789\r\n"
-"Content-Length: [LENGTH_OF_CONTENT]\r\n"
+"Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
+"Content-Length: 1024\r\n"
 "\r\n"
-"-----------------------------123456789\r\n"
-"Content-Disposition: form-data; name='file'; filename='small_image.png'\r\n"
+"------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n"
+"Content-Disposition: form-data; name=\"file\"; filename=\"dummy_image.png\"\r\n"
 "Content-Type: image/png\r\n"
 "\r\n"
-"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/DFZZQAAAABJRU5ErkJggg==\r\n"
-"-----------------------------123456789--\r\n"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+"\r\n"
+"------WebKitFormBoundary7MA4YWxkTrZu0gW--\r\n";
+
+const std::string img = {
+	"POST /upload HTTP/1.1\r\n"
+		"Host: example.com\r\n"
+		"Content-Type: multipart/form-data; boundary=---------------------------123456789\r\n"
+		"Content-Length: [LENGTH_OF_CONTENT]\r\n"
+		"\r\n"
+		"-----------------------------123456789\r\n"
+		"Content-Disposition: form-data; name='file'; filename='small_image.png'\r\n"
+		"Content-Type: image/png\r\n"
+		"\r\n"
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/DFZZQAAAABJRU5ErkJggg==\r\n"
+		"-----------------------------123456789--\r\n"
 };
 
 #include "Config.hpp"

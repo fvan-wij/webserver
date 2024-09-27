@@ -1,5 +1,5 @@
 NAME		:= app
-RUN_CMD		:= ./$(NAME)
+RUN_CMD		:= ./$(NAME) test.conf
 
 CFLAGS		+= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
 
