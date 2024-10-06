@@ -170,3 +170,12 @@ void 		HttpServer::poll_cgi()
 		response.set_state(_cgi.poll());
 }
 
+HttpServer &HttpServer::operator=(const HttpServer &other)
+{
+	_header_buffer = other._header_buffer;
+	_body_buffer = other._body_buffer;
+	_b_headers_complete = other._b_headers_complete;
+	_b_body_complete = other._b_body_complete;
+	_current_state = other._current_state;
+	return *this;
+}

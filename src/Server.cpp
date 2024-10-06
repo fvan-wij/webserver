@@ -135,7 +135,7 @@ void Server::_add_client(Socket s)
 
 	if (s.is_client())
 	{
-		_httpserver_map[r_s.get_fd()] =  std::make_shared<HttpServer>(_config);
+		_httpserver_map[r_s.get_fd()] = new HttpServer(_config);
 		mask = POLLIN | POLLOUT;
 	}
 
@@ -149,6 +149,7 @@ void Server::_client_remove(int index)
 	if (_sockets[index].is_client())
 	{
 		auto http_server = _httpserver_map.find(_sockets[index].get_fd());
+		delete http_server->second;
 		_httpserver_map.erase(http_server);
 	}
 
@@ -160,7 +161,7 @@ void Server::_client_remove(int index)
 
 bool Server::error_occurred(short revents)
 {
-	return revents & POLLERR || revents & POLLNVAL;	
+	return revents & POLLERR || revents & POLLNVAL;
 }
 
 bool Server::ready_to_read(short revents)
