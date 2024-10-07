@@ -9,12 +9,31 @@
 #include <vector>
 #include <optional>
 
-enum class SocketType 
+/**
+ * @brief Enum class to differentiate between listener and client sockets
+ *
+ */
+enum class SocketType
 {
 	LISTENER,
 	CLIENT,
 };
 
+/**
+ * @brief Custom implementation of a socket class.
+ *
+ * The added functionality includes:
+ *
+ * 	- Read and write functions that return std::optional<std::vector<char>> and take std::string as arguments
+ *
+ * 	- Overloaded << operator for easy printing
+ *
+ * 	- Overloaded == operator for easy comparison
+ *
+ * 	- Getters for the file descriptor, port and address
+ *
+ * 	- is_listener() and is_client() functions to check the type of socket
+ */
 class Socket
 {
 	public:
@@ -25,7 +44,7 @@ class Socket
 		Socket(const Socket &);
 		Socket &operator=(const Socket &);
 		~Socket();
-		
+
 		// Funcs
 		Socket 								accept();
 		std::optional<std::vector<char>> 	read();

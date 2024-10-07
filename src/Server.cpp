@@ -140,18 +140,20 @@ int Server::_poll_events()
 }
 
 /**
- * @brief Copies socket 's' into the '_sockets' attribute where it will reside untill we call '_client_remove'.
+ * @brief We add the socket 's' to the list of sockets that we will poll on.
  *
- * After this is done you should only use the '_sockets' attribute to access 's'.
+ * As 's' is not a reference, we copy it into the _sockets vector. This means that all other copies of 's' will become invalid the moment this function returns.
  *
- * If not followed undefined behaviour ensues.
+ * The socket does not actually need to be a client socket, it can also be a listener socket. (Maybe we should rename this function)
+ *
+ * We also add the socket to the _httpserver_map if it is a client socket.
+ *
+ * @param s the socket to add.
  */
 void Server::_add_client(Socket s)
 {
 	short mask = POLLIN;
 
-	// we copy `s` into _sockets where it will reside until we call `_client_remove`.
-	// This means that all other refences to still `s` will become invalid the moment this function returns.
 	_sockets.push_back(s);
 
 	Socket &r_s = _sockets.back();
@@ -166,7 +168,11 @@ void Server::_add_client(Socket s)
 }
 
 /**
- * @brief Removes socket at index from '_sockets'.
+ * @brief Removes the socket at index 'index' from the list of sockets that we poll on.
+ *
+ * This function also closes the file descriptor of the socket.
+ *
+ * @param index the index of the socket to remove.
  */
 void Server::_client_remove(int index)
 {
