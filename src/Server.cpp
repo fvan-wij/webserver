@@ -163,7 +163,7 @@ void Server::_add_client(Socket s)
 }
 
 /**
- * @brief Removes socket 's' from '_sockets'.
+ * @brief Removes socket at index from '_sockets'.
  */
 void Server::_client_remove(int index)
 {
