@@ -56,7 +56,7 @@ OBJ_DIRS 	:=	$(dir $(OBJS))
 
 all:
 	$(MAKE) $(NAME) -j4
-	@mkdir -p uploads
+	@mkdir -p ./var/www/uploads
 
 $(NAME): $(OBJS) $(SRC_DIR)/$(SRC_ENTRY)
 	$(CXX) $(SRC_DIR)/$(SRC_ENTRY) $(OBJS) $(CFLAGS) $(IFLAGS) -o $(NAME)
@@ -67,7 +67,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS)
 
 clean:
 	rm -rf $(OBJ_DIR)
-	rm -rf uploads
+	rm -rf ./var/www/uploads
 
 fclean: clean
 	rm -f $(NAME)

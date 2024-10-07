@@ -68,17 +68,20 @@ std::optional<std::vector<char>> Socket::read()
 	LOG_ERROR("READING FROM SOCKET...");
 	bzero(&buffer, sizeof(buffer));
 	int n;
-	// if ((n = ::read(_fd, buffer, SOCKET_READ_SIZE)) == -1)
 	if ((n = recv(_fd, buffer, SOCKET_READ_SIZE - 1, 0)) == -1)
 	{
 		LOG_ERROR("n of bytes received" << n);
 		UNIMPLEMENTED("recv failed");
 	}
+	else if (n == 0)
+	{
+		LOG_ERROR("CLOSE CONNECTION");
+		return std::nullopt;
+	}
 	LOG_ERROR("n of bytes read: " << n);
 	if (n != 0)
 	{
 		std::vector<char> data(buffer, buffer + n);
-		LOG_ERROR("Size of vector: " << data.size());
 		return data;
 	}
 	else {

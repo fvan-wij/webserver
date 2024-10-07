@@ -1,24 +1,25 @@
 #include "DeleteRequestHandler.hpp"
 #include "Logger.hpp"
+#include <cstdio>
+#include <filesystem>
 
 HttpResponse	DeleteRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
-	(void) config;
-	HttpResponse response;
 	LOG_NOTICE("Handling DELETE request...\n" << request);
-	response.set_status_code(200);
-	response.set_status_mssg("OK");
 
-	if (validate_method(request, config))
+	std::string uri = request.get_uri();
+	std::filesystem::path directorypath = std::filesystem::current_path().string() + config.root + "/uploads";
+	std::filesystem::path filepath = std::filesystem::current_path().string() + config.root + uri;
+	if (std::filesystem::exists(filepath.string()))
 	{
-		std::string path = "." + config.root + request.get_uri();
-		if (!config.location["/"].index.empty())
-			path += config.location["/"].index;
-		LOG_DEBUG(path);
-		response.set_body("\r\n" + retrieve_html(path) + "\r\n");
-
+		std::string sv_loc (uri.data(), request.get_uri().find_last_of('/'));
+		if (!location_exists(config, sv_loc))
+			return generate_error_response(404, "Not Found - Page not found");
+		if (!method_is_valid(sv_loc, request.get_method(), config))
+			return generate_error_response(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
+		if (std::remove(filepath.c_str()) == 0)
+			LOG_NOTICE("Successfully deleted " << filepath);
+		return generate_successful_response(200, directorypath.string(), ResponseType::DELETE);
 	}
-	else
-		response.set_body("\r\n<h1>Fakka strijders</h1>\n<form action='' method='post'><button name='foo' value='Yeet'>Yeet</button></form>\r\n");
-	return response;
+	return generate_error_response(400, "Bad Request");
 }

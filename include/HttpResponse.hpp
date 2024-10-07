@@ -11,8 +11,9 @@ enum {
 enum class ResponseType:int {
 	REGULAR = 0,
 	UPLOAD = 1,
-	CGI = 2,
-	ERROR = 3,
+	DELETE = 2,
+	CGI = 3,
+	ERROR = 4,
 };
 
 class HttpResponse 

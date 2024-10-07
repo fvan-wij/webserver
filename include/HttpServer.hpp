@@ -15,7 +15,7 @@ class HttpServer
 		HttpServer();
 		HttpServer(t_config &config);
 		HttpServer(const HttpServer &);
-		HttpServer &operator=(const HttpServer &) = delete;
+		HttpServer &operator=(const HttpServer &);
 		~HttpServer();
 
 		// HttpServer(Socket &s);
