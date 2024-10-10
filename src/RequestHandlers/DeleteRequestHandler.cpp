@@ -10,6 +10,7 @@ HttpResponse	DeleteRequestHandler::handle_request(const HttpRequest &request, t_
 	std::string uri = request.get_uri();
 	std::filesystem::path directorypath = std::filesystem::current_path().string() + config.root + "/uploads";
 	std::filesystem::path filepath = std::filesystem::current_path().string() + config.root + uri;
+
 	if (std::filesystem::exists(filepath.string()))
 	{
 		std::string sv_loc (uri.data(), request.get_uri().find_last_of('/'));

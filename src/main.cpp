@@ -1,3 +1,4 @@
+#include "ConnexxionManager.hpp"
 #include "Logger.hpp"
 #include "Server.hpp"
 #include "HttpRequest.hpp"
@@ -49,6 +50,25 @@ int	run_servers(std::vector<Server> &servers)
 	return 1;
 }
 
+void loop()
+{
+	ConnectionManager cm;
+
+	std::vector<pollfd> &_pfds = cm.getPfd();
+	while (1)
+	{
+		int n_ready = ::poll(_pfds.data(), _pfds.size(), POLL_TIMEOUT);
+		if (n_ready)
+		{
+			for (pollfd pfd : _pfds)
+			{
+				// map current fd  to `VirtualServer`
+				// call VirtualServer.handle(pfd)
+			}
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	std::vector<t_config>	configs;
@@ -64,31 +84,20 @@ int main(int argc, char *argv[])
 		// return -1;
 	}
 
+	// if (auto initialized_servers = create_servers(configs))
+	// {
+	// 	return (run_servers(*initialized_servers));
+	// }
+	// else 
+	// {
+	// 	LOG_ERROR("Error initializing server(s)");
+	// 	return -1;
+	// }
+
+	// init severs
+	loop();
 
 
-	std::vector<pollfd> &_pfds = ConnectionManager.getPfd();
-	while (1)
-	{
-		int n_ready = ::poll(_pfds.data(), _pfds.size(), POLL_TIMEOUT);
-		if (n_ready)
-		{
-			for (pollfd pfd : _pfds)
-			{
-				// map current fd  to `VirtualServer`
-				// call VirtualServer.handle(pfd)
-			}
-		}
-	}
-
-	if (auto initialized_servers = create_servers(configs))
-	{
-		return (run_servers(*initialized_servers));
-	}
-	else 
-	{
-		LOG_ERROR("Error initializing server(s)");
-		return -1;
-	}
 }
 
 #endif

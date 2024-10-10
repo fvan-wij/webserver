@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "ConnexxionManager.hpp"
 #include "HttpProtocol.hpp"
 #include "meta.hpp"
 #include <cstdint>
@@ -18,12 +19,13 @@ Server::Server(uint16_t port) : Server(std::vector<uint16_t>({port}))
 
 }
 
-Server::Server(t_config &config) : _exit_server(false)
+Server::Server(t_config &config, ConnectionManager &cm) : _exit_server(false)
 {
 	for (const auto& [name, port] : config.listen)
 	{
 		LOG_NOTICE("Adding listener socket for " << name << " on port: " << port);
-		_add_client({SocketType::LISTENER, port});
+		// _add_client({SocketType::LISTENER, port});
+		cm.add(this, {SocketType::LISTENER, port});
 	}
 	_config = config;
 }

@@ -5,6 +5,7 @@
 #include <map>
 #include <sys/poll.h>
 #include <vector>
+#include "ConnexxionManager.hpp"
 #include "HttpProtocol.hpp"
 #include "Socket.hpp"
 #include <memory>
@@ -22,7 +23,7 @@ class Server
 		//Custom constructors
 		Server(uint16_t port);
 		Server(std::vector<uint16_t> ports);
-		Server(t_config &config);
+		Server(t_config &config, ConnectionManager &cm);
 
 		//Methods
 		void 													handle_events();
@@ -38,12 +39,12 @@ class Server
 
 	private:
 		/**
-	 *	_fd_map		: A map of file descriptor keys, with the value being shared pointers to HttpServer objects.
-	 *	_pfds		: A vector of the poll fd objects used in the server loop.
-	 *	_sockets	: A vector of all active sockets. Is somewhat linked to _pfds.
-	 *	_exit_server: Boolean saying if the server should exit.
-	 *	_config		: Struct with the servers configuration.
-	 * */
+		 *	_fd_map		: A map of file descriptor keys, with the value being shared pointers to HttpServer objects.
+		 *	_pfds		: A vector of the poll fd objects used in the server loop.
+		 *	_sockets	: A vector of all active sockets. Is somewhat linked to _pfds.
+		 *	_exit_server: Boolean saying if the server should exit.
+		 *	_config		: Struct with the servers configuration.
+		 **/
 		std::unordered_map<int, HttpProtocol *>	_httpserver_map;
 		std::vector<pollfd> 									_pfds;
 		std::vector<Socket> 									_sockets;
