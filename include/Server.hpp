@@ -44,7 +44,7 @@ class Server
 	 *	_exit_server: Boolean saying if the server should exit.
 	 *	_config		: Struct with the servers configuration.
 	 * */
-		std::unordered_map<int, HttpServer *>	_httpserver_map;
+		std::unordered_map<int, HttpProtocol *>	_httpserver_map;
 		std::vector<pollfd> 									_pfds;
 		std::vector<Socket> 									_sockets;
 		bool													_exit_server;

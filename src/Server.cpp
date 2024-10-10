@@ -160,7 +160,7 @@ void Server::_add_client(Socket s)
 
 	if (s.is_client())
 	{
-		_httpserver_map[r_s.get_fd()] = new HttpServer(_config);
+		_httpserver_map[r_s.get_fd()] = new HttpProtocol(_config);
 		mask = POLLIN | POLLOUT;
 	}
 

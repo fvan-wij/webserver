@@ -9,14 +9,14 @@
 #include "Config.hpp"
 #include <charconv>
 
-class HttpServer
+class HttpProtocol
 {
 	public:
-		HttpServer();
-		HttpServer(t_config &config);
-		HttpServer(const HttpServer &);
-		HttpServer &operator=(const HttpServer &);
-		~HttpServer();
+		HttpProtocol();
+		HttpProtocol(t_config &config);
+		HttpProtocol(const HttpProtocol &);
+		HttpProtocol &operator=(const HttpProtocol &);
+		~HttpProtocol();
 
 		// HttpServer(Socket &s);
 
