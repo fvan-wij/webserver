@@ -9,7 +9,7 @@ SRC_DIR		:=	src
 SRC_ENTRY	:=	main.cpp
 SRCS		:=	Server.cpp \
 				Socket.cpp \
-				HttpServer.cpp \
+				HttpProtocol.cpp \
 				CGI.cpp			\
 				HttpObjects/HttpRequest.cpp \
 				HttpObjects/HttpResponse.cpp \
@@ -29,7 +29,7 @@ HEADER_DIR	:=	include
 HEADERS 	:=	Server.hpp \
 				Socket.hpp \
 				meta.hpp \
-				HttpServer.hpp \
+				HttpProtocol.hpp \
 				CGI.hpp			\
 				HttpRequest.hpp \
 				HttpResponse.hpp \

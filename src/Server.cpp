@@ -1,5 +1,5 @@
 #include "Server.hpp"
-#include "HttpServer.hpp"
+#include "HttpProtocol.hpp"
 #include "meta.hpp"
 #include <cstdint>
 #include <cstring>

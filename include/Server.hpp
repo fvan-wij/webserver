@@ -5,7 +5,7 @@
 #include <map>
 #include <sys/poll.h>
 #include <vector>
-#include "HttpServer.hpp"
+#include "HttpProtocol.hpp"
 #include "Socket.hpp"
 #include <memory>
 #include <algorithm>
