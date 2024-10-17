@@ -46,6 +46,7 @@ class HttpProtocol
 
 		bool		is_ready();
 		std::string	get_data();
+		t_config	get_config();
 
 		HttpResponse	response;
 		HttpRequest		request;

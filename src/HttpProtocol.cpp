@@ -159,6 +159,11 @@ std::string	HttpProtocol::get_data()
 	return response.to_string();
 }
 
+t_config	HttpProtocol::get_config()
+{
+	return (_config);
+}
+
 bool		HttpProtocol::is_ready()
 {
 	return this->response.is_ready();
