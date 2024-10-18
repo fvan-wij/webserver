@@ -31,6 +31,7 @@ void ConnectionManager::add(t_config config, Socket socket)
 	if (socket.is_client())
 	{
 		mask = POLLIN | POLLOUT;
+		LOG_DEBUG("Adding client socket for " << config.server_name[0] << " on port: " << socket.get_port());
 	}
 	_protocol_map[socket.get_fd()] = new HttpProtocol(config);
 	_pfds.push_back({socket.get_fd(), mask, 0});

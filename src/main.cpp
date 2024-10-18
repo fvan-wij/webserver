@@ -84,6 +84,22 @@ void loop(ConnectionManager &cm)
 					else
 						cm.remove(i);
 				}
+				else if (socket.is_client() && pfd.revents & POLLOUT)
+				{
+					// LOG("fd: " << pfd.fd << " POLLOUT");
+					auto protocol = cm.get_handlers()[pfd.fd];
+					if (protocol->response.is_ready())
+					{
+						std::string data = protocol->get_data();
+						LOG_INFO("Sending response: \n" << GREEN << protocol->response.to_string() << END);
+						socket.write(data);
+						cm.remove(i);
+					}
+				}
+				else if (pfd.revents & POLLERR || pfd.revents & POLLNVAL)
+				{
+					LOG_ERROR("POLLERR | POLLNVAL error occurred: " << strerror(errno));
+				}
 				// map current fd  to `VirtualServer`
 				// call VirtualServer.handle(pfd)
 			}
