@@ -100,8 +100,6 @@ void loop(ConnectionManager &cm)
 				{
 					LOG_ERROR("POLLERR | POLLNVAL error occurred: " << strerror(errno));
 				}
-				// map current fd  to `VirtualServer`
-				// call VirtualServer.handle(pfd)
 			}
 		}
 	}
@@ -125,19 +123,6 @@ int main(int argc, char *argv[])
 
 	cm.add_listeners(configs);
 	loop(cm);
-
-
-	// if (auto initialized_servers = create_servers(configs))
-	// {
-	// 	return (run_servers(*initialized_servers));
-	// }
-	// else
-	// {
-	// 	LOG_ERROR("Error initializing server(s)");
-	// 	return -1;
-	// }
-
-	// init severs
 }
 
 #endif

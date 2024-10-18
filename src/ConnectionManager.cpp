@@ -8,6 +8,9 @@ ConnectionManager::ConnectionManager()
 
 }
 
+/**
+ * @brief Using the config(s) as reference add new listener sockets. (I feel like this needs an update at some point)
+ */
 void ConnectionManager::add_listeners(std::vector<t_config> &configs)
 {
 	for (const auto& config : configs)
@@ -22,7 +25,11 @@ void ConnectionManager::add_listeners(std::vector<t_config> &configs)
 
 // adds a client to `_pfd`s list
 /**
- * @brief sock_ref is there to make sure
+ * @brief Adds a socket and pollfd to the managers list.
+ * A protocol is assigned to each new file descriptor.
+ * The protocol is determined from the config. (Currently hardcoded)
+ * That way the "Handling" can be independent at some point.
+ *
  */
 void ConnectionManager::add(t_config config, Socket socket)
 {
@@ -36,9 +43,11 @@ void ConnectionManager::add(t_config config, Socket socket)
 	_protocol_map[socket.get_fd()] = new HttpProtocol(config);
 	_pfds.push_back({socket.get_fd(), mask, 0});
 	_sockets.push_back(socket);
-	// _configs.push_back(config);
 }
 
+/**
+ * @brief using an index remove the file descriptor (socket, pollfd) and assigned protocol.
+ */
 void ConnectionManager::remove(size_t index)
 {
 	const int fd = _pfds[index].fd;
@@ -55,16 +64,28 @@ void ConnectionManager::remove(size_t index)
 
 }
 
+/**
+ * @brief
+ * @return vector of pollfds
+ */
 std::vector<pollfd>	ConnectionManager::get_pfds()
 {
 	return (_pfds);
 }
 
+/**
+ * @brief
+ * @return vector of Sockets
+ */
 std::vector<Socket>	ConnectionManager::get_sockets()
 {
 	return (_sockets);
 }
 
+/**
+ * @brief
+ * @return unordered protocol map.
+ */
 std::unordered_map<int, HttpProtocol *> ConnectionManager::get_handlers()
 {
 	return (_protocol_map);
