@@ -1,4 +1,5 @@
 #include "ConnectionManager.hpp"
+#include "ConnectionInfo.hpp"
 #include "Logger.hpp"
 // #include "Server.hpp"
 #include "HttpRequest.hpp"
@@ -14,40 +15,17 @@
 
 #ifndef USE_TEST_MAIN
 
-// std::optional<std::vector<Server>> create_servers(std::vector<t_config> &configs) {
-//     if (!configs.empty()) {
-//         LOG_NOTICE("Creating server(s):");
-//         std::vector<Server> servers;
-//         for (auto &config : configs) {
-//             servers.emplace_back(config);
-//         }
-//         return servers;
-//     } else {
-//         LOG_ERROR("Could not create server(s) from the given config file. Did you supply a config file?");
-//         return std::nullopt;
-//     }
-// }
-
-// int	run_servers(std::vector<Server> &servers)
+// void read_request(ConnectionInfo &ci)
 // {
-// 	bool should_exit = false;
-
-// 	while (!should_exit)
+// 	std::optional<std::vector<char>> read_data = ci.get_socket().read();
+// 	if (read_data)
 // 	{
-// 		for(Server &s : servers)
-// 		{
-// 			if (s.should_exit())
-// 			{
-// 				should_exit = true;
-// 				return 0;
-// 			}
-// 			else if (s.poll() > 0)
-// 			{
-// 				s.handle_events();
-// 			}
-// 		}
+// 		auto protocol = ci.get_protocol();
+// 		std::vector<char> data = read_data.value();
+// 		protocol->handle(data);
 // 	}
-// 	return 1;
+// 	else
+// 		cm.remove(i);
 // }
 
 void loop(ConnectionManager &cm)
@@ -55,46 +33,53 @@ void loop(ConnectionManager &cm)
 	while (1)
 	{
 		std::vector<pollfd> pfds = cm.get_pfds();
-		std::vector<Socket> sockets = cm.get_sockets();
-		std::unordered_map<int, HttpProtocol *> protocol_handlers = cm.get_handlers();
+		std::vector<FdType> fd_types = cm.get_fd_types();
 		int n_ready = ::poll(pfds.data(), pfds.size(), POLL_TIMEOUT);
 		if (n_ready > 0)
 		{
 			for (size_t i = 0; i < pfds.size(); i++)
 			{
 				pollfd &pfd = pfds[i];
-				Socket &socket = sockets[i];
+				FdType type = fd_types[i];
+				ConnectionInfo &ci = *cm.get_connection_info()[pfd.fd].get();
 
-				if (socket.is_listener() && pfd.revents & POLLIN)
+				if (type == FdType::LISTENER && pfd.revents & POLLIN)
 				{
-					Socket client_socket = socket.accept();
-					cm.add(protocol_handlers[pfd.fd]->get_config(), client_socket);
+					cm.add_client(ci);
 				}
-				else if (socket.is_client() && pfd.revents & POLLIN)
+				else if (type == FdType::CLIENT && pfd.revents & POLLIN)
 				{
+					// Parse request and generate response
 					LOG_INFO("fd: " << pfd.fd << " POLLIN");
-
-					std::optional<std::vector<char>> read_data = socket.read();
+					std::optional<std::vector<char>> read_data = ci.get_socket().read();
 					if (read_data)
 					{
-						auto protocol = protocol_handlers[pfd.fd];
+						auto protocol = ci.get_protocol();
 						std::vector<char> data = read_data.value();
 						protocol->handle(data);
 					}
 					else
 						cm.remove(i);
 				}
-				else if (socket.is_client() && pfd.revents & POLLOUT)
+				else if (type == FdType::CLIENT && pfd.revents & POLLOUT)
 				{
+					// Send response
 					// LOG("fd: " << pfd.fd << " POLLOUT");
-					auto protocol = cm.get_handlers()[pfd.fd];
+					auto protocol = ci.get_protocol();
 					if (protocol->response.is_ready())
 					{
 						std::string data = protocol->get_data();
 						LOG_INFO("Sending response: \n" << GREEN << protocol->response.to_string() << END);
-						socket.write(data);
+						ci.get_socket().write(data);
 						cm.remove(i);
 					}
+				}
+				else if (type == FdType::PIPE && pfd.revents & POLLIN)
+				{
+					// Read from pipe
+					LOG_INFO("fd: " << pfd.fd << " POLLIN");
+					auto protocol = ci.get_protocol();
+					protocol->poll_cgi();
 				}
 				else if (pfd.revents & POLLERR || pfd.revents & POLLNVAL)
 				{

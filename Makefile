@@ -24,6 +24,7 @@ SRCS		:=	Server.cpp \
 				Config/print_config.cpp				\
 				Utility.cpp							\
 				ConnectionManager.cpp				\
+				ConnectionInfo.cpp					\
 
 
 HEADER_DIR	:=	include

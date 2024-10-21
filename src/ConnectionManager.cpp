@@ -17,51 +17,88 @@ void ConnectionManager::add_listeners(std::vector<t_config> &configs)
 	{
 		for (const auto& [name, port] : config.listen)
 		{
-			LOG_NOTICE("Adding listener socket for " << name << " on port: " << port);
-			this->add(config, {SocketType::LISTENER, port});
+			// LOG_NOTICE("Adding listener socket for " << name << " on port: " << port);
+			this->add_listener(config, port);
 		}
 	}
 }
 
-// adds a client to `_pfd`s list
 /**
- * @brief Adds a socket and pollfd to the managers list.
- * A protocol is assigned to each new file descriptor.
- * The protocol is determined from the config. (Currently hardcoded)
- * That way the "Handling" can be independent at some point.
+ * @brief adds a listener socket to the pollfd list and adds a type to the fd_types list.
  *
+ * The fd_types list is parallel to the pollfd list. It is used to keep track of the types of the pollfd list.
+ *
+ * This function creates a new ConnectionInfo object and adds it to the _connection_info map.
+ * The keys in this map are the file descriptors of the sockets. So you can use this map to get the ConnectionInfo object of a socket or "connection".
+ *
+ * A protocol is assigned to each new file descriptor. This protocol is determined from the config. (Currently only HttpProtocol)
+ * The protocol handles the response format of the server.
+ * This protocol is also passed on to any new connections that are created from this listener socket.
+ *
+ * @param config
+ * @param port
  */
-void ConnectionManager::add(t_config config, Socket socket)
+void ConnectionManager::add_listener(t_config config, uint16_t port)
 {
 	short mask = POLLIN;
+	Socket listener = {SocketType::LISTENER, port};
+	ConnectionInfo *ci = new ConnectionInfo(listener, new HttpProtocol(config), config);
 
-	if (socket.is_client())
-	{
-		mask = POLLIN | POLLOUT;
-		LOG_DEBUG("Adding client socket for " << config.server_name[0] << " on port: " << socket.get_port());
-	}
-	_protocol_map[socket.get_fd()] = new HttpProtocol(config);
-	_pfds.push_back({socket.get_fd(), mask, 0});
-	_sockets.push_back(socket);
+	_pfds.push_back({listener.get_fd(), mask, 0});
+	_fd_types.push_back(FdType::LISTENER);
+	_connection_info[listener.get_fd()] = std::shared_ptr<ConnectionInfo>(ci);
+	LOG_NOTICE("Adding listener socket for " << config.server_name[0] << " on port: " << port);
 }
 
 /**
- * @brief using an index remove the file descriptor (socket, pollfd) and assigned protocol.
+ * @brief Add a client socket to the pollfd list and add a type to the fd_types list.
+ * Also creates a new ConnectionInfo object and adds it to the _connection_info map.
+ * A protocol is assigned to each new file descriptor. This protocol is determined from the config. (Currently only HttpProtocol)
+ * The protocol handles the response format of the server.
+ *
+ * @param config The config of the server connection.
+ * @param socket The socket to add.
+ */
+void ConnectionManager::add_client(ConnectionInfo &ci)
+{
+	short mask = POLLIN | POLLOUT;
+	t_config config = ci.get_config();
+	Socket socket = ci.get_socket().accept();
+	LOG_DEBUG("Adding client socket for " << config.server_name[0] << " on port: " << socket.get_port());
+
+	ConnectionInfo *new_ci = new ConnectionInfo(socket, new HttpProtocol(config), config);
+	_pfds.push_back({socket.get_fd(), mask, 0});
+	_fd_types.push_back(FdType::CLIENT);
+	_connection_info[socket.get_fd()] = std::shared_ptr<ConnectionInfo>(new_ci);
+}
+
+/**
+ * @brief CGI input pipe is added to the pollfd list.
+ * This pipe is linked in the connection info map to the ConnectionInfo object of the client socket.
+ * This way we can easily find the client socket that needs the response from the CGI.
+ *
+ * @param read_pipe
+ */
+void ConnectionManager::add_pipe(int client_fd, int read_pipe)
+{
+	short mask = POLLIN;
+	_pfds.push_back({read_pipe, mask, 0});
+	_fd_types.push_back(FdType::PIPE);
+	_connection_info[read_pipe] = _connection_info[client_fd];
+	LOG_DEBUG("Adding pipe for client cgi request[" << client_fd << "], pipe_fd: " << read_pipe);
+}
+
+/**
+ * @brief using an index remove the file descriptor (socket, pollfd, pipe) and connectionInfo.
  */
 void ConnectionManager::remove(size_t index)
 {
-	const int fd = _pfds[index].fd;
-	if (_sockets[index].is_client())
-	{
-		auto protocol_pair = _protocol_map.find(fd);
-		delete protocol_pair->second;
-		_protocol_map.erase(protocol_pair);
-	}
+	int fd = _pfds[index].fd;
+	LOG_DEBUG("Removing fd: " << fd);
 	close(fd);
 	_pfds.erase(_pfds.begin() + index);
-	_sockets.erase(_sockets.begin() + index);
-	LOG_DEBUG("Removed socket[" << fd << "], total sockets: " << _sockets.size());
-
+	_fd_types.erase(_fd_types.begin() + index);
+	_connection_info.erase(fd);
 }
 
 /**
@@ -75,18 +112,18 @@ std::vector<pollfd>	ConnectionManager::get_pfds()
 
 /**
  * @brief
- * @return vector of Sockets
+ * @return vector of File descriptor types.
  */
-std::vector<Socket>	ConnectionManager::get_sockets()
+std::vector<FdType>	ConnectionManager::get_fd_types()
 {
-	return (_sockets);
+	return (_fd_types);
 }
 
 /**
  * @brief
- * @return unordered protocol map.
+ * @return unordered connectionInfo map.
  */
-std::unordered_map<int, HttpProtocol *> ConnectionManager::get_handlers()
+std::unordered_map<int, std::shared_ptr<ConnectionInfo>> ConnectionManager::get_connection_info()
 {
-	return (_protocol_map);
+	return (_connection_info);
 }
