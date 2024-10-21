@@ -21,7 +21,7 @@ CGI::CGI() : _is_running(false)
 void CGI::start(std::string path)
 {
 	_is_running = true;
-	LOG_NOTICE("starting CGI with path: " << path);
+	LOG_DEBUG("starting CGI with path: " << path);
 	if (pipe(_pipes) == -1)
 	{
 		UNIMPLEMENTED("pipe failed" << strerror(errno));
@@ -80,7 +80,7 @@ bool CGI::poll()
 	// NOTE maybe we can just straight up attach the pipe from the CGI to the client's socket_fd.
 	if (WIFEXITED(status))
 	{
-		LOG_NOTICE("CGI exited with code: " << WEXITSTATUS(status));
+		LOG_DEBUG("CGI exited with code: " << WEXITSTATUS(status));
 
 		// read until the pipe is empty.
 		while (_read() == PIPE_READ_SIZE - 1)
@@ -95,9 +95,14 @@ bool CGI::poll()
 }
 
 
-const std::string & CGI::get_buffer() const
+const std::string& CGI::get_buffer() const
 {
 	return _buffer;
+}
+
+const int& CGI::get_pipe_fd() const
+{
+	return _pipes[READ];
 }
 
 int32_t CGI::_read()

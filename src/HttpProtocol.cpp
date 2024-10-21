@@ -43,17 +43,13 @@ void		HttpProtocol::on_data_received(std::vector<char> data)
 			generate_response();
 			break;
 		case State::ProcessingCGI:
-			response.set_state(_cgi.poll());
+			// response.set_state(_cgi.poll());
 			break;
 	}
 }
 
 void		HttpProtocol::handle_headers(std::vector<char> data)
 {
-	static int iterations;
-	LOG_DEBUG("handle_headers #" << iterations);
-	iterations++;
-
 	std::string_view str(data.data(), data.size());
 	size_t	header_size = str.find("\r\n\r\n", 0);
 
@@ -141,8 +137,12 @@ void		HttpProtocol::generate_response()
 	if (response.get_type() == ResponseType::CGI)
 	{
 		_current_state = State::ProcessingCGI;
-		_cgi.start("sleep_echo_var");
 	}
+}
+
+void	HttpProtocol::start_cgi()
+{
+	_cgi.start("sleep_echo_var");
 }
 
 std::string	HttpProtocol::get_data()
@@ -162,6 +162,11 @@ std::string	HttpProtocol::get_data()
 t_config	HttpProtocol::get_config()
 {
 	return (_config);
+}
+
+int	HttpProtocol::get_pipe_fd()
+{
+	return _cgi.get_pipe_fd();
 }
 
 bool		HttpProtocol::is_ready()

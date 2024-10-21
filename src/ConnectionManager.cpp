@@ -64,7 +64,7 @@ void ConnectionManager::add_client(ConnectionInfo &ci)
 	short mask = POLLIN | POLLOUT;
 	t_config config = ci.get_config();
 	Socket socket = ci.get_socket().accept();
-	LOG_DEBUG("Adding client socket for " << config.server_name[0] << " on port: " << socket.get_port());
+	LOG_DEBUG("Adding client socket fd " << socket.get_fd() << " for " << config.server_name[0] << " on port: " << socket.get_port());
 
 	ConnectionInfo *new_ci = new ConnectionInfo(socket, new HttpProtocol(config), config);
 	_pfds.push_back({socket.get_fd(), mask, 0});
@@ -85,7 +85,7 @@ void ConnectionManager::add_pipe(int client_fd, int read_pipe)
 	_pfds.push_back({read_pipe, mask, 0});
 	_fd_types.push_back(FdType::PIPE);
 	_connection_info[read_pipe] = _connection_info[client_fd];
-	LOG_DEBUG("Adding pipe for client cgi request[" << client_fd << "], pipe_fd: " << read_pipe);
+	LOG_DEBUG("Adding pipe for client cgi request. client_fd: " << client_fd << ", pipe_fd: " << read_pipe);
 }
 
 /**
@@ -99,6 +99,24 @@ void ConnectionManager::remove(size_t index)
 	_pfds.erase(_pfds.begin() + index);
 	_fd_types.erase(_fd_types.begin() + index);
 	_connection_info.erase(fd);
+}
+
+/**
+ * @brief using an client_fd to remove the pipe file descriptor (socket, pollfd, pipe) and connectionInfo.
+ */
+void ConnectionManager::remove_pipe(int client_fd)
+{
+	for (size_t i = 0; i < _pfds.size(); i++)
+	{
+		if (_pfds[i].fd == _connection_info[client_fd]->get_protocol()->get_pipe_fd())
+		{
+			int fd = _pfds[i].fd;
+			LOG_DEBUG("Removing pipe_fd: " << fd);
+			_pfds.erase(_pfds.begin() + i);
+			_fd_types.erase(_fd_types.begin() + i);
+			_connection_info.erase(fd);
+		}
+	}
 }
 
 /**

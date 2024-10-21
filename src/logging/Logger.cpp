@@ -51,11 +51,11 @@ void Logger::operator()(std::string const& message, char const* function, char c
 	UNUSED(function);
 
 	const char *PREFIX[] = {
-		"[ERROR]",
-		"[WARNING]",
-		"[INFO]",
-		"[NOTICE]",
-		"[DEBUG]",
+		"ERROR",
+		"WARNING",
+		"INFO",
+		"NOTICE",
+		"DEBUG",
 	};
 
 	const char *COLORS[] = {
@@ -76,13 +76,13 @@ void Logger::operator()(std::string const& message, char const* function, char c
 			<< ":" << std::setfill('0') << std::setw(2) << ct.tm_min
 			<< ":" << std::setfill('0') << std::setw(2) << ct.tm_sec << "]";
 
-	std::cout << COLORS[int(_level)] << time.str() << PREFIX[int(_level)];
+	std::cout << time.str() << "[" << COLORS[int(_level)] << PREFIX[int(_level)]<< COLOR_RESET << "]";
 
 	// append file name
 	if (_level == Level::DEBUG || _level == Level::WARNING || _level == Level::ERROR)
 		std::cout << "[" << file << ":" << line << "]";
 
-	std::cout << " : "<< message << COLOR_RESET << std::endl;
+	std::cout << " : "<< message << std::endl;
 }
 
 

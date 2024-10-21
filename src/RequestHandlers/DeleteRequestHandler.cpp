@@ -5,7 +5,8 @@
 
 HttpResponse	DeleteRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
-	LOG_NOTICE("Handling DELETE request...\n" << request);
+	// LOG_NOTICE("Handling DELETE request...\n" << request);
+	LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
 
 	std::string uri = request.get_uri();
 	std::filesystem::path directorypath = std::filesystem::current_path().string() + config.root + "/uploads";

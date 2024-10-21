@@ -43,6 +43,7 @@ class ConnectionManager {
 
 		void	add(t_config config, Socket);
 		void 	remove(size_t index);
+		void 	remove_pipe(int client_fd);
 
 		void	add_listeners(std::vector<t_config> &configs);
 		void	add_listener(t_config config, uint16_t port);

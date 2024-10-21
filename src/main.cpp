@@ -57,9 +57,21 @@ void loop(ConnectionManager &cm)
 						auto protocol = ci.get_protocol();
 						std::vector<char> data = read_data.value();
 						protocol->handle(data);
+						if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
+						{
+							protocol->start_cgi();
+							cm.add_pipe(pfd.fd, protocol->get_pipe_fd());
+						}
 					}
-					else
-						cm.remove(i);
+					// else
+					// 	cm.remove(i);
+				}
+				else if (type == FdType::PIPE && pfd.revents & POLLIN)
+				{
+					// Read from pipe
+					LOG_INFO("fd: " << pfd.fd << " POLLIN");
+					auto protocol = ci.get_protocol();
+					protocol->poll_cgi();
 				}
 				else if (type == FdType::CLIENT && pfd.revents & POLLOUT)
 				{
@@ -69,21 +81,20 @@ void loop(ConnectionManager &cm)
 					if (protocol->response.is_ready())
 					{
 						std::string data = protocol->get_data();
-						LOG_INFO("Sending response: \n" << GREEN << protocol->response.to_string() << END);
+						// LOG_INFO("Sending response: \n" << GREEN << protocol->response.to_string() << END);
+						LOG_INFO("Sending response...");
 						ci.get_socket().write(data);
+						if (protocol->response.get_type() == ResponseType::CGI) // Remove pipe_fd && pipe type
+						{
+							cm.remove_pipe(pfd.fd);
+
+						}
 						cm.remove(i);
 					}
 				}
-				else if (type == FdType::PIPE && pfd.revents & POLLIN)
-				{
-					// Read from pipe
-					LOG_INFO("fd: " << pfd.fd << " POLLIN");
-					auto protocol = ci.get_protocol();
-					protocol->poll_cgi();
-				}
 				else if (pfd.revents & POLLERR || pfd.revents & POLLNVAL)
 				{
-					LOG_ERROR("POLLERR | POLLNVAL error occurred: " << strerror(errno));
+					LOG_ERROR("POLLERR | POLLNVAL error occurred with fd: " << pfd.fd << ", type: " << int(type) << "strerror(): " << strerror(errno));
 				}
 			}
 		}

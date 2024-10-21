@@ -22,7 +22,6 @@ std::optional<std::string_view>	HttpRequest::get_value(const std::string &key) c
 	{
 		return _header.at(key);
 	}
-	LOG_DEBUG("value for given key " << key << " is empty");
 	return std::nullopt;
 }
 
@@ -82,7 +81,6 @@ void	HttpRequest::parse_header(const std::string &data)
 			}
 	}
 	_b_header_parsed = true;
-	LOG_NOTICE("HEADER IS PARSED!");
 }
 
 void HttpRequest::parse_body(std::vector<char> data)
