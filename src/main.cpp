@@ -30,6 +30,7 @@
 
 void loop(ConnectionManager &cm)
 {
+	int poll_count = 0;
 	while (1)
 	{
 		std::vector<pollfd> pfds = cm.get_pfds();
@@ -42,7 +43,6 @@ void loop(ConnectionManager &cm)
 				pollfd &pfd = pfds[i];
 				FdType type = fd_types[i];
 				ConnectionInfo &ci = *cm.get_connection_info()[pfd.fd].get();
-
 				if (type == FdType::LISTENER && pfd.revents & POLLIN)
 				{
 					cm.add_client(ci);
@@ -63,8 +63,6 @@ void loop(ConnectionManager &cm)
 							cm.add_pipe(pfd.fd, protocol->get_pipe_fd());
 						}
 					}
-					// else
-					// 	cm.remove(i);
 				}
 				else if (type == FdType::PIPE && pfd.revents & POLLIN)
 				{
@@ -87,9 +85,10 @@ void loop(ConnectionManager &cm)
 						if (protocol->response.get_type() == ResponseType::CGI) // Remove pipe_fd && pipe type
 						{
 							cm.remove_pipe(pfd.fd);
-
 						}
 						cm.remove(i);
+						pfds = cm.get_pfds();
+						fd_types = cm.get_fd_types();
 					}
 				}
 				else if (pfd.revents & POLLERR || pfd.revents & POLLNVAL)
