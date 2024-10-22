@@ -46,6 +46,7 @@ void loop(ConnectionManager &cm)
 						if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
 						{
 							protocol->start_cgi();
+							LOG_INFO("Starting CGI on port: " << ci.get_socket().get_port());
 							cm.add_pipe(pfd.fd, protocol->get_pipe_fd());
 						}
 					}
