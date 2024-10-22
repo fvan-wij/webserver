@@ -23,13 +23,16 @@ public:
 	};
 
 
-	const std::string &get_buffer() const;
+	const std::string 	&get_buffer() const;
+	const int			&get_pipe_fd() const;
+	bool				is_running() {return _is_running;};
 
 private:
 	bool		_is_running;
 	std::string _buffer;
 	int			_pid;
 	int			_pipes[PipeFD::COUNT];
+
 
 	int32_t _read();
 };

@@ -9,14 +9,14 @@
 #include "Config.hpp"
 #include <charconv>
 
-class HttpServer
+class HttpProtocol
 {
 	public:
-		HttpServer();
-		HttpServer(t_config &config);
-		HttpServer(const HttpServer &);
-		HttpServer &operator=(const HttpServer &);
-		~HttpServer();
+		HttpProtocol();
+		HttpProtocol(t_config &config);
+		HttpProtocol(const HttpProtocol &);
+		HttpProtocol &operator=(const HttpProtocol &);
+		~HttpProtocol();
 
 		// HttpServer(Socket &s);
 
@@ -35,6 +35,8 @@ class HttpServer
 		void		handle_body(std::vector<char> data);
 		void		generate_response();
 
+		void		start_cgi();
+
 		// std::optional<size_t> validate_content_length(); //413 Payload Too Large
 		// std::optional<size_t> validate_path();
 		// std::optional<size_t> validate_content_type();
@@ -45,7 +47,10 @@ class HttpServer
 		// std::optional<size_t> validate_multipart_form_data();
 
 		bool		is_ready();
+		bool		is_cgi_running() {return _cgi.is_running();};
 		std::string	get_data();
+		t_config	get_config();
+		int			get_pipe_fd();
 
 		HttpResponse	response;
 		HttpRequest		request;

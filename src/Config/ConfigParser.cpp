@@ -235,7 +235,6 @@ std::vector<t_config>	parse_config(std::string_view config_path)
 			t_config server_config;
 			server_config = read_config(tokens, i);
 			configs.push_back(server_config);
-			LOG_DEBUG("i: " << i);
 		}
 		i++;
 	}

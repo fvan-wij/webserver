@@ -1,35 +1,35 @@
-#include "HttpServer.hpp"
+#include "HttpProtocol.hpp"
 #include "meta.hpp"
 #include <cwchar>
 #include <string>
 
-HttpServer::HttpServer() : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders)
+HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders)
 {
 	response.set_state(NOT_READY);
 }
 
-HttpServer::HttpServer(t_config &config) : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders), _config(config)
+HttpProtocol::HttpProtocol(t_config &config) : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders), _config(config)
 {
 	response.set_state(NOT_READY);
 }
 
-HttpServer::~HttpServer()
+HttpProtocol::~HttpProtocol()
 {
 	// LOG(RED << "DELETING HTTPSERVER!" << END);
 }
 
-HttpServer::HttpServer(const HttpServer &other) : _header_buffer(other._header_buffer), _body_buffer(other._body_buffer), _b_headers_complete(other._b_headers_complete), _b_body_complete(other._b_body_complete), _current_state(other._current_state)
+HttpProtocol::HttpProtocol(const HttpProtocol &other) : _header_buffer(other._header_buffer), _body_buffer(other._body_buffer), _b_headers_complete(other._b_headers_complete), _b_body_complete(other._b_body_complete), _current_state(other._current_state)
 {
 	// LOG("HttpServer : copied for sock_fd: " << _socket.get_fd());
 }
 
 
-void	HttpServer::handle(std::vector<char> data)
+void	HttpProtocol::handle(std::vector<char> data)
 {
 	on_data_received(data);
 }
 
-void		HttpServer::on_data_received(std::vector<char> data)
+void		HttpProtocol::on_data_received(std::vector<char> data)
 {
 	switch (_current_state)
 	{
@@ -43,17 +43,13 @@ void		HttpServer::on_data_received(std::vector<char> data)
 			generate_response();
 			break;
 		case State::ProcessingCGI:
-			response.set_state(_cgi.poll());
+			// response.set_state(_cgi.poll());
 			break;
 	}
 }
 
-void		HttpServer::handle_headers(std::vector<char> data)
+void		HttpProtocol::handle_headers(std::vector<char> data)
 {
-	static int iterations;
-	LOG_DEBUG("handle_headers #" << iterations);
-	iterations++;
-
 	std::string_view str(data.data(), data.size());
 	size_t	header_size = str.find("\r\n\r\n", 0);
 
@@ -105,7 +101,7 @@ void		HttpServer::handle_headers(std::vector<char> data)
 }
 
 
-void		HttpServer::handle_body(std::vector<char> data)
+void		HttpProtocol::handle_body(std::vector<char> data)
 {
 	static int it;
 	LOG_DEBUG("handle_body #" << it);
@@ -132,7 +128,7 @@ void		HttpServer::handle_body(std::vector<char> data)
 	}
 }
 
-void		HttpServer::generate_response()
+void		HttpProtocol::generate_response()
 {
 	_body_buffer.push_back('\0');
 	request.set_body(_body_buffer);
@@ -141,11 +137,15 @@ void		HttpServer::generate_response()
 	if (response.get_type() == ResponseType::CGI)
 	{
 		_current_state = State::ProcessingCGI;
-		_cgi.start("sleep_echo_var");
 	}
 }
 
-std::string	HttpServer::get_data()
+void	HttpProtocol::start_cgi()
+{
+	_cgi.start("sleep_echo_var");
+}
+
+std::string	HttpProtocol::get_data()
 {
 	if (!response.is_ready())
 	{
@@ -159,18 +159,28 @@ std::string	HttpServer::get_data()
 	return response.to_string();
 }
 
-bool		HttpServer::is_ready()
+t_config	HttpProtocol::get_config()
+{
+	return (_config);
+}
+
+int	HttpProtocol::get_pipe_fd()
+{
+	return _cgi.get_pipe_fd();
+}
+
+bool		HttpProtocol::is_ready()
 {
 	return this->response.is_ready();
 }
 
-void 		HttpServer::poll_cgi()
+void 		HttpProtocol::poll_cgi()
 {
 	if (response.get_type() == ResponseType::CGI)
 		response.set_state(_cgi.poll());
 }
 
-HttpServer &HttpServer::operator=(const HttpServer &other)
+HttpProtocol &HttpProtocol::operator=(const HttpProtocol &other)
 {
 	_header_buffer = other._header_buffer;
 	_body_buffer = other._body_buffer;

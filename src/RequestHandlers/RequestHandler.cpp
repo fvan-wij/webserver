@@ -39,7 +39,6 @@ std::string RequestHandler::retrieve_html(std::string_view path)
 	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
 	auto 			out 		= std::string();
 
-	LOG_DEBUG(path);
 	if (not file_stream)
 		LOG_ERROR("Could not open file");
 	else
