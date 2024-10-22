@@ -43,7 +43,6 @@ void		HttpProtocol::on_data_received(std::vector<char> data)
 			generate_response();
 			break;
 		case State::ProcessingCGI:
-			// response.set_state(_cgi.poll());
 			break;
 	}
 }
@@ -103,25 +102,20 @@ void		HttpProtocol::handle_headers(std::vector<char> data)
 
 void		HttpProtocol::handle_body(std::vector<char> data)
 {
-	static int it;
-	LOG_DEBUG("handle_body #" << it);
-	it++;
-
 	std::string_view sv(_body_buffer.data(), _body_buffer.size());
 	if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
 	{
 			_current_state = State::GeneratingResponse;
-			LOG_ERROR("Generating response... ");
+			LOG_DEBUG("Generating response... ");
 			generate_response();
 			return;
 	}
 	else
 	{
 		_body_buffer.insert(_body_buffer.end(), data.begin(), data.end());
-		LOG_ERROR("Body buffer size: " << _body_buffer.size());
 		if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
 		{
-			LOG_ERROR("Generating response... ");
+			LOG_DEBUG("Generating response... ");
 			generate_response();
 			return;
 		}

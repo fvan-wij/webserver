@@ -238,7 +238,5 @@ std::vector<t_config>	parse_config(std::string_view config_path)
 		}
 		i++;
 	}
-	std::cout << std::endl;
-	std::cout << std::endl;
 	return (configs);
 }

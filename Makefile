@@ -7,8 +7,7 @@ IFLAGS		:=	-Iinclude
 
 SRC_DIR		:=	src
 SRC_ENTRY	:=	main.cpp
-SRCS		:=	Server.cpp \
-				Socket.cpp \
+SRCS		:=	Socket.cpp \
 				HttpProtocol.cpp \
 				CGI.cpp			\
 				HttpObjects/HttpRequest.cpp \
@@ -28,8 +27,7 @@ SRCS		:=	Server.cpp \
 
 
 HEADER_DIR	:=	include
-HEADERS 	:=	Server.hpp \
-				Socket.hpp \
+HEADERS 	:=  Socket.hpp \
 				meta.hpp \
 				HttpProtocol.hpp \
 				CGI.hpp			\

@@ -50,8 +50,8 @@ class ConnectionManager {
 		void	add_client(ConnectionInfo &ci);
 		void	add_pipe(int client_fd, int read_pipe);
 
-		std::vector<pollfd>			get_pfds();
-		std::vector<FdType>			get_fd_types();
+		std::vector<pollfd>&		get_pfds();
+		std::vector<FdType>&		get_fd_types();
 		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> get_connection_info();
 
 	private:

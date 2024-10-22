@@ -17,7 +17,6 @@ void ConnectionManager::add_listeners(std::vector<t_config> &configs)
 	{
 		for (const auto& [name, port] : config.listen)
 		{
-			// LOG_NOTICE("Adding listener socket for " << name << " on port: " << port);
 			this->add_listener(config, port);
 		}
 	}
@@ -123,7 +122,7 @@ void ConnectionManager::remove_pipe(int client_fd)
  * @brief
  * @return vector of pollfds
  */
-std::vector<pollfd>	ConnectionManager::get_pfds()
+std::vector<pollfd>&	ConnectionManager::get_pfds()
 {
 	return (_pfds);
 }
@@ -132,7 +131,7 @@ std::vector<pollfd>	ConnectionManager::get_pfds()
  * @brief
  * @return vector of File descriptor types.
  */
-std::vector<FdType>	ConnectionManager::get_fd_types()
+std::vector<FdType>&	ConnectionManager::get_fd_types()
 {
 	return (_fd_types);
 }
