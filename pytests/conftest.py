@@ -1,9 +1,11 @@
+# Main config file that all tests will inherit from
 import pytest
 from dataclasses import dataclass
 from typing import Type
 from subprocess import Popen, call
 from os import path
 from time import sleep
+
 
 
 @dataclass
