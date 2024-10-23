@@ -19,7 +19,7 @@ def webserv_config() -> WebservConfig:
 
     config = WebservConfig(
         path=base_path + "/app",
-        args=["test.conf"], 
+        args=[], 
         # This should match the ports specified in the config file.
         ports=[9090],
         )

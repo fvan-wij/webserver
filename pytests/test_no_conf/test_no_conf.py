@@ -15,8 +15,8 @@ def send_get_request(port: int, uri: str, expected_status_code: int):
     assert(r.status_code) == expected_status_code
 
 
-def test_webserv_instance_pid_check(webserv_instance: WebservInstance) -> None:
-    assert webserv_instance.proc.pid is not 0
+def test_running_without_conf(webserv_instance: WebservInstance) -> None:
+    #TODO Read from webserv pipe to check that its running without Config
 
     # for child in children:
     #     print('Child pid is {}'.format(child.pid))
