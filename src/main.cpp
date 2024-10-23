@@ -1,8 +1,6 @@
 #include "ConnectionManager.hpp"
 #include "ConnectionInfo.hpp"
 #include "Logger.hpp"
-#include "HttpRequest.hpp"
-#include "HandlerFactory.hpp"
 #include "ConfigParser.hpp"
 
 #include <cstring>

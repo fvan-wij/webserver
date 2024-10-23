@@ -126,6 +126,9 @@ void		HttpProtocol::generate_response()
 {
 	_body_buffer.push_back('\0');
 	request.set_body(_body_buffer);
+	std::optional<std::string_view> host_name = request.get_value("Host");
+	if (host_name)
+		LOG_INFO(host_name.value());
 	auto handler = HandlerFactory::create_handler(request.get_type());
 	response = handler->handle_request(request, _config);
 	if (response.get_type() == ResponseType::CGI)
