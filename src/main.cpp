@@ -90,7 +90,7 @@ void loop(ConnectionManager &cm)
 	}
 }
 
-int main(int argc, char *argv[])
+int main1(int argc, char *argv[])
 {
 	std::vector<t_config>	configs;
 	ConnectionManager		cm;
@@ -110,3 +110,15 @@ int main(int argc, char *argv[])
 }
 
 #endif
+
+
+
+int main ()
+{
+	LOG_DEBUG("debug msg");
+	LOG_NOTICE("notice message");
+	LOG_INFO("info message");
+	LOG_WARNING("warning message");
+	LOG_ERROR("error message");
+	return 0;
+}

@@ -43,7 +43,7 @@ def search_upwards_for_file(filename):
 def webserv_instance(webserv_config: WebservConfig) -> None:
     proc = Popen(
             args=[webserv_config.path] + webserv_config.args,
-            shell=False
+            shell=False,
         )
     # TODO Make this smaller?
     sleep(1)

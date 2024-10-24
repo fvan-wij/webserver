@@ -33,5 +33,7 @@ def test_webserv_instance_child_startup(webserv_instance: WebservInstance) -> No
     print(f"pid: {webserv_instance.proc.pid}")
 
 
-def test_webserv_pass(webserv_instance: WebservInstance) -> None:
+def test_webserv_pass(webserv_instance: WebservInstance, capsys) -> None:
+    captured = capsys.readouterr()
+    print(captured)
     pass
