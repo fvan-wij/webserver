@@ -54,15 +54,16 @@ def webserv_instance(webserv_config: WebservConfig) -> WebservInstance:
     proc.kill()
 
 
-# TODO Add cmd parameter to set child proc loglevel
+# Add `--child-stdout-level` parameter to set child `LogLevel`
 def pytest_addoption(parser):
     parser.addoption(
             "--child-stdout-level",
             action="store",
             default=LogLevel.NONE.name,
-            help="child stdout level: [none|error]",
-            choices=("none", "error", "all"),
-            )
+            help="forward child's STDOUT",
+            # Tering vieze python shit hiero.
+            choices=([entry.name.lower() for entry in LogLevel]),
+        )
 
 
 def pytest_generate_tests(metafunc):

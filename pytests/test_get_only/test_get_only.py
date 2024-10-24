@@ -1,4 +1,4 @@
-from ..conftest import WebservInstance
+from ..conftest import LogLevel, WebservInstance
 import requests
 import psutil
 
@@ -32,3 +32,10 @@ def test_webserv_instance_child_startup(webserv_instance: WebservInstance) -> No
         print('Child pid is {}'.format(child.pid))
     print(f"pid: {webserv_instance.proc.pid}")
 
+
+def test_webserv_pass(webserv_instance: WebservInstance) -> None:
+
+    names = [entry.name.lower() for entry in LogLevel]
+    print(f"names: {names}")
+
+    pass
