@@ -1,4 +1,3 @@
-from subprocess import STDOUT
 import pytest
 from os import chdir
 from pathlib import Path
@@ -7,7 +6,8 @@ from ..conftest import WebservConfig, search_upwards_for_file
 
 
 @pytest.fixture
-def webserv_config() -> WebservConfig:
+def webserv_config(child_stdout_level: str) -> WebservConfig:
+    print(f"\nparameter {child_stdout_level}")
     executable_name = 'app'
     args=["test.conf"]
     # This should match the ports specified in the config file.
