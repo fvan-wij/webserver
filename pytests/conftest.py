@@ -1,4 +1,5 @@
 # Main config file that all tests will inherit from
+from pathlib import Path
 import pytest
 from dataclasses import dataclass
 from typing import Type
@@ -19,6 +20,17 @@ class WebservInstance:
     config: WebservConfig
     proc: Type[Popen]
 
+def search_upwards_for_file(filename):
+    d = Path.cwd()
+    root = Path(d.root)
+
+    while d != root:
+        attempt = d / filename
+        if attempt.exists():
+            return attempt
+        d = d.parent
+    return None
+
 
 @pytest.fixture()
 def webserv_instance(webserv_config: WebservConfig) -> WebservInstance:
@@ -31,3 +43,4 @@ def webserv_instance(webserv_config: WebservConfig) -> WebservInstance:
     sleep(1)
     
     proc.kill()
+

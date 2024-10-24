@@ -1,5 +1,4 @@
 import pytest
-import httpx
 from time import sleep
 from ..conftest import WebservInstance
 import requests

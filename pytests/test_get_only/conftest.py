@@ -1,26 +1,25 @@
 import pytest
-from dataclasses import dataclass
-from subprocess import Popen, call
-from os import path
+from os import chdir
+from pathlib import Path
 
-from ..conftest import WebservConfig
+from ..conftest import WebservConfig, search_upwards_for_file
+
 
 @pytest.fixture
 def webserv_config() -> WebservConfig:
-    executable_name = "app"
-    base_path = path.dirname(path.realpath('__file__'))
+    executable_name = 'app'
+    args=["test.conf"]
+    # This should match the ports specified in the config file.
+    ports=[9090]
 
-
-    # TODO
-    # Set the this files location as the cwd for webserv.
-    # Run the webserver from here using relative path `../../webserv`.
+    script_path = Path(__file__).parent.resolve()
+    chdir(script_path)
+    executable_path = search_upwards_for_file(executable_name)
     
 
-
     config = WebservConfig(
-        path=base_path + "/app",
-        args=["test.conf"], 
-        # This should match the ports specified in the config file.
-        ports=[9090],
+        path=str(executable_path),
+        args=args,
+        ports=ports,
         )
     return config
