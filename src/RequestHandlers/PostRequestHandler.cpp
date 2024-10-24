@@ -18,6 +18,19 @@ static bool	upload_file(std::vector<char> buffer, std::string_view uri, t_config
 		path += filename.data();
 		LOG_DEBUG(path);
 		std::ofstream outfile(path, std::ios::binary);
+
+		//Trimming the boundaries
+		LOG_DEBUG("Before\n" << buffer.data());
+		//Extract boundary
+		size_t boundary_pos = sv_buffer.find("--");
+		std::string_view boundary(sv_buffer.data() + boundary_pos, sv_buffer.find("\r\n", pos) + 2);
+		LOG_DEBUG("boundary: " << boundary);
+		//Trim till right after boundary
+		size_t begin = sv_buffer.find(boundary) + boundary.length();
+		LOG_DEBUG("Begin size_t: " << begin);
+		buffer.erase(buffer.begin(), buffer.begin() + begin);
+		LOG_DEBUG("Trimmed bufer\n" << buffer.data());
+
 		bool begin_trimmed = false;
 		for (size_t i = 0; i < buffer.size(); i++)
 		{
@@ -31,6 +44,7 @@ static bool	upload_file(std::vector<char> buffer, std::string_view uri, t_config
 				buffer.erase(buffer.begin() + i - 5, buffer.end());
 			}
 		}
+		LOG_DEBUG("After\n" << buffer.data());
 		outfile.write(buffer.data(), buffer.size());
 		outfile.close();
 		return true;
@@ -54,8 +68,15 @@ HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_co
 		return generate_successful_response(200, "", ResponseType::CGI);
 	else
 	{
+		//Upload file
+		//Extract the boundary, which will be present in the header Content-Type: multipart/form-data; boundary=-------adsfsfdsfdsaf;
+
+
+
 		std::string path = get_path(config.root, request.get_uri());
-		path += config.location["/"].index;
+		path += "/"; // ./var/www/uploads/
+		path += config.location["/"].index; // html/index.html
+		LOG_INFO("Path is: " << path);
 		if (!upload_file(request.get_body(), request.get_uri(), config))
 			LOG_ERROR("Couldn't upload file");
 		return generate_successful_response(200, path, ResponseType::UPLOAD);
