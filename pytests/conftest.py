@@ -3,8 +3,7 @@ from pathlib import Path
 import pytest
 from dataclasses import dataclass
 from typing import Type
-from subprocess import Popen, call
-from os import path
+from subprocess import Popen
 from time import sleep
 
 
@@ -14,6 +13,7 @@ class WebservConfig:
     path: str
     args: list[str]
     ports: list[int]
+    url: str
 
 @dataclass
 class WebservInstance:
@@ -39,8 +39,18 @@ def webserv_instance(webserv_config: WebservConfig) -> WebservInstance:
             shell=False
         )
     sleep(1)
-    yield WebservInstance(config=webserv_config, proc=proc)
+    yield WebservInstance(
+            config=webserv_config,
+            proc=proc
+            )
     sleep(1)
     
     proc.kill()
+
+
+# TODO Add cmd parameter to set child proc loglevel
+def pytest_addoption(parser):
+    parser.addoption("--name", action="store", default="default name")
+
+
 

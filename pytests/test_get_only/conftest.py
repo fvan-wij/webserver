@@ -1,3 +1,4 @@
+from subprocess import STDOUT
 import pytest
 from os import chdir
 from pathlib import Path
@@ -11,6 +12,7 @@ def webserv_config() -> WebservConfig:
     args=["test.conf"]
     # This should match the ports specified in the config file.
     ports=[9090]
+    url = "http://localhost:"
 
     script_path = Path(__file__).parent.resolve()
     chdir(script_path)
@@ -21,5 +23,6 @@ def webserv_config() -> WebservConfig:
         path=str(executable_path),
         args=args,
         ports=ports,
+        url=url,
         )
     return config
