@@ -8,6 +8,10 @@ from time import sleep
 from enum import Enum
 
 
+class LogLevel(Enum):
+    NONE = 1
+    ERROR = 2
+    ALL = 3
 
 @dataclass
 class WebservConfig:
@@ -15,16 +19,12 @@ class WebservConfig:
     args: list[str]
     ports: list[int]
     url: str
+    stdout_level: LogLevel
 
 @dataclass
 class WebservInstance:
     config: WebservConfig
     proc: Type[Popen]
-
-class LogLevel(Enum):
-    NONE = 1
-    ERROR = 2
-    ALL = 3
 
 def search_upwards_for_file(filename):
     d = Path.cwd()
@@ -38,12 +38,14 @@ def search_upwards_for_file(filename):
     return None
 
 
+#`webserv_config` gets passed in from the child directories their `conftest.py`
 @pytest.fixture()
-def webserv_instance(webserv_config: WebservConfig) -> WebservInstance:
+def webserv_instance(webserv_config: WebservConfig) -> None:
     proc = Popen(
             args=[webserv_config.path] + webserv_config.args,
             shell=False
         )
+    # TODO Make this smaller?
     sleep(1)
     yield WebservInstance(
             config=webserv_config,
@@ -71,5 +73,6 @@ def pytest_generate_tests(metafunc):
     # if the argument is specified in the list of test "fixturenames".
     option_value = metafunc.config.option.child_stdout_level
     if 'child_stdout_level' in metafunc.fixturenames and option_value is not None:
-        metafunc.parametrize("child_stdout_level", [option_value])
+        # Take users `option_value` and make it an `LogLevel` type again
+        metafunc.parametrize("child_stdout_level", [LogLevel[option_value.upper()]])
 

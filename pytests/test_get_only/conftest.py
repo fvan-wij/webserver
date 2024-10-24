@@ -2,12 +2,11 @@ import pytest
 from os import chdir
 from pathlib import Path
 
-from ..conftest import WebservConfig, search_upwards_for_file
+from ..conftest import LogLevel, WebservConfig, search_upwards_for_file
 
 
 @pytest.fixture
-def webserv_config(child_stdout_level: str) -> WebservConfig:
-    print(f"\nparameter {child_stdout_level}")
+def webserv_config(child_stdout_level: LogLevel) -> WebservConfig:
     executable_name = 'app'
     args=["test.conf"]
     # This should match the ports specified in the config file.
@@ -24,5 +23,6 @@ def webserv_config(child_stdout_level: str) -> WebservConfig:
         args=args,
         ports=ports,
         url=url,
+        stdout_level=child_stdout_level,
         )
     return config

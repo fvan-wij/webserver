@@ -34,8 +34,4 @@ def test_webserv_instance_child_startup(webserv_instance: WebservInstance) -> No
 
 
 def test_webserv_pass(webserv_instance: WebservInstance) -> None:
-
-    names = [entry.name.lower() for entry in LogLevel]
-    print(f"names: {names}")
-
     pass
