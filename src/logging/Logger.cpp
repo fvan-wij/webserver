@@ -76,13 +76,13 @@ void Logger::operator()(std::string const& message, char const* function, char c
 			<< ":" << std::setfill('0') << std::setw(2) << ct.tm_min
 			<< ":" << std::setfill('0') << std::setw(2) << ct.tm_sec << "]";
 
-	std::cout << time.str() << "[" << COLORS[int(_level)] << PREFIX[int(_level)]<< COLOR_RESET << "]";
+	std::cerr << time.str() << "[" << COLORS[int(_level)] << PREFIX[int(_level)]<< COLOR_RESET << "]";
 
 	// append file name
 	if (_level == Level::DEBUG || _level == Level::WARNING || _level == Level::ERROR)
-		std::cout << "[" << file << ":" << line << "]";
+		std::cerr << "[" << file << ":" << line << "]";
 
-	std::cout << " : "<< message << std::endl;
+	std::cerr << " : "<< message << std::endl;
 }
 
 

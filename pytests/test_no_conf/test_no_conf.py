@@ -1,8 +1,9 @@
 import pytest
-import httpx
 from time import sleep
 from ..conftest import WebservInstance
 import requests
+
+
 
 def send_get_request(port: int, uri: str, expected_status_code: int):
     url = "http://localhost:"
@@ -18,6 +19,7 @@ def send_get_request(port: int, uri: str, expected_status_code: int):
 def test_running_without_conf(webserv_instance: WebservInstance) -> None:
     #TODO Read from webserv pipe to check that its running without Config
 
+    pass
     # for child in children:
     #     print('Child pid is {}'.format(child.pid))
     # print(f"pid: {webserv_instance.proc.pid}")
