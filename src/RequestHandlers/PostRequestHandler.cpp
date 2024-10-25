@@ -1,48 +1,52 @@
 #include "PostRequestHandler.hpp"
+// #include <algorithm>
 
-static bool	upload_file(std::vector<char> buffer, std::string_view uri, t_config &config)
+static std::string get_file_path(std::string_view root, std::string_view uri, std::string_view filename)
 {
-	std::string_view sv_buffer(buffer.data(), buffer.size());
-	size_t pos = sv_buffer.find("filename=");
-	std::string path;
-	if (pos != std::string::npos)
+	std::string path = ".";
+
+	return path + root.data() + uri.data() + "/" + filename.data();
+}
+
+static std::string get_filename(std::string_view body_buffer)
+{
+	size_t filename_begin = body_buffer.find("filename=\"") + 10;
+	size_t filename_end = body_buffer.find("\r\n", filename_begin);
+	std::string filename (&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
+	LOG_DEBUG("FILENAME IS: " << filename);
+	return filename;
+}
+
+static std::string get_boundary(std::string_view content_type)
+{
+	size_t boundary_begin = content_type.find("boundary=") + 9;
+	std::string boundary(&content_type[boundary_begin], content_type.end());
+	LOG_DEBUG("Boundary: " << boundary);
+	return boundary;
+}
+
+static bool	upload_file(std::vector<char> buffer, std::string_view uri, t_config &config, std::string_view content_type)
+{
+	std::string_view 	sv_buffer(buffer.data(), buffer.size());
+	std::string 		filename = get_filename(sv_buffer);
+	std::string 		path = get_file_path(config.root, uri.data(), filename);
+	std::string 		boundary_end = "--" + get_boundary(content_type) + "--";
+	std::ofstream 		outfile(path, std::ios::binary);
+	if (!filename.empty())
 	{
-		size_t end = sv_buffer.find(10, pos);
-		pos+=10;
-		std::string filename(&sv_buffer[pos], (end - 2) - (pos));
-		filename.push_back('\0');
-		path += ".";
-		path += config.root;
-		path += uri.data();
-		path += "/";
-		path += filename.data();
-		LOG_DEBUG(path);
-		std::ofstream outfile(path, std::ios::binary);
+		//Remove beginning till CRLN
+		size_t crln_pos = sv_buffer.find("\r\n\r\n");
+		buffer.erase(buffer.begin(), (buffer.begin() + crln_pos) + 4);
 
-		//Trimming the boundaries
-		LOG_DEBUG("Before\n" << buffer.data());
-		//Extract boundary
-		size_t boundary_pos = sv_buffer.find("--");
-		std::string_view boundary(sv_buffer.data() + boundary_pos, sv_buffer.find("\r\n", pos) + 2);
-		LOG_DEBUG("boundary: " << boundary);
-		//Trim till right after boundary
-		size_t begin = sv_buffer.find(boundary) + boundary.length();
-		LOG_DEBUG("Begin size_t: " << begin);
-		buffer.erase(buffer.begin(), buffer.begin() + begin);
-		LOG_DEBUG("Trimmed bufer\n" << buffer.data());
-
-		bool begin_trimmed = false;
-		for (size_t i = 0; i < buffer.size(); i++)
+		//Remove ending boundary and everything after
+		std::vector<char>::iterator it_boundary_end = std::search(buffer.begin(), buffer.end(), boundary_end.begin(), boundary_end.end());
+		if (it_boundary_end != buffer.end())
 		{
-			if (!begin_trimmed && i > 4 && buffer[i - 3] == '\r' && buffer[i - 2] == '\n'&& buffer[i - 1] == '\r' && buffer[i] == '\n')
-			{
-				buffer.erase(buffer.begin(), buffer.begin() + i + 1);
-				begin_trimmed = true;
-			}
-			if (begin_trimmed && i > 6 && buffer[i - 5] == '-' && buffer[i - 4] == '-'&& buffer[i - 3] == '-' && buffer[i - 2] == '-' && buffer[i - 1] == '-' && buffer[i] == '-')
-			{
-				buffer.erase(buffer.begin() + i - 5, buffer.end());
-			}
+			buffer.erase(it_boundary_end - 2, buffer.end());
+		}
+		else
+		{
+			LOG_DEBUG("Not present!");
 		}
 		LOG_DEBUG("After\n" << buffer.data());
 		outfile.write(buffer.data(), buffer.size());
@@ -69,16 +73,22 @@ HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_co
 	else
 	{
 		//Upload file
-		//Extract the boundary, which will be present in the header Content-Type: multipart/form-data; boundary=-------adsfsfdsfdsaf;
-
-
-
 		std::string path = get_path(config.root, request.get_uri());
 		path += "/"; // ./var/www/uploads/
 		path += config.location["/"].index; // html/index.html
 		LOG_INFO("Path is: " << path);
-		if (!upload_file(request.get_body(), request.get_uri(), config))
+		std::optional<std::string_view> content_type = request.get_value("Content-Type");
+		if (content_type)
+		{
+			LOG_DEBUG("Content-Type: " << content_type.value());
+			if (!upload_file(request.get_body(), request.get_uri(), config, content_type.value()))
+				LOG_ERROR("Couldn't upload file");
+		}
+		else
+		{
 			LOG_ERROR("Couldn't upload file");
+			return generate_error_response(400, "Bad Request");
+		}
 		return generate_successful_response(200, path, ResponseType::UPLOAD);
 	}
 	return generate_error_response(400, "Bad Request");
