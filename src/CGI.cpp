@@ -62,8 +62,6 @@ void CGI::start(std::string path)
 }
 
 
-
-
 // TODO in the future we should try to implement chucked reading of the pipe.
 // incase there is more than 4KB of data.
 bool CGI::poll()

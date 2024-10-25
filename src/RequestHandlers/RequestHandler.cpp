@@ -132,7 +132,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	}
 	else if (type == ResponseType::UPLOAD)
 	{
-		response.set_state(READY);
+		response.set_state(NOT_READY);
 		response.set_body("\r\n<h1>File uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
 	}
 	else if (type == ResponseType::DELETE)
@@ -164,6 +164,21 @@ bool	RequestHandler::location_exists(t_config &config, std::string_view loc)
 	auto it = config.location.find(loc.data());
 	if (it != config.location.end())
 		return true;
+	return false;
+}
+
+bool RequestHandler::is_multipart_content(const HttpRequest &request)
+{
+	std::optional<std::string_view> content_type = request.get_value("Content-Type");
+	if (!content_type)
+	{
+		return false;
+	}
+	LOG_DEBUG("Content-Type: " << content_type.value());
+	if (content_type.value().find("multipart") != std::string::npos)
+	{
+		return true;
+	}
 	return false;
 }
 

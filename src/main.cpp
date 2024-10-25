@@ -1,8 +1,6 @@
 #include "ConnectionManager.hpp"
 #include "ConnectionInfo.hpp"
 #include "Logger.hpp"
-#include "HttpRequest.hpp"
-#include "HandlerFactory.hpp"
 #include "ConfigParser.hpp"
 
 #include <cstring>
@@ -46,6 +44,7 @@ void loop(ConnectionManager &cm)
 						if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
 						{
 							protocol->start_cgi();
+							LOG_INFO("Starting CGI on port: " << ci.get_socket().get_port());
 							cm.add_pipe(pfd.fd, protocol->get_pipe_fd());
 						}
 					}
@@ -76,6 +75,10 @@ void loop(ConnectionManager &cm)
 							cm.remove_pipe(pfd.fd);
 						}
 						cm.remove(i);
+					}
+					else if (protocol->response.get_type() == ResponseType::UPLOAD)
+					{
+						protocol->poll_upload();
 					}
 				}
 				else if (pfd.revents & POLLERR)

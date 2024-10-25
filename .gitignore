@@ -3,3 +3,4 @@ Session.vim
 compile_commands.json
 app
 obj/
+*__pycache__*
