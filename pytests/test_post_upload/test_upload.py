@@ -8,8 +8,7 @@ def send_upload_request(port: int, file_path: str, expected_status_code: int):
     url = "http://localhost:"
     url += str(port)
     url += "/uploads"
-    absolute_path = "./pytests/test_post_upload/" + file_path
-    files={"upload_file": open(absolute_path, "rb")}
+    files={"upload_file": open(file_path, "rb")}
     r = requests.post(url, files=files)
     print("Status code == ",  r.status_code)
     print("Expected code == ",  expected_status_code)
@@ -18,10 +17,10 @@ def send_upload_request(port: int, file_path: str, expected_status_code: int):
     if (r.status_code == expected_status_code):
         assert(os.path.isfile(test_file_path)) == True
         size_test_file = os.path.getsize(test_file_path)
-        size_og_file = os.path.getsize(absolute_path)
+        size_og_file = os.path.getsize(file_path)
         print(f"Size of test file: {size_test_file}, size of og file {size_og_file}")
         assert(size_test_file) == size_og_file
-        # os.remove(test_file_path)
+        os.remove(test_file_path)
 
 def test_webserv_instance_pid_check(webserv_instance: WebservInstance) -> None:
     assert webserv_instance.proc.pid is not 0
