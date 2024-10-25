@@ -1,11 +1,9 @@
 import pytest
+from ..conftest import WebservInstance
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
-urls = ["http://localhost:8080/cgi-bin", "http://localhost:8081/cgi-bin", "http://localhost:9090/cgi-bin", "http://localhost:9091/cgi-bin"]
-
-#Function that concurrently runs all the given urls
-def trigger_cgi_on_urls(urls):
+def trigger_cgi_concurrently_on_all_servers(urls):
     def send_concurrent_post_request(url):
         try:
             r = requests.post(url)
@@ -19,7 +17,9 @@ def trigger_cgi_on_urls(urls):
     for result in results:
         print(result)
 
-def test_cgi_calls():
-    print("\n[TEST3]: Sending POST requests to ", urls)
-    trigger_cgi_on_urls(urls)
-
+def test_webserv_instance_pid_check(webserv_instance: WebservInstance) -> None:
+    assert webserv_instance.proc.pid is not 0
+    urls = []
+    for i in range(4):
+        urls.append(webserv_instance.config.url + str(webserv_instance.config.ports[0]) + "/cgi-bin")
+    trigger_cgi_concurrently_on_all_servers(urls)
