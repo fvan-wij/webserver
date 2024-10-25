@@ -17,6 +17,7 @@ class RequestHandler {
 		bool					method_is_valid(std::string_view uri, std::string_view method, t_config &config);
 		bool					location_exists(t_config &config, std::string_view loc);
 		bool 					content_length_exceeded(const HttpRequest &request, t_config &config);
+		bool					is_multipart_content(const HttpRequest &request);
 
 		HttpResponse			generate_error_response(int error_code, std::string_view message);
 		HttpResponse			generate_successful_response(int status_code, std::string_view path, ResponseType type);

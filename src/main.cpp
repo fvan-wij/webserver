@@ -76,6 +76,10 @@ void loop(ConnectionManager &cm)
 						}
 						cm.remove(i);
 					}
+					else if (protocol->response.get_type() == ResponseType::UPLOAD)
+					{
+						protocol->poll_upload();
+					}
 				}
 				else if (pfd.revents & POLLERR)
 				{
