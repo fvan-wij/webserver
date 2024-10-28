@@ -46,6 +46,8 @@ void		HttpProtocol::on_data_received(std::vector<char> data)
 			break;
 		case State::UploadingFile:
 			break;
+		case State::FetchingFile:
+			break;
 	}
 }
 
@@ -139,6 +141,10 @@ void		HttpProtocol::generate_response()
 		_current_state = State::UploadingFile;
 		parse_file_data(request.get_body(), _config, request.get_uri());
 	}
+	else if (response.get_type() == ResponseType::FETCH_FILE)
+	{
+		_current_state = State::FetchingFile;
+	}
 }
 
 void	HttpProtocol::start_cgi()
@@ -185,6 +191,12 @@ void	HttpProtocol::poll_upload()
 {
 	if (response.get_type() == ResponseType::UPLOAD)
 		response.set_state(upload_chunk());
+}
+
+void	HttpProtocol::poll_fetch()
+{
+	if (response.get_type() == ResponseType::FETCH_FILE)
+		response.set_state(fetch_file(response.get_path()));
 }
 
 static std::string get_file_path(std::string_view root, std::string_view uri, std::string_view filename)
@@ -271,6 +283,42 @@ bool	HttpProtocol::upload_chunk()
 	}
 	_file.bytes_uploaded += buffer_size;
 	return bytes_left <= 0;
+}
+
+bool HttpProtocol::fetch_file(std::string_view path)
+{
+	char 			buffer[1024];
+	constexpr auto 	read_size 	= std::size_t(1024);
+	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
+	auto 			out 		= std::string();
+
+	if (not file_stream)
+	{
+		response.set_status_code(400);
+		response.set_status_mssg("Could not fetch file");
+		response.set_state(READY);
+		response.set_type(ResponseType::ERROR);
+		response.set_streamcount(0);
+		LOG_ERROR("Could not open file");
+	}
+	else
+	{
+		file_stream.seekg(response.get_streamcount());
+		file_stream.read(&buffer[0], read_size);
+		std::streamsize bytes = file_stream.gcount();
+		response.update_streamcount(bytes);
+		std::vector<char> data(buffer, buffer + bytes);
+		std::string str(data.begin(), data.end());
+		response.append_body(str);
+		if (bytes < 1024)
+		{
+			response.set_status_code(200);
+			response.set_state(READY);
+			response.set_streamcount(0);
+			return true;
+		}
+	}
+	return false;
 }
 
 HttpProtocol &HttpProtocol::operator=(const HttpProtocol &other)

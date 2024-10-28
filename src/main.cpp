@@ -36,9 +36,9 @@ void loop(ConnectionManager &cm)
 					// Parse request and generate response
 					LOG_INFO("fd: " << pfd.fd << " POLLIN (client)");
 					std::optional<std::vector<char>> read_data = ci.get_socket().read();
+					auto protocol = ci.get_protocol();
 					if (read_data)
 					{
-						auto protocol = ci.get_protocol();
 						std::vector<char> data = read_data.value();
 						protocol->handle(data);
 						if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
@@ -47,6 +47,10 @@ void loop(ConnectionManager &cm)
 							LOG_INFO("Starting CGI on port: " << ci.get_socket().get_port());
 							cm.add_pipe(pfd.fd, protocol->get_pipe_fd());
 						}
+					}
+					else if (protocol->response.get_type() == ResponseType::FETCH_FILE)
+					{
+						protocol->poll_fetch();
 					}
 					else
 					{

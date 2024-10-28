@@ -7,14 +7,17 @@ RequestHandler::~RequestHandler()
 	// LOG(RED << "Deleting requesthandler" << END);
 }
 
-static std::string generate_list(std::filesystem::path directory)
+static std::string generate_list(std::filesystem::path path)
 {
 	std::string list;
 
-	for (const auto& entry : std::filesystem::directory_iterator(directory))
+	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
-		std::string img = "<li><p>" + entry.path().string().substr(entry.path().string().find_last_of('/'), entry.path().string().length()) + "</p></li>";
-		list += img;
+		std::string file_name = entry.path().string().substr(entry.path().string().find_last_of('/'), entry.path().string().length());
+		std::string uri = path.string().substr(path.string().find_last_of('/')) + file_name;
+		std::string href_open = "<a href=\'" + uri + "\'>";
+		std::string item = "<li>" + href_open + file_name  + "</a></li>";
+		list += item;
 	}
 	if (list.empty())
 		return {};
@@ -26,33 +29,41 @@ static std::string generate_list(std::filesystem::path directory)
 	}
 }
 
-static void insert_list_of_files(std::string &html)
+static std::string generate_directory_listing(std::string_view path)
 {
-	size_t insertion_index = html.find("<!--FILES-->");
-	std::filesystem::path uploads = std::filesystem::current_path().string() + "/var/www/uploads";
-	html.insert(insertion_index + 13, "<div class=\"fileBlock\">" + generate_list(uploads) + "</div>");
+	std::string directory_list;
+	directory_list.append("<div class=\"fileBlock\">" + generate_list(path) + "</div>");
+	return directory_list;
 }
 
-std::string RequestHandler::retrieve_html(std::string_view path)
+std::optional<std::string> RequestHandler::retrieve_index_html(std::string_view path)
 {
-	constexpr auto 	read_size 	= std::size_t(1024);
+	constexpr auto 	READ_SIZE 	= std::size_t(1024);
 	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
 	auto 			out 		= std::string();
 
 	if (not file_stream)
+	{
 		LOG_ERROR("Could not open file");
+		return std::nullopt;
+	}
 	else
 	{
-		auto buf = std::string(read_size, '\0');
-		while (file_stream.read(&buf[0], read_size))
+		auto buf = std::string(READ_SIZE, '\0');
+		while (file_stream.read(&buf[0], READ_SIZE))
 		{
 			out.append(buf, 0, file_stream.gcount());
 		}
 		out.append(buf, 0, file_stream.gcount());
-		insert_list_of_files(out);
+	}
+	if (not out.empty())
+	{
 		return out;
 	}
-	return out;
+	else
+	{
+		return std::nullopt;
+	}
 }
 
 bool			RequestHandler::method_is_allowed(std::string_view method, std::vector<std::string> v)
@@ -125,27 +136,58 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	HttpResponse response;
 	response.set_status_code(status_code);
 	response.set_status_mssg("OK");
-	if (type == ResponseType::REGULAR)
-	{
-		response.set_state(READY);
-		response.set_body("\r\n" + retrieve_html(path) + "\r\n");
-	}
-	else if (type == ResponseType::UPLOAD)
-	{
-		response.set_state(NOT_READY);
-		response.set_body("\r\n<h1>File uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
-	}
-	else if (type == ResponseType::DELETE)
-	{
-		response.set_state(READY);
-		response.set_body("\r\n<h1>File deleted</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
-	}
-	else if (type == ResponseType::CGI)
-	{
-		response.set_state(NOT_READY);
-		response.set_body("\r\n<h1>CGI data</h1>\r\n");
-	}
 	response.set_type(type);
+	switch (type)
+	{
+		case ResponseType::REGULAR:
+			{
+				response.set_state(READY);
+				std::optional<std::string> html = retrieve_index_html(path);
+				bool autoindexing = true;
+				if (html)
+				{
+					response.set_body("\r\n" + html.value() + "\r\n");
+				}
+				else if (autoindexing) // Temp flag, but should be retrieved from config
+				{
+					std::string directory_list = generate_directory_listing(path);
+					response.set_body("\r\n" + directory_list + "\r\n");
+				}
+			}
+			break;
+		case ResponseType::FETCH_FILE:
+			{
+				response.set_state(NOT_READY);
+				response.set_streamcount(0);
+				response.set_path(path.data());
+			}
+			break;
+		case ResponseType::UPLOAD:
+			{
+				response.set_state(NOT_READY);
+				response.set_body("\r\n<h1>File uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
+			}
+			break;
+		case ResponseType::DELETE:
+			{
+				response.set_state(READY);
+				response.set_body("\r\n<h1>File deleted</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
+			}
+			break;
+		case ResponseType::CGI:
+			{
+				response.set_state(NOT_READY);
+				response.set_body("\r\n<h1>CGI data</h1>\r\n");
+			}
+			break;
+		case ResponseType::ERROR:
+			{
+				response.set_state(READY);
+				response.set_status_mssg("ERROR");
+				response.set_body("\r\n<h1>ERROR</h1>\r\n");
+			}
+			break;
+	}
 	return response;
 }
 
@@ -159,8 +201,6 @@ std::string	RequestHandler::get_path(std::string_view root, std::string_view uri
 
 bool	RequestHandler::location_exists(t_config &config, std::string_view loc)
 {
-	// for (auto& it : config.location)
-	// 	LOG_DEBUG("," << it.first << ",");
 	auto it = config.location.find(loc.data());
 	if (it != config.location.end())
 		return true;

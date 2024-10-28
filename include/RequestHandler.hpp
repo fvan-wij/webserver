@@ -22,7 +22,7 @@ class RequestHandler {
 		HttpResponse			generate_error_response(int error_code, std::string_view message);
 		HttpResponse			generate_successful_response(int status_code, std::string_view path, ResponseType type);
 
-		std::string 			retrieve_html(std::string_view path);
+		std::optional<std::string> 			retrieve_index_html(std::string_view path);
 		std::string				get_path(std::string_view root, std::string_view uri);
 		virtual ~RequestHandler();
 };
