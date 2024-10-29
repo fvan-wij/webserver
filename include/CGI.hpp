@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string>
+#include <array>
 
 class CGI
 {
@@ -12,7 +13,7 @@ public:
 	CGI &operator=(const CGI &) = delete;
 	~CGI();
 
-	void start(std::string path);
+	void start(std::array<std::string, 3> arguments);
 	bool poll();
 
 	enum PipeFD

@@ -150,7 +150,8 @@ void		HttpProtocol::generate_response()
 
 void	HttpProtocol::start_cgi()
 {
-	_cgi.start("sleep_echo_var");
+	// _cgi.start("sleep_echo_var");
+	_cgi.start({"python3", "./var/www/cgi-bin/upload_file.py", "./var/www/favicon.ico"});
 }
 
 std::string	HttpProtocol::get_data()
@@ -162,7 +163,8 @@ std::string	HttpProtocol::get_data()
 	if (response.get_type() == ResponseType::CGI)
 	{
 		std::string b = _cgi.get_buffer();
-		response.append_body(b);
+		// response.append_body(b);
+		response.set_body(b);
 	}
 	return response.to_string();
 }
