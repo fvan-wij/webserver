@@ -221,11 +221,3 @@ bool RequestHandler::is_multipart_content(const HttpRequest &request)
 	}
 	return false;
 }
-
-//Check if there's a body and/or Content-Length key-value pair
-//	This should not be present in a GET request, either ignore or generate appropriate error response
-//Get root location
-//	What if there's no root location? Perhaps this needs to be checked before setting up the server
-//Generate path to retrieve from, check if exists
-//Retrieve HTML
-//	If path to HTML does not exist: error!

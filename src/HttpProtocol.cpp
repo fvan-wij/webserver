@@ -2,6 +2,7 @@
 #include "meta.hpp"
 #include <cwchar>
 #include <string>
+#include <filesystem>
 
 HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders)
 {
@@ -203,48 +204,101 @@ static std::string get_file_path(std::string_view root, std::string_view uri, st
 {
 	std::string path = ".";
 
-	return path + root.data() + uri.data() + "/" + filename.data();
+	// return path + root.data() + uri.data() + "/" + filename;
+	return (std::filesystem::path(".") / root / uri / filename).string();
 }
 
 static std::string get_filename(std::string_view body_buffer)
 {
-	size_t filename_begin = body_buffer.find("filename=\"") + 10;
+	size_t filename_begin = body_buffer.find("filename=\"");
+	if (filename_begin == std::string::npos)
+	{
+		LOG_ERROR("Filename not found in body buffer");
+		return {};
+	}
+	filename_begin += 10; // Move past 'filename="'
 	size_t filename_end = body_buffer.find("\r\n", filename_begin);
-	std::string filename (&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
-	LOG_DEBUG("FILENAME IS: " << filename);
-	return filename;
+	if (filename_end == std::string::npos)
+	{
+		LOG_ERROR("Malformed filename in body buffer");
+		return {};
+	}
+	// std::string filename (&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
+	// LOG_DEBUG("FILENAME IS: " << filename);
+	// return filename;
+	return std::string(body_buffer.substr(filename_begin, filename_end - filename_begin));
 }
 
 static std::string get_boundary(std::string_view content_type)
 {
-	size_t boundary_begin = content_type.find("boundary=") + 9;
-	std::string boundary(&content_type[boundary_begin], content_type.end());
-	LOG_DEBUG("Boundary: " << boundary);
-	return boundary;
+	size_t boundary_begin = content_type.find("boundary=");
+	if (boundary_begin == std::string::npos)
+	{
+		LOG_ERROR("Boundary not found in Content-Type header");
+		return {};
+	}
+	boundary_begin += 9; // Move past 'boundary='
+	std::string boundary(content_type.substr(boundary_begin));
+	if (boundary.find("WebKitFormBoundary") == std::string::npos)
+	{
+		// for (auto it : boundary)
+		// 	LOG_DEBUG(it << ", ");
+		return boundary;
+	}
+	else
+	{
+		boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up logging whenever I'm dealing with a webkit boundary (!????)
+		return boundary;
+	}
 }
 
 void	HttpProtocol::parse_file_data(std::vector<char> buffer, t_config& config, std::string_view uri)
 {
 	std::string_view 	sv_buffer(buffer.data(), buffer.size());
-	_file.filename = get_filename(sv_buffer);
-	_file.path = get_file_path(config.root, uri.data(), _file.filename);
-	std::string 		boundary_end = "--" + get_boundary(request.get_value("Content-Type").value()) + "--";
 
-	//Remove beginning till CRLN
-	size_t crln_pos = sv_buffer.find("\r\n\r\n");
-	buffer.erase(buffer.begin(), (buffer.begin() + crln_pos) + 4);
-	//Remove ending boundary and everything after
-	auto it_end_boundary = std::search(buffer.begin(), buffer.end(), boundary_end.begin(), boundary_end.end());
-	if (it_end_boundary != buffer.end())
+	_file.filename = get_filename(sv_buffer);
+	if (_file.filename.empty())
 	{
-		buffer.erase(it_end_boundary - 2, buffer.end());
-		_file.data = buffer;
-		_file.finished = false;
-		_file.bytes_uploaded = 0;
+		LOG_ERROR("No filename extracted... aborting parse_file_data()");
+		return;
+	}
+	_file.path = get_file_path(config.root, uri.data(), _file.filename);
+
+	std::string_view content_type = request.get_value("Content-Type").value_or("");
+	std::string boundary = get_boundary(content_type);
+	if (boundary.empty())
+	{
+		LOG_ERROR("No boundary extracted... aborting parse_file_data()");
+		return;
+	}
+
+	LOG_DEBUG("Boundary: " << boundary);
+	std::string	boundary_end = "--" + boundary + "--";
+	LOG_DEBUG("Boundary end: " << boundary_end);
+
+	// Find CRLN
+	size_t crln_pos = sv_buffer.find("\r\n\r\n");
+	if (crln_pos == std::string::npos)
+	{
+		LOG_ERROR("No CRLF found... aborting parse_file_data()");
+		return;
+	}
+
+	auto body_data_start = (buffer.begin() + crln_pos) + 4;
+	auto body_data_end = std::search(body_data_start, buffer.end(), boundary_end.begin(), boundary_end.end());
+
+
+	// Assign body_start till end to _file.data
+	if (body_data_end == buffer.end())
+	{
+		LOG_ERROR("Ending boundary not present... aborting parse_file_data()");
+		return;
 	}
 	else
 	{
-		LOG_ERROR("Ending boundary not present");
+		_file.data.assign(body_data_start, body_data_end - 2);
+		_file.finished = false;
+		_file.bytes_uploaded = 0;
 	}
 }
 
@@ -265,12 +319,6 @@ bool	HttpProtocol::upload_chunk()
 		buffer_size = bytes_left;
 		LOG_INFO("bytes_left: " << bytes_left);
 	}
-	else if (bytes_left <= 0)
-	{
-		_file.finished = true;
-		return true;
-	}
-
 	if (!file_exists(_file.path))
 	{
 		std::ofstream outfile(_file.path.data(), std::ios::binary);
@@ -282,6 +330,11 @@ bool	HttpProtocol::upload_chunk()
 		outfile.write(&_file.data[_file.bytes_uploaded], buffer_size);
 	}
 	_file.bytes_uploaded += buffer_size;
+	if (bytes_left <= 0)
+	{
+		_file.finished = true;
+		return true;
+	}
 	return bytes_left <= 0;
 }
 
