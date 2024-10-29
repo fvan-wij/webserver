@@ -202,9 +202,6 @@ void	HttpProtocol::poll_fetch()
 
 static std::string get_file_path(std::string_view root, std::string_view uri, std::string_view filename)
 {
-	std::string path = ".";
-
-	// return path + root.data() + uri.data() + "/" + filename;
 	return (std::filesystem::path(".") / root / uri / filename).string();
 }
 
@@ -223,10 +220,7 @@ static std::string get_filename(std::string_view body_buffer)
 		LOG_ERROR("Malformed filename in body buffer");
 		return {};
 	}
-	// std::string filename (&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
-	// LOG_DEBUG("FILENAME IS: " << filename);
-	// return filename;
-	return std::string(body_buffer.substr(filename_begin, filename_end - filename_begin));
+	return std::string(&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
 }
 
 static std::string get_boundary(std::string_view content_type)
@@ -241,8 +235,6 @@ static std::string get_boundary(std::string_view content_type)
 	std::string boundary(content_type.substr(boundary_begin));
 	if (boundary.find("WebKitFormBoundary") == std::string::npos)
 	{
-		// for (auto it : boundary)
-		// 	LOG_DEBUG(it << ", ");
 		return boundary;
 	}
 	else
@@ -263,6 +255,7 @@ void	HttpProtocol::parse_file_data(std::vector<char> buffer, t_config& config, s
 		return;
 	}
 	_file.path = get_file_path(config.root, uri.data(), _file.filename);
+	LOG_DEBUG("path: " << _file.path);
 
 	std::string_view content_type = request.get_value("Content-Type").value_or("");
 	std::string boundary = get_boundary(content_type);
@@ -314,6 +307,7 @@ bool	HttpProtocol::upload_chunk()
 	size_t bytes_left = _file.data.size() - _file.bytes_uploaded;
 	size_t buffer_size = UPLOAD_CHUNK_SIZE;
 
+	LOG_DEBUG("Uploading chunk to: " << _file.path);
 	if (bytes_left < UPLOAD_CHUNK_SIZE)
 	{
 		buffer_size = bytes_left;
@@ -321,12 +315,12 @@ bool	HttpProtocol::upload_chunk()
 	}
 	if (!file_exists(_file.path))
 	{
-		std::ofstream outfile(_file.path.data(), std::ios::binary);
+		std::ofstream outfile(_file.path, std::ios::binary);
 			outfile.write(&_file.data[_file.bytes_uploaded], buffer_size);
 	}
 	else
 	{
-		std::ofstream outfile(_file.path.data(), std::ios::binary | std::ios::app);
+		std::ofstream outfile(_file.path, std::ios::binary | std::ios::app);
 		outfile.write(&_file.data[_file.bytes_uploaded], buffer_size);
 	}
 	_file.bytes_uploaded += buffer_size;
