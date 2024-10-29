@@ -148,10 +148,20 @@ void		HttpProtocol::generate_response()
 	}
 }
 
-void	HttpProtocol::start_cgi()
+//CGI should be able to run any .py file
+//CGI can be triggered by both POST and GET requests
+//CGI can accept uploaded files and configure where they should be saved
+//Trailing pathnames that follow the scriptname should be added to PATH_INFO
+
+void	HttpProtocol::start_cgi(char *envp[])
 {
 	// _cgi.start("sleep_echo_var");
-	_cgi.start({"python3", "./var/www/cgi-bin/upload_file.py", "./var/www/favicon.ico"});
+	LOG_DEBUG("path: " << response.get_path());
+	std::string path = response.get_path();
+	std::vector<const char*> args;
+	args.push_back("python3");
+	args.push_back(path.c_str());
+	_cgi.start(args, envp);
 }
 
 std::string	HttpProtocol::get_data()

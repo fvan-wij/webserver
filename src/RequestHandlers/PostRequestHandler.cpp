@@ -1,5 +1,4 @@
 #include "PostRequestHandler.hpp"
-// #include <algorithm>
 
 HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
@@ -12,7 +11,7 @@ HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_co
 		return generate_error_response(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
 	if (content_length_exceeded(request, config))
 		return generate_error_response(413, "Content Too Large");
-	else if (request.get_uri() == "/cgi-bin")
+	else if (get_file_extension(request.get_uri()) == ".py")
 		return generate_successful_response(200, "", ResponseType::CGI);
 	else if (is_multipart_content(request))
 		return generate_successful_response(200, "", ResponseType::UPLOAD);

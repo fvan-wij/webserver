@@ -178,6 +178,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 			{
 				response.set_state(NOT_READY);
 				response.set_body("\r\n<h1>CGI data</h1>\r\n");
+				response.set_path(path.data());
 			}
 			break;
 		case ResponseType::ERROR:
@@ -219,4 +220,11 @@ bool RequestHandler::is_multipart_content(const HttpRequest &request)
 		return true;
 	}
 	return false;
+}
+
+
+std::string RequestHandler::get_file_extension(std::string path)
+{
+	size_t	extension_pos = path.find_last_of(".");
+	return std::string(&path[extension_pos]);
 }

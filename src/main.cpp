@@ -12,7 +12,7 @@
 
 #ifndef USE_TEST_MAIN
 
-void loop(ConnectionManager &cm)
+void loop(ConnectionManager &cm, char *envp[])
 {
 	while (1)
 	{
@@ -43,7 +43,7 @@ void loop(ConnectionManager &cm)
 						protocol->handle(data);
 						if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
 						{
-							protocol->start_cgi();
+							protocol->start_cgi(envp);
 							LOG_INFO("Starting CGI on port: " << ci.get_socket().get_port());
 							cm.add_pipe(pfd.fd, protocol->get_pipe_fd());
 						}
@@ -99,7 +99,7 @@ void loop(ConnectionManager &cm)
 	}
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[], char *envp[])
 {
 	std::vector<t_config>	configs;
 	ConnectionManager		cm;
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 		// return -1;
 	}
 	cm.add_listeners(configs);
-	loop(cm);
+	loop(cm, envp);
 }
 
 #endif

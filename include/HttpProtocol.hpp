@@ -49,7 +49,7 @@ class HttpProtocol
 		bool		upload_chunk();
 		bool		fetch_file(std::string_view path);
 
-		void		start_cgi();
+		void		start_cgi(char *envp[]);
 
 		bool		is_ready();
 		bool		is_cgi_running() {return _cgi.is_running();};

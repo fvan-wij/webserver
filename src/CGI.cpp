@@ -18,10 +18,11 @@ CGI::CGI() : _is_running(false)
 
 
 
-void CGI::start(std::array<std::string, 3> arguments)
+void CGI::start(std::vector<const char*> args, char *const envp[])
 {
+	args.push_back(nullptr);
 	_is_running = true;
-	for (auto it : arguments)
+	for (auto it : args)
 	{
 		LOG_DEBUG("starting CGI with arguments: " << it);
 	}
@@ -47,16 +48,7 @@ void CGI::start(std::array<std::string, 3> arguments)
 
 		close(_pipes[PipeFD::WRITE]);
 
-
-		char *args[] =
-		{
-			(char*) arguments[0].c_str(),
-			(char *) arguments[1].c_str(),
-			(char *) arguments[2].c_str(),
-			NULL,
-		};
-
-		if (execvp(args[0], args) == -1)
+		if (execve(args[0], const_cast<char* const*>(args.data()), envp) == -1)
 		{
 			UNIMPLEMENTED("execvp failed" << strerror(errno));
 		}

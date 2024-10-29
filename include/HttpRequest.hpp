@@ -32,7 +32,7 @@ class HttpRequest
 		std::string 									get_protocol() const;
 		const std::string 								get_buffer() const {return _buffer;};
 		std::string										get_location() const {return _location;};
-		std::string										get_filename() const {return _location;};
+		std::string										get_filename() const {return _filename;};
 
 		std::vector<char> 								get_body() const {return _body;};
 		std::unordered_map<std::string, std::string>	get_headers() const {return _header;};

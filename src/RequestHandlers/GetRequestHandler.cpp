@@ -12,7 +12,15 @@ HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_con
 		return generate_error_response(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
 	std::string path = get_path(config.root, request.get_uri());
 	if (request.is_file())
-		return generate_successful_response(200, path, ResponseType::FETCH_FILE);
+	{
+		LOG_DEBUG("URI: " << request.get_uri());
+		LOG_DEBUG("PATH: " << request.get_uri());
+		std::string ext = get_file_extension(request.get_uri());
+		if (ext == ".py")
+			return generate_successful_response(200, path, ResponseType::CGI);
+		else
+			return generate_successful_response(200, path, ResponseType::FETCH_FILE);
+	}
 	else
 		path += config.location[request.get_location()].index;
 	return generate_successful_response(200, path, ResponseType::REGULAR);

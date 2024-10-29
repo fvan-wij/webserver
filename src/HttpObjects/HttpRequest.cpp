@@ -99,6 +99,7 @@ void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
 	{
 		_b_file = true;
 		_filename = _uri.substr(_uri.rfind('/'), _uri.length());
+		LOG_DEBUG("FILENAME: " << _filename);
 		if (std::count(_uri.begin(), _uri.end(), '/') == 1)
 			_location = "/";
 		else
