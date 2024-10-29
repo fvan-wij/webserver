@@ -103,14 +103,12 @@ void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
 			_location = "/";
 		else
 			_location = _uri.substr(0, _uri.find("/", 1));
-		LOG_ERROR("File: " << _filename);
 	}
 	else 
 	{
 		_location = _uri.substr(0, _uri.find("/", 1));
 		_b_file = false;
 	}
-	LOG_ERROR("Location: " << _location);
 	if (tokens[2] != "HTTP/1.1\r")
 		throw HttpException("HttpRequest: Protocol not present!");
 	_protocol = tokens[2];

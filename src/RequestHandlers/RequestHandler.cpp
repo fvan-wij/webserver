@@ -214,7 +214,6 @@ bool RequestHandler::is_multipart_content(const HttpRequest &request)
 	{
 		return false;
 	}
-	LOG_DEBUG("Content-Type: " << content_type.value());
 	if (content_type.value().find("multipart") != std::string::npos)
 	{
 		return true;

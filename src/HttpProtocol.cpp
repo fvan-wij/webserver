@@ -301,7 +301,6 @@ bool	HttpProtocol::upload_chunk()
 	size_t bytes_left = _file.data.size() - _file.bytes_uploaded;
 	size_t buffer_size = UPLOAD_CHUNK_SIZE;
 
-	LOG_DEBUG("Uploading chunk to: " << _file.path);
 	if (bytes_left < UPLOAD_CHUNK_SIZE)
 	{
 		buffer_size = bytes_left;
@@ -333,6 +332,7 @@ bool HttpProtocol::fetch_file(std::string_view path)
 	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
 	auto 			out 		= std::string();
 
+	LOG_DEBUG("Fetching " << path.data());
 	if (not file_stream)
 	{
 		response.set_status_code(400);
@@ -353,6 +353,7 @@ bool HttpProtocol::fetch_file(std::string_view path)
 		response.append_body(str);
 		if (bytes < 1024)
 		{
+			LOG_DEBUG("Finished... size: " << response.get_body().size());
 			response.set_status_code(200);
 			response.set_state(READY);
 			response.set_streamcount(0);

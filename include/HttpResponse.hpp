@@ -37,6 +37,7 @@ class HttpResponse
 		std::string		get_status_mssg() const {return _status_message;};
 		std::string		get_path() const {return _path;};
 		size_t			get_streamcount() const {return _streamcount;};
+		std::string		get_body() const {return _body;};
 
 		std::string		to_string() const;
 

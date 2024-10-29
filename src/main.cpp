@@ -24,7 +24,7 @@ void loop(ConnectionManager &cm)
 			for (size_t i = 0; i < pfds.size(); i++)
 			{
 				pollfd &pfd = pfds[i];
-				FdType type = fd_types[i];
+				FdType &type = fd_types[i];
 				ConnectionInfo &ci = *cm.get_connection_info()[pfd.fd].get();
 				if (type == FdType::LISTENER && pfd.revents & POLLIN)
 				{
@@ -47,10 +47,6 @@ void loop(ConnectionManager &cm)
 							LOG_INFO("Starting CGI on port: " << ci.get_socket().get_port());
 							cm.add_pipe(pfd.fd, protocol->get_pipe_fd());
 						}
-					}
-					else if (protocol->response.get_type() == ResponseType::FETCH_FILE)
-					{
-						protocol->poll_fetch();
 					}
 					else
 					{
@@ -83,6 +79,11 @@ void loop(ConnectionManager &cm)
 					else if (protocol->response.get_type() == ResponseType::UPLOAD)
 					{
 						protocol->poll_upload();
+					}
+					else if (protocol->response.get_type() == ResponseType::FETCH_FILE) // Note: Fetching requires both reading and writing... but does both when there's a POLLOUT revent.
+					{
+						// LOG_INFO("fd: " << pfd.fd << " POLLOUT (Fetch file)"); 
+						protocol->poll_fetch();
 					}
 				}
 				else if (pfd.revents & POLLERR)
