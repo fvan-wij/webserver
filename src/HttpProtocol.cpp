@@ -202,7 +202,9 @@ void	HttpProtocol::poll_fetch()
 
 static std::string get_file_path(std::string_view root, std::string_view uri, std::string_view filename)
 {
-	return (std::filesystem::path(".") / root / uri / filename).string();
+	std::string path = ".";
+
+	return path + root.data() + uri.data() + "/" + filename.data();
 }
 
 static std::string get_filename(std::string_view body_buffer)
@@ -239,7 +241,7 @@ static std::string get_boundary(std::string_view content_type)
 	}
 	else
 	{
-		boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up logging whenever I'm dealing with a webkit boundary (!????)
+		boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up string manipulation whenever I'm dealing with a webkit boundary (!????)
 		return boundary;
 	}
 }
@@ -255,7 +257,6 @@ void	HttpProtocol::parse_file_data(std::vector<char> buffer, t_config& config, s
 		return;
 	}
 	_file.path = get_file_path(config.root, uri.data(), _file.filename);
-	LOG_DEBUG("path: " << _file.path);
 
 	std::string_view content_type = request.get_value("Content-Type").value_or("");
 	std::string boundary = get_boundary(content_type);
@@ -264,12 +265,7 @@ void	HttpProtocol::parse_file_data(std::vector<char> buffer, t_config& config, s
 		LOG_ERROR("No boundary extracted... aborting parse_file_data()");
 		return;
 	}
-
-	LOG_DEBUG("Boundary: " << boundary);
 	std::string	boundary_end = "--" + boundary + "--";
-	LOG_DEBUG("Boundary end: " << boundary_end);
-
-	// Find CRLN
 	size_t crln_pos = sv_buffer.find("\r\n\r\n");
 	if (crln_pos == std::string::npos)
 	{
@@ -280,8 +276,6 @@ void	HttpProtocol::parse_file_data(std::vector<char> buffer, t_config& config, s
 	auto body_data_start = (buffer.begin() + crln_pos) + 4;
 	auto body_data_end = std::search(body_data_start, buffer.end(), boundary_end.begin(), boundary_end.end());
 
-
-	// Assign body_start till end to _file.data
 	if (body_data_end == buffer.end())
 	{
 		LOG_ERROR("Ending boundary not present... aborting parse_file_data()");

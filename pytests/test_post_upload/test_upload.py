@@ -20,7 +20,7 @@ def send_upload_request(port: int, file_path: str, expected_status_code: int):
         size_og_file = os.path.getsize(file_path)
         print(f"Size of test file: {size_test_file}, size of og file {size_og_file}")
         assert(size_test_file) == size_og_file
-        # os.remove(test_file_path)
+        os.remove(test_file_path)
 
 def test_webserv_instance_pid_check(webserv_instance: WebservInstance) -> None:
     assert webserv_instance.proc.pid is not 0
