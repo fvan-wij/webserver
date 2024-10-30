@@ -155,12 +155,17 @@ void		HttpProtocol::generate_response()
 
 void	HttpProtocol::start_cgi(char *envp[])
 {
-	// _cgi.start("sleep_echo_var");
-	LOG_DEBUG("path: " << response.get_path());
-	std::string path = response.get_path();
 	std::vector<const char*> args;
-	args.push_back("python3");
+
+	//To do: find /usr/bin/python3
+	//Differentiate between UPLOAD, FETCH or simply running a script
+
+	std::string path = response.get_path();
+	LOG_DEBUG("path: " << path);
+
+	args.push_back("/usr/bin/python3");
 	args.push_back(path.c_str());
+
 	_cgi.start(args, envp);
 }
 
@@ -344,7 +349,8 @@ bool HttpProtocol::fetch_file(std::string_view path)
 	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
 	auto 			out 		= std::string();
 
-	LOG_DEBUG("Fetching " << path.data());
+	if (response.get_streamcount() == 0)
+		LOG_DEBUG("Fetching " << path.data());
 	if (not file_stream)
 	{
 		response.set_status_code(400);
