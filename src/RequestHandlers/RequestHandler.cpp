@@ -77,7 +77,7 @@ bool			RequestHandler::method_is_allowed(std::string_view method, std::vector<st
 	return allowed;
 }
 
-bool	RequestHandler::method_is_valid(std::string_view uri, std::string_view method, t_config &config)
+bool	RequestHandler::method_is_valid(std::string_view uri, std::string_view method, Config &config)
 {
 	t_location loc;
 	auto it = config.location.find(uri.data());
@@ -104,7 +104,7 @@ bool	RequestHandler::method_is_valid(std::string_view uri, std::string_view meth
 	return false;
 }
 
-bool RequestHandler::content_length_exceeded(const HttpRequest &request, t_config &config)
+bool RequestHandler::content_length_exceeded(const HttpRequest &request, Config &config)
 {
 	std::optional<std::string_view> sv_conlen = request.get_value("Content-Length");
 	if (sv_conlen)
@@ -206,7 +206,7 @@ std::string	RequestHandler::get_path(std::string_view root, std::string_view uri
 	return path;
 }
 
-bool	RequestHandler::location_exists(t_config &config, std::string_view loc)
+bool	RequestHandler::location_exists(Config &config, std::string_view loc)
 {
 	auto it = config.location.find(loc.data());
 	if (it != config.location.end())

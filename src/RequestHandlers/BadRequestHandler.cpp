@@ -2,7 +2,7 @@
 #include "Logger.hpp"
 
 
-HttpResponse	BadRequestHandler::handle_request(const HttpRequest &request, t_config &config)
+HttpResponse	BadRequestHandler::handle_request(const HttpRequest &request, Config &config)
 {
 	HttpResponse response;
 	(void) config;

@@ -11,7 +11,7 @@ ConnectionManager::ConnectionManager()
 /**
  * @brief Using the config(s) as reference add new listener sockets. (I feel like this needs an update at some point)
  */
-void ConnectionManager::add_listeners(std::vector<t_config> &configs)
+void ConnectionManager::add_listeners(std::vector<Config> &configs)
 {
 	for (const auto& config : configs)
 	{
@@ -37,7 +37,7 @@ void ConnectionManager::add_listeners(std::vector<t_config> &configs)
  * @param config
  * @param port
  */
-void ConnectionManager::add_listener(t_config config, uint16_t port)
+void ConnectionManager::add_listener(Config config, uint16_t port)
 {
 	short mask = POLLIN;
 	Socket listener = {SocketType::LISTENER, port};
@@ -61,7 +61,7 @@ void ConnectionManager::add_listener(t_config config, uint16_t port)
 void ConnectionManager::add_client(ConnectionInfo &ci)
 {
 	short mask = POLLIN | POLLOUT;
-	t_config config = ci.get_config();
+	Config config = ci.get_config();
 	Socket socket = ci.get_socket().accept();
 	LOG_DEBUG("Adding client socket fd " << socket.get_fd() << " for " << config.server_name[0] << " on port: " << socket.get_port());
 

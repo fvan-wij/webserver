@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <optional>
+#include <string>
 #include <sys/poll.h>
 #include <vector>
 
@@ -36,7 +37,7 @@ void loop(ConnectionManager &cm, char *envp[])
 					// Parse request and generate response
 					LOG_INFO("fd: " << pfd.fd << " POLLIN (client)");
 					std::optional<std::vector<char>> read_data = ci.get_socket().read();
-					auto protocol = ci.get_protocol();
+					auto const &protocol = ci.get_protocol();
 					if (read_data)
 					{
 						std::vector<char> data = read_data.value();
@@ -99,12 +100,18 @@ void loop(ConnectionManager &cm, char *envp[])
 	}
 }
 
+
+static bool	check_extension(const std::string &file, const std::string &ext)
+{
+  	return ext.length() <= file.length() && std::equal(ext.rbegin(), ext.rend(), file.rbegin());
+}
+
 int main(int argc, char *argv[], char *envp[])
 {
-	std::vector<t_config>	configs;
+	std::vector<Config>	configs;
 	ConnectionManager		cm;
 
-	if (argc == 2 && argv[1]) // Do check if file extension is correct (.conf)
+	if (argc == 2 && argv[1] && check_extension(argv[1], ".conf"))
 	{
 		configs = parse_config(argv[1]);
 	}
@@ -112,7 +119,6 @@ int main(int argc, char *argv[], char *envp[])
 	{
 		LOG_ERROR("Config is invalid or not present, using DEFAULT_CONFIG");
 		configs.push_back(DEFAULT_CONFIG);
-		// return -1;
 	}
 	cm.add_listeners(configs);
 	loop(cm, envp);

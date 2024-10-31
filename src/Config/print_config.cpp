@@ -6,7 +6,7 @@
 #include <iostream>
 #include <unordered_map>
 
-void	print_listen(t_config config)
+void	print_listen(Config config)
 {
 	std::vector<std::pair<std::string, int>> listen;
 	listen = config.listen;
@@ -16,7 +16,7 @@ void	print_listen(t_config config)
 	}
 }
 
-void	print_server_name(t_config config)
+void	print_server_name(Config config)
 {
 	std::cout << " - server_name(s):";
 	for (unsigned int x = 0; x < config.server_name.size(); x++)
@@ -36,7 +36,7 @@ void	print_methods(std::vector<std::string> methods)
 	std::cout << std::endl;
 }
 
-void	print_location(t_config config)
+void	print_location(Config config)
 {
 	t_location location;
 	std::cout << " - Locations {" << std::endl;

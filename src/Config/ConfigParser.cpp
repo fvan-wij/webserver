@@ -137,7 +137,7 @@ std::pair<int, std::string> parse_error_page(std::vector<std::string> tokens, un
 
 }
 
-void	print_config(t_config config)
+void	print_config(Config config)
 {
 	std::cout << "config {" << std::endl;
 	print_listen(config);
@@ -150,9 +150,9 @@ void	print_config(t_config config)
 	std::cout << "}" << std::endl;
 }
 
-t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
+Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 {
-	t_config server_config;
+	Config server_config;
 	while (i < tokens.size())
 	{
 		if (tokens[i] == "root")
@@ -207,10 +207,9 @@ t_config	read_config(std::vector<std::string> tokens, unsigned long &i)
 	// print_config(server_config);
 	return (server_config);
 }
-
-std::vector<t_config>	parse_config(std::string_view config_path)
+std::vector<Config>	parse_config(std::string_view config_path)
 {
-	std::vector<t_config>		configs;
+	std::vector<Config>			configs;
 	std::ifstream				in(config_path.data(), std::ios_base::in);
 	std::vector<std::string>	tokenized_line;
 	std::string					line;
@@ -232,7 +231,7 @@ std::vector<t_config>	parse_config(std::string_view config_path)
 	{
 		if (tokens[i] == "server\0")
 		{
-			t_config server_config;
+			Config server_config;
 			server_config = read_config(tokens, i);
 			configs.push_back(server_config);
 		}

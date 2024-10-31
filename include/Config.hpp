@@ -18,7 +18,7 @@ const t_location DEFAULT_LOCATION = {
     "index.html"                   // index
 };
 
-typedef struct s_config {
+struct Config {
 	std::vector<std::string>					server_name;
 	std::vector<std::pair<std::string, int>>	listen; 
 	std::vector<std::string>					methods;
@@ -28,9 +28,9 @@ typedef struct s_config {
 	std::vector<std::pair<int, std::string>>	error_page; 
 	std::vector<std::string>					paths;
 	std::string									index;
-} t_config;
+};
 
-const t_config DEFAULT_CONFIG = {
+const Config DEFAULT_CONFIG = {
     {"default_server"},                        // server_name
     {{"0.0.0.0", 9090}},                    // listen (IP, port)
     {"GET", "POST"},                      // methods
@@ -42,7 +42,7 @@ const t_config DEFAULT_CONFIG = {
     "index.html",                         // index page
 };
 
-void	print_listen(t_config config);
-void	print_server_name(t_config config);
+void	print_listen(Config config);
+void	print_server_name(Config config);
 void	print_methods(std::vector<std::string> methods);
-void	print_location(t_config config);
+void	print_location(Config config);

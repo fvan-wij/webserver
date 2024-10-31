@@ -1,7 +1,7 @@
 #include "GetRequestHandler.hpp"
 #include "Logger.hpp"
 
-HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_config &config)
+HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, Config &config)
 {
 	// LOG_NOTICE("Handling GET request:\n" << request);
 	LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());

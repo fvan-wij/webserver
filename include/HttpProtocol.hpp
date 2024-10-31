@@ -22,7 +22,7 @@ class HttpProtocol
 {
 	public:
 		HttpProtocol();
-		HttpProtocol(t_config &config);
+		HttpProtocol(Config &config);
 		HttpProtocol(const HttpProtocol &);
 		HttpProtocol &operator=(const HttpProtocol &);
 		~HttpProtocol();
@@ -45,16 +45,17 @@ class HttpProtocol
 		void		handle_headers(std::vector<char> data);
 		void		handle_body(std::vector<char> data);
 		void		generate_response();
-		void		parse_file_data(std::vector<char> buffer, t_config& config, std::string_view uri);
+		void		parse_file_data(std::vector<char> buffer, Config& config, std::string_view uri);
 		bool		upload_chunk();
 		bool		fetch_file(std::string_view path);
 
 		void		start_cgi(char *envp[]);
 
 		bool		is_ready();
+		// TODO Put this in .cpp file 
 		bool		is_cgi_running() {return _cgi.is_running();};
 		std::string	get_data();
-		t_config	get_config();
+		Config	get_config();
 		int			get_pipe_fd();
 
 		HttpResponse	response;
@@ -68,6 +69,6 @@ class HttpProtocol
 		bool				_b_headers_complete;
 		bool				_b_body_complete;
 		State				_current_state;
-		t_config			_config;
+		Config			_config;
 
 };

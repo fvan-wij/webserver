@@ -41,12 +41,12 @@ class ConnectionManager {
 		ConnectionManager &operator=(const ConnectionManager &) = default;
 		~ConnectionManager() = default;
 
-		void	add(t_config config, Socket);
+		void	add(Config config, Socket);
 		void 	remove(size_t index);
 		void 	remove_pipe(int client_fd);
 
-		void	add_listeners(std::vector<t_config> &configs);
-		void	add_listener(t_config config, uint16_t port);
+		void	add_listeners(std::vector<Config> &configs);
+		void	add_listener(Config config, uint16_t port);
 		void	add_client(ConnectionInfo &ci);
 		void	add_pipe(int client_fd, int read_pipe);
 
