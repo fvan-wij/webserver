@@ -2,6 +2,7 @@
 #include "meta.hpp"
 #include <cwchar>
 #include <string>
+#include <filesystem>
 
 HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders)
 {
@@ -45,6 +46,8 @@ void		HttpProtocol::on_data_received(std::vector<char> data)
 		case State::ProcessingCGI:
 			break;
 		case State::UploadingFile:
+			break;
+		case State::FetchingFile:
 			break;
 	}
 }
@@ -139,11 +142,31 @@ void		HttpProtocol::generate_response()
 		_current_state = State::UploadingFile;
 		parse_file_data(request.get_body(), _config, request.get_uri());
 	}
+	else if (response.get_type() == ResponseType::FETCH_FILE)
+	{
+		_current_state = State::FetchingFile;
+	}
 }
 
-void	HttpProtocol::start_cgi()
+//CGI should be able to run any .py file
+//CGI can be triggered by both POST and GET requests
+//CGI can accept uploaded files and configure where they should be saved
+//Trailing pathnames that follow the scriptname should be added to PATH_INFO
+
+void	HttpProtocol::start_cgi(char *envp[])
 {
-	_cgi.start("sleep_echo_var");
+	std::vector<const char*> args;
+
+	//To do: find /usr/bin/python3
+	//Differentiate between UPLOAD, FETCH or simply running a script
+
+	std::string path = response.get_path();
+	LOG_DEBUG("path: " << path);
+
+	args.push_back("/usr/bin/python3");
+	args.push_back(path.c_str());
+
+	_cgi.start(args, envp);
 }
 
 std::string	HttpProtocol::get_data()
@@ -155,7 +178,8 @@ std::string	HttpProtocol::get_data()
 	if (response.get_type() == ResponseType::CGI)
 	{
 		std::string b = _cgi.get_buffer();
-		response.append_body(b);
+		// response.append_body(b);
+		response.set_body(b);
 	}
 	return response.to_string();
 }
@@ -187,6 +211,12 @@ void	HttpProtocol::poll_upload()
 		response.set_state(upload_chunk());
 }
 
+void	HttpProtocol::poll_fetch()
+{
+	if (response.get_type() == ResponseType::FETCH_FILE)
+		response.set_state(fetch_file(response.get_path()));
+}
+
 static std::string get_file_path(std::string_view root, std::string_view uri, std::string_view filename)
 {
 	std::string path = ".";
@@ -196,43 +226,83 @@ static std::string get_file_path(std::string_view root, std::string_view uri, st
 
 static std::string get_filename(std::string_view body_buffer)
 {
-	size_t filename_begin = body_buffer.find("filename=\"") + 10;
+	size_t filename_begin = body_buffer.find("filename=\"");
+	if (filename_begin == std::string::npos)
+	{
+		LOG_ERROR("Filename not found in body buffer");
+		return {};
+	}
+	filename_begin += 10; // Move past 'filename="'
 	size_t filename_end = body_buffer.find("\r\n", filename_begin);
-	std::string filename (&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
-	LOG_DEBUG("FILENAME IS: " << filename);
-	return filename;
+	if (filename_end == std::string::npos)
+	{
+		LOG_ERROR("Malformed filename in body buffer");
+		return {};
+	}
+	return std::string(&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
 }
 
 static std::string get_boundary(std::string_view content_type)
 {
-	size_t boundary_begin = content_type.find("boundary=") + 9;
-	std::string boundary(&content_type[boundary_begin], content_type.end());
-	LOG_DEBUG("Boundary: " << boundary);
-	return boundary;
+	size_t boundary_begin = content_type.find("boundary=");
+	if (boundary_begin == std::string::npos)
+	{
+		LOG_ERROR("Boundary not found in Content-Type header");
+		return {};
+	}
+	boundary_begin += 9; // Move past 'boundary='
+	std::string boundary(content_type.substr(boundary_begin));
+	if (boundary.find("WebKitFormBoundary") == std::string::npos)
+	{
+		return boundary;
+	}
+	else
+	{
+		boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up string manipulation whenever I'm dealing with a webkit boundary (!????)
+		return boundary;
+	}
 }
 
 void	HttpProtocol::parse_file_data(std::vector<char> buffer, t_config& config, std::string_view uri)
 {
 	std::string_view 	sv_buffer(buffer.data(), buffer.size());
-	_file.filename = get_filename(sv_buffer);
-	_file.path = get_file_path(config.root, uri.data(), _file.filename);
-	std::string 		boundary_end = "--" + get_boundary(request.get_value("Content-Type").value()) + "--";
 
-	//Remove beginning till CRLN
-	size_t crln_pos = sv_buffer.find("\r\n\r\n");
-	buffer.erase(buffer.begin(), (buffer.begin() + crln_pos) + 4);
-	//Remove ending boundary and everything after
-	auto it_end_boundary = std::search(buffer.begin(), buffer.end(), boundary_end.begin(), boundary_end.end());
-	if (it_end_boundary != buffer.end())
+	_file.filename = get_filename(sv_buffer);
+	if (_file.filename.empty())
 	{
-		buffer.erase(it_end_boundary - 2, buffer.end());
-		_file.data = buffer;
-		_file.finished = false;
-		_file.bytes_uploaded = 0;
+		LOG_ERROR("No filename extracted... aborting parse_file_data()");
+		return;
+	}
+	_file.path = get_file_path(config.root, uri.data(), _file.filename);
+
+	std::string_view content_type = request.get_value("Content-Type").value_or("");
+	std::string boundary = get_boundary(content_type);
+	if (boundary.empty())
+	{
+		LOG_ERROR("No boundary extracted... aborting parse_file_data()");
+		return;
+	}
+	std::string	boundary_end = "--" + boundary + "--";
+	size_t crln_pos = sv_buffer.find("\r\n\r\n");
+	if (crln_pos == std::string::npos)
+	{
+		LOG_ERROR("No CRLF found... aborting parse_file_data()");
+		return;
+	}
+
+	auto body_data_start = (buffer.begin() + crln_pos) + 4;
+	auto body_data_end = std::search(body_data_start, buffer.end(), boundary_end.begin(), boundary_end.end());
+
+	if (body_data_end == buffer.end())
+	{
+		LOG_ERROR("Ending boundary not present... aborting parse_file_data()");
+		return;
 	}
 	else
 	{
-		LOG_ERROR("Ending boundary not present");
+		_file.data.assign(body_data_start, body_data_end - 2);
+		_file.finished = false;
+		_file.bytes_uploaded = 0;
 	}
 }
 
@@ -253,24 +323,63 @@ bool	HttpProtocol::upload_chunk()
 		buffer_size = bytes_left;
 		LOG_INFO("bytes_left: " << bytes_left);
 	}
-	else if (bytes_left <= 0)
-	{
-		_file.finished = true;
-		return true;
-	}
-
 	if (!file_exists(_file.path))
 	{
-		std::ofstream outfile(_file.path.data(), std::ios::binary);
+		std::ofstream outfile(_file.path, std::ios::binary);
 			outfile.write(&_file.data[_file.bytes_uploaded], buffer_size);
 	}
 	else
 	{
-		std::ofstream outfile(_file.path.data(), std::ios::binary | std::ios::app);
+		std::ofstream outfile(_file.path, std::ios::binary | std::ios::app);
 		outfile.write(&_file.data[_file.bytes_uploaded], buffer_size);
 	}
 	_file.bytes_uploaded += buffer_size;
+	if (bytes_left <= 0)
+	{
+		_file.finished = true;
+		return true;
+	}
 	return bytes_left <= 0;
+}
+
+bool HttpProtocol::fetch_file(std::string_view path)
+{
+	char 			buffer[1024];
+	constexpr auto 	read_size 	= std::size_t(1024);
+	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
+	auto 			out 		= std::string();
+
+	if (response.get_streamcount() == 0)
+		LOG_DEBUG("Fetching " << path.data());
+	if (not file_stream)
+	{
+		response.set_status_code(400);
+		response.set_status_mssg("Could not fetch file");
+		response.set_state(READY);
+		response.set_type(ResponseType::ERROR);
+		response.set_streamcount(0);
+		LOG_ERROR("Could not open file");
+		return true;
+	}
+	else
+	{
+		file_stream.seekg(response.get_streamcount());
+		file_stream.read(&buffer[0], read_size);
+		std::streamsize bytes = file_stream.gcount();
+		response.update_streamcount(bytes);
+		std::vector<char> data(buffer, buffer + bytes);
+		std::string str(data.begin(), data.end());
+		response.append_body(str);
+		if (bytes < 1024)
+		{
+			LOG_DEBUG("Finished... size: " << response.get_body().size());
+			response.set_status_code(200);
+			response.set_state(READY);
+			response.set_streamcount(0);
+			return true;
+		}
+	}
+	return false;
 }
 
 HttpProtocol &HttpProtocol::operator=(const HttpProtocol &other)

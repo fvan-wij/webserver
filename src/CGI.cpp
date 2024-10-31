@@ -18,10 +18,14 @@ CGI::CGI() : _is_running(false)
 
 
 
-void CGI::start(std::string path)
+void CGI::start(std::vector<const char*> args, char *const envp[])
 {
+	args.push_back(nullptr);
 	_is_running = true;
-	LOG_DEBUG("starting CGI with path: " << path);
+	for (auto it : args)
+	{
+		LOG_DEBUG("starting CGI with arguments: " << it);
+	}
 	if (pipe(_pipes) == -1)
 	{
 		UNIMPLEMENTED("pipe failed" << strerror(errno));
@@ -33,10 +37,10 @@ void CGI::start(std::string path)
 		UNIMPLEMENTED("fork failed" << strerror(errno));
 	}
 
-	// Child proccess
+	// Child process
 	else if (_pid == 0)
 	{
-		// Attach "this" proccess's STDOUT_FILENO to pipe.
+		// Attach "this" process's STDOUT_FILENO to pipe.
 		if (dup2(_pipes[PipeFD::WRITE], STDOUT_FILENO) == -1)
 		{
 			UNIMPLEMENTED("dup2 failed" << strerror(errno));
@@ -44,15 +48,7 @@ void CGI::start(std::string path)
 
 		close(_pipes[PipeFD::WRITE]);
 
-
-		char *args[] =
-		{
-			(char *) path.c_str(),
-			(char*) ("2"),
-			NULL,
-		};
-
-		if (execvp(args[0], args) == -1)
+		if (execve(args[0], const_cast<char* const*>(args.data()), envp) == -1)
 		{
 			UNIMPLEMENTED("execvp failed" << strerror(errno));
 		}

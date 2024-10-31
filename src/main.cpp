@@ -12,7 +12,7 @@
 
 #ifndef USE_TEST_MAIN
 
-void loop(ConnectionManager &cm)
+void loop(ConnectionManager &cm, char *envp[])
 {
 	while (1)
 	{
@@ -24,7 +24,7 @@ void loop(ConnectionManager &cm)
 			for (size_t i = 0; i < pfds.size(); i++)
 			{
 				pollfd &pfd = pfds[i];
-				FdType type = fd_types[i];
+				FdType &type = fd_types[i];
 				ConnectionInfo &ci = *cm.get_connection_info()[pfd.fd].get();
 				if (type == FdType::LISTENER && pfd.revents & POLLIN)
 				{
@@ -36,14 +36,14 @@ void loop(ConnectionManager &cm)
 					// Parse request and generate response
 					LOG_INFO("fd: " << pfd.fd << " POLLIN (client)");
 					std::optional<std::vector<char>> read_data = ci.get_socket().read();
+					auto protocol = ci.get_protocol();
 					if (read_data)
 					{
-						auto protocol = ci.get_protocol();
 						std::vector<char> data = read_data.value();
 						protocol->handle(data);
 						if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
 						{
-							protocol->start_cgi();
+							protocol->start_cgi(envp);
 							LOG_INFO("Starting CGI on port: " << ci.get_socket().get_port());
 							cm.add_pipe(pfd.fd, protocol->get_pipe_fd());
 						}
@@ -80,6 +80,11 @@ void loop(ConnectionManager &cm)
 					{
 						protocol->poll_upload();
 					}
+					else if (protocol->response.get_type() == ResponseType::FETCH_FILE) // Note: Fetching requires both reading and writing... but does both when there's a POLLOUT revent.
+					{
+						// LOG_INFO("fd: " << pfd.fd << " POLLOUT (Fetch file)"); 
+						protocol->poll_fetch();
+					}
 				}
 				else if (pfd.revents & POLLERR)
 				{
@@ -94,7 +99,7 @@ void loop(ConnectionManager &cm)
 	}
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[], char *envp[])
 {
 	std::vector<t_config>	configs;
 	ConnectionManager		cm;
@@ -110,7 +115,7 @@ int main(int argc, char *argv[])
 		// return -1;
 	}
 	cm.add_listeners(configs);
-	loop(cm);
+	loop(cm, envp);
 }
 
 #endif
