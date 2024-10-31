@@ -46,6 +46,7 @@ class HttpProtocol
 		void		handle_body(std::vector<char> data);
 		void		generate_response();
 		void		parse_file_data(std::vector<char> buffer, t_config& config, std::string_view uri);
+		void		build_error_response(int error_code, std::string_view message);
 		bool		upload_chunk();
 		bool		fetch_file(std::string_view path);
 

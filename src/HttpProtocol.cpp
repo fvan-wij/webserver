@@ -171,14 +171,9 @@ void	HttpProtocol::start_cgi(char *envp[])
 
 std::string	HttpProtocol::get_data()
 {
-	if (!response.is_ready())
-	{
-		WARNING("calling get_data() while not ready!");
-	}
 	if (response.get_type() == ResponseType::CGI)
 	{
 		std::string b = _cgi.get_buffer();
-		// response.append_body(b);
 		response.set_body(b);
 	}
 	return response.to_string();
@@ -342,6 +337,16 @@ bool	HttpProtocol::upload_chunk()
 	return bytes_left <= 0;
 }
 
+void	HttpProtocol::build_error_response(int error_code, std::string_view message)
+{
+	response.set_status_code(error_code);
+	response.set_status_mssg(message.data());
+	std::string mssg = "\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n";
+	response.set_body(mssg);
+	response.set_state(READY);
+	response.set_type(ResponseType::ERROR);
+}
+
 bool HttpProtocol::fetch_file(std::string_view path)
 {
 	char 			buffer[1024];
@@ -353,10 +358,7 @@ bool HttpProtocol::fetch_file(std::string_view path)
 		LOG_DEBUG("Fetching " << path.data());
 	if (not file_stream)
 	{
-		response.set_status_code(400);
-		response.set_status_mssg("Could not fetch file");
-		response.set_state(READY);
-		response.set_type(ResponseType::ERROR);
+		build_error_response(404, "Not Found - The server cannot find the requested resource");
 		response.set_streamcount(0);
 		LOG_ERROR("Could not open file");
 		return true;
