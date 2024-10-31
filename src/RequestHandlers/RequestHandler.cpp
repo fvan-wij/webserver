@@ -150,6 +150,12 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 				}
 				else if (autoindexing) // Temp flag, but should be retrieved from config
 				{
+					if (path.rfind(".html") != std::string::npos) // Strips off index.html path if cannot be retrieved
+					{
+						LOG_DEBUG("path .html found, path is: " << path);
+						path = path.substr(0, path.find_last_of("/"));
+						LOG_DEBUG("path substr is: " << path);
+					}
 					std::string directory_list = generate_directory_listing(path);
 					response.set_body("\r\n" + directory_list + "\r\n");
 				}

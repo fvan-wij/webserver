@@ -359,6 +359,7 @@ bool HttpProtocol::fetch_file(std::string_view path)
 		response.set_type(ResponseType::ERROR);
 		response.set_streamcount(0);
 		LOG_ERROR("Could not open file");
+		return true;
 	}
 	else
 	{

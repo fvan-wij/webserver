@@ -12,23 +12,13 @@ body {
 	justify-content: center;
 	align-items: center;
 	font-size: 1.5em;
-}
 		</style>	
 	</head>
 	<body>
 		<div>
-			<h1>Welcome to our Webserver</h1>
-			<p>This is the default page</p>
-			<h2>Tests</h1>
-
-			<ul>
-				<li><a href="/post_test.html">Upload a file</a></li>
-				<li><a href="/delete_test.html">Delete a file</a></li>
-				<li><a href="/cgi_test.html">Run a script</a></li>
-			</ul>
-
+			<h1>CGI test</h1>
 			<h4>Send post request and trigger CGI</h1>
-			<form action='/cgi-bin' method='post'><button name='foo' value='Yeet'>Test Post (trigger CGI)</button></form>
+			<form action='/cgi-bin/hello_world.py' method='post'><button name='foo' value='Yeet'>Test Post (trigger CGI)</button></form>
 		</div>
 	</body>
 </html>
