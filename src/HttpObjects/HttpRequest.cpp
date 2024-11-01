@@ -1,6 +1,9 @@
 #include "HttpRequest.hpp"
 #include "Logger.hpp"
+#include "Utility.hpp"
+
 #include <algorithm>
+
 
 std::string	HttpRequest::get_method() const
 {
@@ -31,9 +34,9 @@ void	HttpRequest::set_type(RequestType type)
 	_type = type;
 }
 
-void	HttpRequest::parse_header(const std::string &data)
+void	HttpRequest::extract_header_fields(std::string_view data_sv)
 {
-	std::istringstream 			stream(data);
+	std::istringstream 			stream(data_sv.data()); // Might be dangerous because sv is not guaranteed to be null-terminated
 	std::string					line;
 
 	_parse_request_line(stream);
@@ -54,11 +57,74 @@ void	HttpRequest::parse_header(const std::string &data)
 	_b_header_parsed = true;
 }
 
-void HttpRequest::parse_body(std::vector<char> data)
+State	HttpRequest::parse_header(std::vector<char>& data)
 {
-	_body.insert(_body.end(), data.begin(), data.end());
-	_b_body_parsed = true;
-	LOG_NOTICE("BODY IS PARSED!");
+	std::string_view data_sv(data.data(), data.size());
+	size_t	header_size = data_sv.find("\r\n\r\n", 0);
+
+	if (header_size != std::string::npos)
+	{
+		//Parsed header
+		_header_buffer += data_sv.substr(0, header_size);
+		extract_header_fields(data_sv);
+		_b_header_parsed = true;
+
+		_body_buffer.insert(_body_buffer.end(), data.begin() + (header_size + 4), data.end());
+		std::string_view sv_body(_body_buffer.data(), _body_buffer.size());
+		if (data_sv.find("WebKitFormBoundary") != std::string::npos)
+		{
+			return State::ReadingBody;
+		}
+		else if ((header_size + 4) == data_sv.length())
+		{
+			_b_body_parsed = true;
+			return State::GeneratingResponse;
+		}
+		std::optional<std::string_view> val = get_value("Content-Length");
+		if (val)
+		{
+			try {
+				auto len = Utility::svtoi(val);
+				if (len && len == _body_buffer.size())
+				{
+					_b_body_parsed = true;
+					return State::GeneratingResponse;
+				}
+				else
+				{
+					return State::ReadingBody;
+				}
+			}
+			catch (std::invalid_argument &e)
+			{
+				exit(123);
+			}
+		}
+	}
+	else {
+		_header_buffer.append(data.data(), data.size());
+	}
+	return State::ReadingHeaders; //Perhaps return new State::Error?
+}
+
+State HttpRequest::parse_body(std::vector<char> data)
+{
+	std::string_view sv(_body_buffer.data(), _body_buffer.size());
+	if (_body_buffer.size() == Utility::svtoi(get_value("Content-Length")))
+	{
+			LOG_DEBUG("Generating response... ");
+			return State::GeneratingResponse;
+	}
+	else
+	{
+		_body_buffer.insert(_body_buffer.end(), data.begin(), data.end());
+		if (_body_buffer.size() == Utility::svtoi(get_value("Content-Length")))
+		{
+			LOG_DEBUG("Generating response... ");
+			return State::GeneratingResponse;
+		}
+	}
+	return State::ReadingBody;
 }
 
 static std::vector<std::string>	tokenize_string(std::string string, std::string delimiter)

@@ -1,8 +1,7 @@
 #include "HttpProtocol.hpp"
-#include "meta.hpp"
+#include "HandlerFactory.hpp"
 #include <cwchar>
 #include <string>
-#include <filesystem>
 
 HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders)
 {
@@ -27,13 +26,40 @@ HttpProtocol::HttpProtocol(const HttpProtocol &other) : _header_buffer(other._he
 
 void	HttpProtocol::handle(std::vector<char> data)
 {
+	// switch (_current_state)
+	// {
+	// 	case State::ReadingHeaders: //Parses headers
+	// 		// handle_headers(data);
+	// 		_current_state = request.parse_header(data);
+	// 		break;
+	// 	case State::ReadingBody: //Parses body
+	// 		// handle_body(data);
+	// 		_current_state = request.parse_body(data);
+	// 		break;
+	// 	case State::ProcessingCGI:
+	// 		_current_state = request.process_cgi();
+	// 		break;
+	// 	case State::UploadingFile:
+	// 		_current_state = request.upload_file();
+	// 		break;
+	// 	case State::FetchingFile:
+	// 		_current_state = request.fetch_file();
+	// 		break;
+	// 	case State::BuildingResponse:
+	// 		_current_state = request.building_response();
+	// 		break;
+	// 	case State::Ready:
+	// 		break;
+	// }
+
 	switch (_current_state)
 	{
 		case State::ReadingHeaders: //Parses headers
-			handle_headers(data);
+			// handle_headers(data);
+			_current_state = request.parse_header(data);
 			break;
 		case State::ReadingBody: //Parses body
-			handle_body(data);
+			_current_state = request.parse_body(data);
 			break;
 		case State::ProcessingCGI:
 			break;
@@ -45,82 +71,85 @@ void	HttpProtocol::handle(std::vector<char> data)
 			generate_response();
 			break;
 	}
+
 }
 
-void		HttpProtocol::handle_headers(std::vector<char> data)
-{
-	std::string_view str(data.data(), data.size());
-	size_t	header_size = str.find("\r\n\r\n", 0);
+// void		HttpProtocol::handle_headers(std::vector<char> data)
+// {
+// 	//Passes the raw data to the request class, which parses the header in chunks
+// 	//Does this until the request.parse_header is finished;
+// 	std::string_view str(data.data(), data.size());
+// 	size_t	header_size = str.find("\r\n\r\n", 0);
+//
+// 	if (header_size != std::string::npos)
+// 	{
+// 		_header_buffer += str.substr(0, header_size);
+// 		_b_headers_complete = true;
+// 		_body_buffer.insert(_body_buffer.end(), data.begin() + (header_size + 4), data.end());
+// 		request.parse_header(_header_buffer);
+// 		std::string_view sv_body(_body_buffer.data(), _body_buffer.size());
+// 		if (str.find("WebKitFormBoundary") != std::string::npos)
+// 		{
+// 			_current_state = State::ReadingBody;
+// 			return;
+// 		}
+// 		else if ((header_size + 4) == str.length())
+// 		{
+// 			_current_state = State::GeneratingResponse;
+// 			_b_body_complete = true;
+// 			generate_response();
+// 		}
+// 		std::optional<std::string_view> val = request.get_value("Content-Length");
+// 		if (val)
+// 		{
+// 			try {
+// 				auto len = Utility::svtoi(val);
+// 				if (len && len == _body_buffer.size())
+// 				{
+// 					_current_state = State::GeneratingResponse;
+// 					_b_body_complete = true;
+// 					generate_response();
+// 					return;
+// 				}
+// 				else
+// 				{
+// 					_current_state = State::ReadingBody;
+// 					return;
+// 				}
+// 			}
+// 			catch (std::invalid_argument &e)
+// 			{
+// 				exit(123);
+// 			}
+// 		}
+// 	}
+// 	else {
+// 		_header_buffer.append(data.data(), data.size());
+// 	}
+// }
 
-	if (header_size != std::string::npos)
-	{
-		_header_buffer += str.substr(0, header_size);
-		_b_headers_complete = true;
-		_body_buffer.insert(_body_buffer.end(), data.begin() + (header_size + 4), data.end());
-		request.parse_header(_header_buffer);
-		std::string_view sv_body(_body_buffer.data(), _body_buffer.size());
-		if (str.find("WebKitFormBoundary") != std::string::npos)
-		{
-			_current_state = State::ReadingBody;
-			return;
-		}
-		else if ((header_size + 4) == str.length())
-		{
-			_current_state = State::GeneratingResponse;
-			_b_body_complete = true;
-			generate_response();
-		}
-		std::optional<std::string_view> val = request.get_value("Content-Length");
-		if (val)
-		{
-			try {
-				auto len = Utility::svtoi(val);
-				if (len && len == _body_buffer.size())
-				{
-					_current_state = State::GeneratingResponse;
-					_b_body_complete = true;
-					generate_response();
-					return;
-				}
-				else
-				{
-					_current_state = State::ReadingBody;
-					return;
-				}
-			}
-			catch (std::invalid_argument &e)
-			{
-				exit(123);
-			}
-		}
-	}
-	else {
-		_header_buffer.append(data.data(), data.size());
-	}
-}
 
-
-void		HttpProtocol::handle_body(std::vector<char> data)
-{
-	std::string_view sv(_body_buffer.data(), _body_buffer.size());
-	if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
-	{
-			_current_state = State::GeneratingResponse;
-			LOG_DEBUG("Generating response... ");
-			generate_response();
-			return;
-	}
-	else
-	{
-		_body_buffer.insert(_body_buffer.end(), data.begin(), data.end());
-		if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
-		{
-			LOG_DEBUG("Generating response... ");
-			generate_response();
-			return;
-		}
-	}
-}
+// void		HttpProtocol::handle_body(std::vector<char> data)
+// {
+// 	std::string_view sv(_body_buffer.data(), _body_buffer.size());
+// 	if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
+// 	{
+// 			_current_state = State::GeneratingResponse;
+// 			LOG_DEBUG("Generating response... ");
+// 			generate_response();
+// 			return;
+// 	}
+// 	else
+// 	{
+// 		_body_buffer.insert(_body_buffer.end(), data.begin(), data.end());
+// 		if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
+// 		{
+// 			LOG_DEBUG("Generating response... ");
+// 			generate_response();
+// 			return;
+// 		}
+// 	}
+// }
 
 void		HttpProtocol::generate_response()
 {

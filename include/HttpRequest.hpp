@@ -9,6 +9,7 @@
 
 #include "meta.hpp"
 
+
 enum class RequestType:int
 {
 	PostRequest,
@@ -50,8 +51,10 @@ class HttpRequest
 		void											set_body(std::vector<char> body) {_body = body;};
 		void											append_buffer(std::string &data);
 
-		void											parse_header(const std::string &data);
-		void 											parse_body(std::vector<char> data);
+		//												Parse shananigans
+		State											parse_header(std::vector<char>& data);
+		State 											parse_body(std::vector<char> data);
+		void											extract_header_fields(std::string_view data_sv);
 
 		class HttpException : public std::exception
 	{
@@ -81,9 +84,11 @@ class HttpRequest
 		std::string _filename;
 		std::string _location;
 
-		std::vector<char> _body;
 
+		std::string										_header_buffer;
+		std::vector<char> 								_body_buffer;
 		std::unordered_map<std::string, std::string>	_header;
+		std::vector<char> 								_body;
 
 		RequestType	_type;
 

@@ -34,3 +34,12 @@
 #define GREEN 	"\x1B[32m"
 #define YELLOW 	"\x1B[33m"
 #define END		"\033[0m\t\t"
+
+enum class State {
+	ReadingHeaders,
+	ReadingBody,
+	GeneratingResponse,
+	ProcessingCGI,
+	UploadingFile,
+	FetchingFile,
+};
