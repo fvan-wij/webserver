@@ -99,7 +99,6 @@ void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
 	{
 		_b_file = true;
 		_filename = _uri.substr(_uri.rfind('/'), _uri.length());
-		LOG_DEBUG("FILENAME: " << _filename);
 		if (std::count(_uri.begin(), _uri.end(), '/') == 1)
 			_location = "/";
 		else
@@ -115,22 +114,12 @@ void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
 	_protocol = tokens[2];
 }
 
-std::ostream & operator << (std::ostream &out, HttpRequest &request)
-{
-	if (!request.get_method().empty())
-		out << YELLOW << request.get_method() << " " << request.get_uri() << " " << request.get_protocol() << std::endl;
-	for (const auto& [key, value] : request.get_headers())
-		out << key <<  ":" << value << "\n";
-	out << END << "\n" << RED << request.get_body().data() << END << std::endl;
-	return out;
-}
-
 std::ostream & operator << (std::ostream &out, const HttpRequest &request)
 {
 	if (!request.get_method().empty())
 		out << YELLOW << request.get_method() << " " << request.get_uri() << " " << request.get_protocol() << std::endl;
 	for (const auto& [key, value] : request.get_headers())
 		out << key <<  ":" << value << "\n";
-	out << END << "\n" << RED << request.get_body().data() << END << std::endl;
+	out << END << std::endl;
 	return out;
 }

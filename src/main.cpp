@@ -68,8 +68,7 @@ void loop(ConnectionManager &cm, char *envp[])
 					if (protocol->response.is_ready())
 					{
 						std::string data = protocol->get_data();
-						// LOG_INFO("Sending response..." << protocol->response.get_status_code() << " " << protocol->response.get_status_mssg());
-						LOG_INFO("Sending response... " << data);
+						LOG_NOTICE("Sending response... " << protocol->response.get_status_code() << " " << protocol->response.get_status_mssg());
 						ci.get_socket().write(data);
 						if (protocol->response.get_type() == ResponseType::CGI) // Remove pipe_fd && pipe type
 						{

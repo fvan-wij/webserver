@@ -316,7 +316,6 @@ bool	HttpProtocol::upload_chunk()
 	if (bytes_left < UPLOAD_CHUNK_SIZE)
 	{
 		buffer_size = bytes_left;
-		LOG_INFO("bytes_left: " << bytes_left);
 	}
 	if (!file_exists(_file.path))
 	{

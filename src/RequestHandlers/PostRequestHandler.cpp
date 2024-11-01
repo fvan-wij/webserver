@@ -2,8 +2,8 @@
 
 HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
-	// LOG_NOTICE("Handling POST request\n" << request);
-	LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
+	LOG_NOTICE("Handling POST request\n" << request);
+	// LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
 
 	if (!location_exists(config, request.get_location()))
 		return generate_error_response(404, "Not Found - The server cannot find the requested resource");

@@ -3,8 +3,8 @@
 
 HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_config &config)
 {
-	// LOG_NOTICE("Handling GET request:\n" << request);
-	LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
+	LOG_NOTICE("Handling GET request:\n" << request);
+	// LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
 
 	if (!location_exists(config, request.get_location()))
 		return generate_error_response(404, "Not Found - The server cannot find the requested resource");
@@ -13,8 +13,6 @@ HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_con
 	std::string path = get_path(config.root, request.get_uri());
 	if (request.is_file())
 	{
-		LOG_DEBUG("URI: " << request.get_uri());
-		LOG_DEBUG("PATH: " << request.get_uri());
 		std::string ext = get_file_extension(request.get_uri());
 		if (ext == ".py")
 			return generate_successful_response(200, path, ResponseType::CGI);
@@ -23,5 +21,7 @@ HttpResponse	GetRequestHandler::handle_request(const HttpRequest &request, t_con
 	}
 	else
 		path += config.location[request.get_location()].index;
+	if (path.empty())
+		return generate_error_response(404, "Not Found - The server cannot find the requested resource");
 	return generate_successful_response(200, path, ResponseType::REGULAR);
 }

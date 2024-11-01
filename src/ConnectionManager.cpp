@@ -63,7 +63,7 @@ void ConnectionManager::add_client(ConnectionInfo &ci)
 	short mask = POLLIN | POLLOUT;
 	t_config config = ci.get_config();
 	Socket socket = ci.get_socket().accept();
-	LOG_DEBUG("Adding client socket fd " << socket.get_fd() << " for " << config.server_name[0] << " on port: " << socket.get_port());
+	LOG_INFO("Client (fd " << socket.get_fd() << ") connected to: " << config.server_name[0] << " on port: " << socket.get_port());
 
 	ConnectionInfo *new_ci = new ConnectionInfo(socket, new HttpProtocol(config), config);
 	_pfds.push_back({socket.get_fd(), mask, 0});
@@ -93,7 +93,7 @@ void ConnectionManager::add_pipe(int client_fd, int read_pipe)
 void ConnectionManager::remove(size_t index)
 {
 	int fd = _pfds[index].fd;
-	LOG_DEBUG("Removing fd: " << fd);
+	LOG_INFO("Client (fd " << fd << ") disconnected from " << _connection_info[fd]->get_config().server_name[0] << " on port: " << _connection_info[fd]->get_socket().get_port());
 	close(fd);
 	_pfds.erase(_pfds.begin() + index);
 	_fd_types.erase(_fd_types.begin() + index);
