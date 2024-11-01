@@ -4,14 +4,14 @@
 #include <string>
 #include <unordered_map>
 
-typedef struct s_location {
+struct Location {
 	std::string					path;
 	std::vector<std::string>	allowed_methods;
 	std::string 				root;
 	std::string 				index;
-} t_location;
+};
 
-const t_location DEFAULT_LOCATION = {
+const Location DEFAULT_LOCATION = {
     "/",                           // path
     {"GET", "POST"},               // allowed_methods
     "/var/www/html",               // root
@@ -22,7 +22,7 @@ struct Config {
 	std::vector<std::string>					server_name;
 	std::vector<std::pair<std::string, int>>	listen; 
 	std::vector<std::string>					methods;
-	std::unordered_map<std::string, t_location>	location;
+	std::unordered_map<std::string, Location>	location;
 	std::string									root;
 	int											client_max_body_size;
 	std::vector<std::pair<int, std::string>>	error_page; 

@@ -85,10 +85,10 @@ std::vector<std::string>	parse_allow_methods(std::vector<std::string> tokens, un
 	return (methods);
 }
 
-std::pair<std::string, t_location> parse_location(std::vector<std::string> tokens, unsigned long &i)
+std::pair<std::string, Location> parse_location(std::vector<std::string> tokens, unsigned long &i)
 {
-	t_location	location;
-	std::pair<std::string, t_location> entry;
+	Location	location;
+	std::pair<std::string, Location> entry;
 	i++;
 	location.path = tokens[i];
 	entry.first = location.path;
@@ -177,7 +177,7 @@ Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 		}
 		if (tokens[i] == "location")
 		{
-			std::pair<std::string, t_location>	location;
+			std::pair<std::string, Location>	location;
 			location = parse_location(tokens, i);
 			server_config.paths.push_back(location.first);
 			server_config.location.insert(location);

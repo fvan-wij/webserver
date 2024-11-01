@@ -79,7 +79,7 @@ bool			RequestHandler::method_is_allowed(std::string_view method, std::vector<st
 
 bool	RequestHandler::method_is_valid(std::string_view uri, std::string_view method, Config &config)
 {
-	t_location loc;
+	Location loc;
 	auto it = config.location.find(uri.data());
 	if (it != config.location.end())
 	{

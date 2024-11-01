@@ -38,7 +38,7 @@ void	print_methods(std::vector<std::string> methods)
 
 void	print_location(Config config)
 {
-	t_location location;
+	Location location;
 	std::cout << " - Locations {" << std::endl;
 	for (auto& [path, location]: config.location)
 	{
