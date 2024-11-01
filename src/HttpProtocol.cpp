@@ -16,38 +16,33 @@ HttpProtocol::HttpProtocol(t_config &config) : _b_headers_complete(false), _b_bo
 
 HttpProtocol::~HttpProtocol()
 {
-	// LOG(RED << "DELETING HTTPSERVER!" << END);
+
 }
 
 HttpProtocol::HttpProtocol(const HttpProtocol &other) : _header_buffer(other._header_buffer), _body_buffer(other._body_buffer), _b_headers_complete(other._b_headers_complete), _b_body_complete(other._b_body_complete), _current_state(other._current_state)
 {
-	// LOG("HttpServer : copied for sock_fd: " << _socket.get_fd());
+
 }
 
 
 void	HttpProtocol::handle(std::vector<char> data)
 {
-	on_data_received(data);
-}
-
-void		HttpProtocol::on_data_received(std::vector<char> data)
-{
 	switch (_current_state)
 	{
-		case State::ReadingHeaders:
+		case State::ReadingHeaders: //Parses headers
 			handle_headers(data);
 			break;
-		case State::ReadingBody:
+		case State::ReadingBody: //Parses body
 			handle_body(data);
-			break;
-		case State::GeneratingResponse:
-			generate_response();
 			break;
 		case State::ProcessingCGI:
 			break;
 		case State::UploadingFile:
 			break;
 		case State::FetchingFile:
+			break;
+		case State::GeneratingResponse:
+			generate_response();
 			break;
 	}
 }

@@ -41,7 +41,6 @@ class HttpProtocol
 		void		poll_upload();
 		void		poll_fetch();
 		void		respond();
-		void		on_data_received(std::vector<char> data);
 		void		handle_headers(std::vector<char> data);
 		void		handle_body(std::vector<char> data);
 		void		generate_response();
