@@ -144,3 +144,116 @@ std::unordered_map<int, std::shared_ptr<ConnectionInfo>> ConnectionManager::get_
 {
 	return (_connection_info);
 }
+
+/**
+ * @brief Checks if the protocol is ready to send a response.
+ * If the protocol is ready, send the response based on type.
+ *
+ * @param ci
+ * @param cm
+ * @param pfd
+ * @param i
+ */
+void ConnectionManager::_client_send_response(ConnectionInfo &ci, pollfd &pfd, size_t i)
+{
+	// Send response
+	// LOG_INFO("fd: " << pfd.fd << " POLLOUT (client)");
+	auto protocol = ci.get_protocol();
+	if (protocol->response.is_ready())
+	{
+		std::string data = protocol->get_data();
+		LOG_INFO("Sending response..." << protocol->response.get_status_code() << " " << protocol->response.get_status_mssg());
+		ci.get_socket().write(data);
+		if (protocol->response.get_type() == ResponseType::CGI) // Remove pipe_fd && pipe type
+		{
+			remove_pipe(pfd.fd);
+		}
+		remove(i);
+	}
+	else if (protocol->response.get_type() == ResponseType::UPLOAD)
+	{
+		protocol->poll_upload();
+	}
+	else if (protocol->response.get_type() == ResponseType::FETCH_FILE) // Note: Fetching requires both reading and writing... but does both when there's a POLLOUT revent.
+	{
+		// LOG_INFO("fd: " << pfd.fd << " POLLOUT (Fetch file)");
+		protocol->poll_fetch();
+	}
+}
+
+
+/**
+ * @brief Read data from the client socket.
+ * If the data is a CGI request, start the CGI process.
+ * If the data is not a CGI request, handle the data with the protocol.
+ *
+ * @param cm
+ * @param ci
+ * @param pfd
+ * @param envp
+ * @param i
+ */
+void ConnectionManager::_client_read_data(ConnectionInfo &ci, pollfd &pfd, char *envp[], size_t i)
+{
+	LOG_INFO("fd: " << pfd.fd << " POLLIN (client)");
+	std::optional<std::vector<char>> read_data = ci.get_socket().read();
+	auto const &protocol = ci.get_protocol();
+	if (read_data)
+	{
+		std::vector<char> data = read_data.value();
+		protocol->handle(data);
+		if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
+		{
+			protocol->start_cgi(envp);
+			LOG_INFO("Starting CGI on port: " << ci.get_socket().get_port());
+			add_pipe(pfd.fd, protocol->get_pipe_fd());
+		}
+	}
+	else
+	{
+		remove(i);
+	}
+}
+
+/**
+ * @brief Loop over the pollfd list and handle the events.
+ *
+ * @param envp
+ */
+void ConnectionManager::iterate_fds(char *envp[])
+{
+	std::vector<pollfd> &pfds = get_pfds();
+	for (size_t i = 0; i < pfds.size(); i++)
+	{
+		pollfd &pfd = pfds[i];
+		FdType &type = _fd_types[i];
+		ConnectionInfo &ci = *_connection_info[pfd.fd].get();
+		if (type == FdType::LISTENER && pfd.revents & POLLIN)
+		{
+			LOG_INFO("fd: " << pfd.fd << " POLLIN (listener)");
+			add_client(ci);
+		}
+		else if (type == FdType::CLIENT && pfd.revents & POLLIN)
+		{
+			_client_read_data(ci, pfd, envp, i);
+		}
+		else if (type == FdType::PIPE && pfd.revents & POLLIN)
+		{
+			LOG_INFO("fd: " << pfd.fd << " POLLIN (pipe)");
+			auto protocol = ci.get_protocol();
+			protocol->poll_cgi();
+		}
+		else if (type == FdType::CLIENT && pfd.revents & POLLOUT)
+		{
+			_client_send_response(ci, pfd, i);
+		}
+		else if (pfd.revents & POLLERR)
+		{
+			LOG_ERROR("POLLERR error occurred with fd: " << pfd.fd << ", type: " << int(type));
+		}
+		else if (pfd.revents & POLLNVAL)
+		{
+			LOG_ERROR("POLLNVAL error occurred with fd: " << pfd.fd << ", type: " << int(type));
+		}
+	}
+}
