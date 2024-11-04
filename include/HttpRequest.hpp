@@ -28,6 +28,8 @@ const static std::unordered_map<std::string, RequestType> REQUEST_TYPE =
 class HttpRequest
 {
 	public:
+		HttpRequest();
+		~HttpRequest();
 		std::string 									get_method() const;
 		std::string 									get_uri() const;
 		std::string 									get_protocol() const;
@@ -36,6 +38,7 @@ class HttpRequest
 		std::string										get_filename() const {return _filename;};
 
 		std::vector<char> 								get_body() const {return _body;};
+		std::vector<char> 								get_body_buffer() const {return _body_buffer;};
 		std::unordered_map<std::string, std::string>	get_headers() const {return _header;};
 		std::optional<std::string_view>					get_value(const std::string &key) const;
 
@@ -51,10 +54,16 @@ class HttpRequest
 		void											set_body(std::vector<char> body) {_body = body;};
 		void											append_buffer(std::string &data);
 
-		//												Parse shananigans
+		//												Parsing methods
 		State											parse_header(std::vector<char>& data);
-		State 											parse_body(std::vector<char> data);
+		State 											parse_body(std::vector<char>& data);
+		void											parse_file_data(std::vector<char> buffer, std::string_view root, std::string_view uri);
+
+		//												Data extraction methods
 		void											extract_header_fields(std::string_view data_sv);
+		std::string										extract_boundary(std::string_view content_type);
+		std::string 									extract_file_path(std::string_view filename);
+		std::string 									extract_filename(std::string_view body_buffer);
 
 		class HttpException : public std::exception
 	{
@@ -71,20 +80,26 @@ class HttpRequest
 
 	private:
 		size_t		_body_size;
-		size_t		_body_index;
 
 		bool		_b_header_parsed;
 		bool		_b_body_parsed;
 		bool		_b_file;
+		bool		_b_file_extracted;
+		bool		_b_file_path_extracted;
+		bool		_b_boundary_extracted;
+		bool		_b_file_data_extracted;
 
 		std::string	_buffer;
 		std::string _method;
 		std::string _protocol;
 		std::string _uri;
-		std::string _filename;
+		std::string _filename; // Uri filename
 		std::string _location;
+		std::string _boundary;
+		std::string _boundary_end;
 
 
+		FileUpload										_file;
 		std::string										_header_buffer;
 		std::vector<char> 								_body_buffer;
 		std::unordered_map<std::string, std::string>	_header;

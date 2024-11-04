@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
 #include "Logger.hpp"
+#include <vector>
 
 
 #define POLL_TIMEOUT 100
@@ -42,4 +42,15 @@ enum class State {
 	ProcessingCGI,
 	UploadingFile,
 	FetchingFile,
+	Ready,
 };
+
+typedef struct FileUpload 
+{
+	std::string			filename;
+	std::string			path;
+	std::vector<char> 	data;
+	size_t				bytes_uploaded;
+	bool				finished;
+} FileUpload;
+

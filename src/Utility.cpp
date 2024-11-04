@@ -43,3 +43,20 @@ std::optional<int>	Utility::svtoi(std::optional<std::string_view> str)
 	}
 	return std::nullopt;
 }
+
+std::vector<std::string>	Utility::tokenize_string(std::string string, std::string delimiter)
+{
+	std::vector<std::string> 	tokens;
+	size_t						pos = 0;
+
+	pos = string.find(delimiter);
+	while (pos != std::string::npos)
+	{
+		std::string token = string.substr(0, pos);
+		tokens.push_back(token);
+		string.erase(0, pos + delimiter.length());
+		pos = string.find(delimiter);
+	}
+	tokens.push_back(string);
+	return tokens;
+}

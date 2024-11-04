@@ -81,9 +81,11 @@ std::optional<std::vector<char>> Socket::read()
 	if (n != 0)
 	{
 		std::vector<char> data(buffer, buffer + n);
+		// data.push_back('\0');
 		return data;
 	}
-	else {
+	else
+	{
 		return std::nullopt;
 	}
 }

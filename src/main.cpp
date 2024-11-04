@@ -7,6 +7,7 @@
 #include <optional>
 #include <sys/poll.h>
 #include <vector>
+#include <iostream>
 
 // #define USE_TEST_MAIN
 
@@ -28,19 +29,24 @@ void loop(ConnectionManager &cm, char *envp[])
 				ConnectionInfo &ci = *cm.get_connection_info()[pfd.fd].get();
 				if (type == FdType::LISTENER && pfd.revents & POLLIN)
 				{
-					LOG_INFO("fd: " << pfd.fd << " POLLIN (listener)");
+					// LOG_INFO("fd: " << pfd.fd << " POLLIN (listener)");
 					cm.add_client(ci);
 				}
 				else if (type == FdType::CLIENT && pfd.revents & POLLIN)
 				{
 					// Parse request and generate response
-					LOG_INFO("fd: " << pfd.fd << " POLLIN (client)");
+					// LOG_INFO("fd: " << pfd.fd << " POLLIN (client)");
 					std::optional<std::vector<char>> read_data = ci.get_socket().read();
 					auto protocol = ci.get_protocol();
 					if (read_data)
 					{
-						std::vector<char> data = read_data.value();
-						protocol->handle(data);
+						LOG_DEBUG("read_data: ");
+						for (auto it : read_data.value())
+						{
+							std::cout << it;
+						}
+						std::cout << std::endl;
+						protocol->handle(read_data.value());
 						if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
 						{
 							protocol->start_cgi(envp);
@@ -56,7 +62,7 @@ void loop(ConnectionManager &cm, char *envp[])
 				else if (type == FdType::PIPE && pfd.revents & POLLIN)
 				{
 					// Read from pipe
-					LOG_INFO("fd: " << pfd.fd << " POLLIN (pipe)");
+					// LOG_INFO("fd: " << pfd.fd << " POLLIN (pipe)");
 					auto protocol = ci.get_protocol();
 					protocol->poll_cgi();
 				}
