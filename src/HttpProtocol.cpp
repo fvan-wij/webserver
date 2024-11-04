@@ -25,7 +25,6 @@ HttpProtocol::HttpProtocol(const HttpProtocol &other) : _b_headers_complete(othe
 
 void	HttpProtocol::parse_data(std::vector<char>& data)
 {
-	int iterations = 0;
 	while (not data.empty())
 	{
 		switch (_state)
@@ -43,12 +42,6 @@ void	HttpProtocol::parse_data(std::vector<char>& data)
 				}
 				break;
 		}
-
-		iterations++;
-		LOG_DEBUG("parse_data iteration #" << iterations << ", state: " << int(_state));
-		LOG_DEBUG("data left: " << data.size());
-		if (data.size() != 0)
-			LOG_DEBUG("data: " << data.data());
 	}
 	if (_state == State::GeneratingResponse)
 	{
@@ -64,9 +57,6 @@ void	HttpProtocol::handle(std::vector<char>& data)
 
 void		HttpProtocol::generate_response()
 {
-	LOG_DEBUG("HAHA");
-	// _body_buffer.push_back('\0');
-	// request.set_body(_body_buffer);
 	auto handler = HandlerFactory::create_handler(request.get_type());
 	response = handler->handle_request(request, _config);
 	if (response.get_type() == ResponseType::CGI)
@@ -76,7 +66,8 @@ void		HttpProtocol::generate_response()
 	else if (response.get_type() == ResponseType::UPLOAD)
 	{
 		_state = State::UploadingFile;
-		// parse_file_data(request.get_body_buffer(), _config, request.get_uri());
+		_file = request.get_file_upload();
+		//Set file from request
 	}
 	else if (response.get_type() == ResponseType::FETCH_FILE)
 	{
@@ -170,6 +161,11 @@ bool	HttpProtocol::upload_chunk()
 	{
 		buffer_size = bytes_left;
 	}
+	if (bytes_left <= 0)
+	{
+		_file.finished = true;
+		return true;
+	}
 	if (!file_exists(_file.path))
 	{
 		std::ofstream outfile(_file.path, std::ios::binary);
@@ -181,11 +177,6 @@ bool	HttpProtocol::upload_chunk()
 		outfile.write(&_file.data[_file.bytes_uploaded], buffer_size);
 	}
 	_file.bytes_uploaded += buffer_size;
-	if (bytes_left <= 0)
-	{
-		_file.finished = true;
-		return true;
-	}
 	return bytes_left <= 0;
 }
 

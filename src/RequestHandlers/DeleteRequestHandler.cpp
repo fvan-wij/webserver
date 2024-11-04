@@ -3,9 +3,9 @@
 #include <cstdio>
 #include <filesystem>
 
-HttpResponse	DeleteRequestHandler::handle_request(const HttpRequest &request, t_config &config)
+HttpResponse	DeleteRequestHandler::handle_request(HttpRequest &request, t_config &config)
 {
-	LOG_NOTICE("Handling DELETE request...\n" << request);
+	LOG_NOTICE("Handling DELETE request...\n" << static_cast<const HttpRequest>(request));
 	// LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
 
 	std::string uri = request.get_uri();

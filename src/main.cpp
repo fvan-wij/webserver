@@ -40,7 +40,6 @@ void loop(ConnectionManager &cm, char *envp[])
 					auto protocol = ci.get_protocol();
 					if (read_data)
 					{
-						LOG_DEBUG("read_data: ");
 						for (auto it : read_data.value())
 						{
 							std::cout << it;

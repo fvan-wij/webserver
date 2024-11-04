@@ -1,8 +1,8 @@
 #include "PostRequestHandler.hpp"
 
-HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_config &config)
+HttpResponse	PostRequestHandler::handle_request(HttpRequest &request, t_config &config)
 {
-	LOG_NOTICE("Handling POST request\n" << request);
+	LOG_NOTICE("Handling POST request\n" << static_cast<const HttpRequest>(request));
 	// LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
 
 	if (!location_exists(config, request.get_location()))
@@ -15,6 +15,13 @@ HttpResponse	PostRequestHandler::handle_request(const HttpRequest &request, t_co
 	else if (get_file_extension(request.get_uri()) == ".py")
 		return generate_successful_response(200, path, ResponseType::CGI);
 	else if (is_multipart_content(request))
+	{
+		// LOG_ERROR("UPLOADING SHITTTTTT - path: " << path << " file upload path: " << f.path);
+		request.set_file_upload_path(path);
+		FileUpload &f = request.get_file_upload();
+		LOG_ERROR("f.path: " << f.path);
+
 		return generate_successful_response(200, path, ResponseType::UPLOAD);
+	}
 	return generate_error_response(400, "Bad Request");
 }

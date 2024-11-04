@@ -4,8 +4,11 @@
 
 #include <algorithm>
 
-HttpRequest::HttpRequest() : _body_size(0), _b_header_parsed(false), _b_body_parsed(false), _b_file(false)
+HttpRequest::HttpRequest()
 {
+	_b_header_parsed = false;
+	_b_body_parsed = false;
+	_b_file = false;
 	_b_file_extracted = false;
 	_b_file_path_extracted = false;
 	_b_boundary_extracted = false;
@@ -46,116 +49,12 @@ void	HttpRequest::set_type(RequestType type)
 	_type = type;
 }
 
-void	HttpRequest::extract_header_fields(std::string_view data_sv)
+void HttpRequest::set_file_upload_path(std::string_view root)
 {
-	std::istringstream 			stream(data_sv.data()); // Might be dangerous because sv is not guaranteed to be null-terminated
-	std::string					line;
-
-	_parse_request_line(stream);
-	size_t			colon_index;
-	while (std::getline(stream, line))
-	{
-			if (line[0] == ':')
-				colon_index = line.rfind(':');
-			else
-				colon_index = line.find(':');
-			if (colon_index != std::string::npos)
-			{
-				std::string key = line.substr(0, colon_index);
-				std::string value = line.substr(colon_index + 2, line.length() - colon_index);
-				LOG_DEBUG("emplacing key " << key << " with value " << value);
-				_header.emplace(key, value);
-			}
-	}
-	_b_header_parsed = true;
+	LOG_DEBUG("_file.path: " << _file.filename << ", root data: " << root.data());
+	_file.filename.insert(0, "/");
+	_file.path = root.data() + _file.filename;
 }
-
-std::string HttpRequest::extract_file_path(std::string_view filename)
-{
-	return get_uri() + "/" + filename.data();
-}
-
-std::string HttpRequest::extract_filename(std::string_view body_buffer)
-{
-	size_t filename_begin = body_buffer.find("filename=\"");
-	if (filename_begin == std::string::npos)
-	{
-		LOG_ERROR("Filename not found in body buffer");
-		return {};
-	}
-	filename_begin += 10; // Move past 'filename="'
-	size_t filename_end = body_buffer.find("\r\n", filename_begin);
-	if (filename_end == std::string::npos)
-	{
-		LOG_ERROR("Malformed filename in body buffer");
-		return {};
-	}
-	return std::string(&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
-}
-
-std::string HttpRequest::extract_boundary(std::string_view content_type)
-{
-	size_t boundary_begin = content_type.find("boundary=");
-	if (boundary_begin == std::string::npos)
-	{
-		LOG_ERROR("Boundary not found in Content-Type header");
-		return {};
-	}
-	boundary_begin += 9; // Move past 'boundary='
-	std::string boundary(content_type.substr(boundary_begin));
-	if (boundary.find("WebKitFormBoundary") == std::string::npos)
-	{
-		return boundary;
-	}
-	else
-	{
-		boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up string manipulation whenever I'm dealing with a webkit boundary (!????)
-		return boundary;
-	}
-}
-
-// void	HttpRequest::parse_file_data(std::vector<char> buffer, std::string_view root, std::string_view uri)
-// {
-// 	std::string_view 	sv_buffer(buffer.data(), buffer.size());
-//
-// 	_file.filename = extract_filename(sv_buffer);
-// 	if (_file.filename.empty())
-// 	{
-// 		LOG_ERROR("No filename extracted... aborting parse_file_data()");
-// 		return;
-// 	}
-// 	_file.path = extract_file_path(root, uri.data(), _file.filename);
-//
-// 	std::string_view content_type = get_value("Content-Type").value_or("");
-// 	std::string boundary = extract_boundary(content_type);
-// 	if (boundary.empty())
-// 	{
-// 		LOG_ERROR("No boundary extracted... aborting parse_file_data()");
-// 		return;
-// 	}
-// 	std::string	boundary_end = "--" + boundary + "--";
-// 	size_t crln_pos = sv_buffer.find("\r\n\r\n");
-// 	if (crln_pos == std::string::npos)
-// 	{
-// 		LOG_ERROR("No CRLF found... aborting parse_file_data()");
-// 		return;
-// 	}
-//
-// 	auto body_data_start = (buffer.begin() + crln_pos) + 4;
-// 	auto body_data_end = std::search(body_data_start, buffer.end(), boundary_end.begin(), boundary_end.end());
-//
-// 	if (body_data_end == buffer.end())
-// 	{
-// 		LOG_ERROR("Ending boundary not present... aborting parse_file_data()");
-// 		return;
-// 	}
-// 	else
-// 	{
-// 		_file.data.assign(body_data_start, body_data_end - 2);
-// 		_file.finished = false;
-// 		_file.bytes_uploaded = 0;
-// 	}
-// }
 
 State	HttpRequest::parse_header(std::vector<char>& data)
 {
@@ -163,17 +62,13 @@ State	HttpRequest::parse_header(std::vector<char>& data)
 
 	if (not _b_header_parsed)
 	{
-		LOG_DEBUG("parse_header() data.size(): " << data.size());
 		size_t	header_end = data_sv.find("\r\n\r\n", 0); //0 can be removed, right. Right???
 		if (header_end != std::string::npos)
 		{
 			_header_buffer += data_sv.substr(0, header_end);
-			extract_header_fields(data_sv);
+			_extract_header_fields(data_sv);
 			_b_header_parsed = true;
-			data.erase(data.begin(), data.begin() + header_end);
-			if (_method != "POST")
-				data.clear();
-			LOG_DEBUG("parse_header() data.size() after erasing: " << data.size());
+			data.erase(data.begin(), data.begin() + header_end + 4);
 		}
 		else
 		{
@@ -193,50 +88,52 @@ State	HttpRequest::parse_header(std::vector<char>& data)
 State HttpRequest::parse_body(std::vector<char>& data)
 {
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(data.begin()), std::make_move_iterator(data.end()));
+	_body_buffer.push_back('\0');
 	data.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
 	//extract filename if not yet extracted -> set file extracted true
 	if (not _b_file_extracted)
 	{
-		_file.filename = extract_filename(sv_buffer);
+		_file.filename = _extract_filename(sv_buffer);
 		if (_file.filename.empty())
 		{
 			LOG_ERROR("No filename extracted...");
 		}
 		else
 		{
-			_file.path = extract_file_path(_file.filename);
 			_b_file_extracted = true;
-			//extract filepath if not yet extracted -> set filepath extracted true
-			_b_file_path_extracted = true; // Perhaps redundant
+			LOG_NOTICE("Filename extracted: " << _file.filename);
 		}
 	}
 	//extract boundary if not yet extracted -> set boundary extracted true
 	if (not _b_boundary_extracted)
 	{
 		std::string_view content_type = get_value("Content-Type").value_or("");
-		_boundary = extract_boundary(content_type);
+		_boundary = _extract_boundary(content_type);
 		if (_boundary.empty())
 		{
 			LOG_ERROR("No boundary extracted... ");
 		}
 		else
+		{
+			LOG_NOTICE("Boundary extracted: " << _boundary);
 			_b_boundary_extracted = true;
+		}
 	}
 	//extract filedata if boundary is extracted
 		//finish if end boundary found -> return State::GeneratingResponse
 	if (_b_boundary_extracted)
 	{
-		_boundary_end = "--" + _boundary + "--";
 		size_t crln_pos = sv_buffer.find("\r\n\r\n");
 		if (crln_pos == std::string::npos)
 		{
 			LOG_ERROR("No end CRLF found... ");
+			return State::ReadingBody;
 		}
 
+		_boundary_end = "--" + _boundary + "--";
 		auto body_data_start = (_body_buffer.begin() + crln_pos) + 4;
 		auto body_data_end = std::search(body_data_start, _body_buffer.end(), _boundary_end.begin(), _boundary_end.end());
-
 		if (body_data_end == _body_buffer.end())
 		{
 			LOG_ERROR("Ending boundary not present... ");
@@ -244,15 +141,21 @@ State HttpRequest::parse_body(std::vector<char>& data)
 		else
 		{
 			_file.data.assign(body_data_start, body_data_end - 2);
+			for (auto it : _file.data)
+			{
+				LOG_DEBUG("f: " << it << ", asci: " << (int)it);
+			}
 			_file.finished = false;
 			_file.bytes_uploaded = 0;
+			LOG_NOTICE("Ending boundary extracted: " << _boundary_end);
 			return State::GeneratingResponse;
 		}
 	}
 	return State::ReadingBody;
 }
 
-void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
+//		extraction methods (private)
+void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 {
 	std::string 				line;
 	std::vector<std::string>	tokens;
@@ -286,6 +189,73 @@ void	HttpRequest::_parse_request_line(std::istringstream 	&stream)
 	if (tokens[2] != "HTTP/1.1\r")
 		throw HttpException("HttpRequest: Protocol not present!");
 	_protocol = tokens[2];
+}
+
+void	HttpRequest::_extract_header_fields(std::string_view data_sv)
+{
+	std::istringstream 			stream(data_sv.data()); // Might be dangerous because sv is not guaranteed to be null-terminated
+	std::string					line;
+
+	_extract_request_line(stream);
+	size_t			colon_index;
+	while (std::getline(stream, line))
+	{
+			if (line[0] == ':')
+				colon_index = line.rfind(':');
+			else
+				colon_index = line.find(':');
+			if (colon_index != std::string::npos)
+			{
+				std::string key = line.substr(0, colon_index);
+				std::string value = line.substr(colon_index + 2, line.length() - colon_index);
+				_header.emplace(key, value);
+			}
+	}
+	_b_header_parsed = true;
+}
+
+std::string HttpRequest::_extract_file_path(std::string_view filename)
+{
+	return get_uri() + "/" + filename.data();
+}
+
+std::string HttpRequest::_extract_filename(std::string_view body_buffer)
+{
+	size_t filename_begin = body_buffer.find("filename=\"");
+	if (filename_begin == std::string::npos)
+	{
+		LOG_ERROR("Filename not found in body buffer");
+		return {};
+	}
+	filename_begin += 10; // Move past 'filename="'
+	size_t filename_end = body_buffer.find("\r\n", filename_begin);
+	if (filename_end == std::string::npos)
+	{
+		LOG_ERROR("Malformed filename in body buffer");
+		return {};
+	}
+	return std::string(&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
+}
+
+std::string HttpRequest::_extract_boundary(std::string_view content_type)
+{
+	size_t boundary_begin = content_type.find("boundary=");
+	if (boundary_begin == std::string::npos)
+	{
+		LOG_ERROR("Boundary not found in Content-Type header");
+		return {};
+	}
+	boundary_begin += 9; // Move past 'boundary='
+	std::string boundary(content_type.substr(boundary_begin));
+	if (boundary.find("WebKitFormBoundary") == std::string::npos)
+	{
+		return boundary;
+	}
+	else //Perhaps remove this and only focus on chrome requests
+	{
+		boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up string manipulation whenever I'm dealing with a webkit boundary (!????)
+		return boundary;
+	}
 }
 
 std::ostream & operator << (std::ostream &out, const HttpRequest &request)
