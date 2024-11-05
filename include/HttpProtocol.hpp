@@ -53,6 +53,7 @@ class HttpProtocol
 		void		start_cgi(char *envp[]);
 
 		bool		is_ready();
+		// TODO Put this in .cpp file
 		bool		is_cgi_running() {return _cgi.is_running();};
 		std::string	get_data();
 		Config	get_config();
