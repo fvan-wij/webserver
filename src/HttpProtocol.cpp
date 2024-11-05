@@ -9,7 +9,7 @@ HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(fals
 	response.set_state(NOT_READY);
 }
 
-HttpProtocol::HttpProtocol(t_config &config) : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders), _config(config)
+HttpProtocol::HttpProtocol(Config &config) : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders), _config(config)
 {
 	response.set_state(NOT_READY);
 }
@@ -179,7 +179,7 @@ std::string	HttpProtocol::get_data()
 	return response.to_string();
 }
 
-t_config	HttpProtocol::get_config()
+Config	HttpProtocol::get_config()
 {
 	return (_config);
 }
@@ -258,7 +258,7 @@ static std::string get_boundary(std::string_view content_type)
 	}
 }
 
-void	HttpProtocol::parse_file_data(std::vector<char> buffer, t_config& config, std::string_view uri)
+void	HttpProtocol::parse_file_data(std::vector<char> buffer, Config& config, std::string_view uri)
 {
 	std::string_view 	sv_buffer(buffer.data(), buffer.size());
 

@@ -1,6 +1,6 @@
 #include <ConnectionInfo.hpp>
 
-ConnectionInfo::ConnectionInfo(Socket s, HttpProtocol *p, t_config c) : _socket(s), _protocol(p), _config(c)
+ConnectionInfo::ConnectionInfo(Socket s, HttpProtocol *p, Config c) : _socket(s), _protocol(p), _config(c)
 {
 
 }
@@ -10,7 +10,7 @@ ConnectionInfo::~ConnectionInfo()
 	delete _protocol;
 }
 
-t_config ConnectionInfo::get_config()
+Config ConnectionInfo::get_config()
 {
 	return (_config);
 }
