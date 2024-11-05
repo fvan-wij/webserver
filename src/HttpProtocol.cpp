@@ -46,6 +46,8 @@ void	HttpProtocol::parse_data(std::vector<char>& data)
 	if (_state == State::GeneratingResponse)
 	{
 		LOG_NOTICE("Finished reading/parsing, on to generating a response!");
+		LOG_DEBUG("Size of body: " << request.get_body_buffer().size());
+		LOG_DEBUG("Content-Length: " << request.get_value("Content-Length").value_or("0"));
 		generate_response();
 	}
 }

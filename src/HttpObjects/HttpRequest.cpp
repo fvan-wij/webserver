@@ -51,7 +51,6 @@ void	HttpRequest::set_type(RequestType type)
 
 void HttpRequest::set_file_upload_path(std::string_view root)
 {
-	LOG_DEBUG("_file.path: " << _file.filename << ", root data: " << root.data());
 	_file.filename.insert(0, "/");
 	_file.path = root.data() + _file.filename;
 }
@@ -59,7 +58,10 @@ void HttpRequest::set_file_upload_path(std::string_view root)
 State	HttpRequest::parse_header(std::vector<char>& data)
 {
 	std::string_view data_sv(data.data(), data.size());
+	static int x;
 
+	x++;
+	LOG_DEBUG("Incoming datachunk on iteration " << x << " = " << data.size());
 	if (not _b_header_parsed)
 	{
 		size_t	header_end = data_sv.find("\r\n\r\n", 0); //0 can be removed, right. Right???
@@ -69,26 +71,31 @@ State	HttpRequest::parse_header(std::vector<char>& data)
 			_extract_header_fields(data_sv);
 			_b_header_parsed = true;
 			data.erase(data.begin(), data.begin() + header_end + 4);
+			LOG_DEBUG("Iteration #" << x << "_b_header_parsed = true");
 		}
 		else
 		{
 			_header_buffer.append(data.data(), data.size());
 			data.clear();
+			LOG_DEBUG("Iteration #" << x << "returning State::ReadingHeaders");
 			return State::ReadingHeaders;
 		}
 	}
 	if (not data.empty() && _b_header_parsed)
 	{
+		LOG_DEBUG("Iteration #" << x << "returning State::ReadingBody");
 		return State::ReadingBody;
 	}
 	else
+	{
+		LOG_DEBUG("Iteration #" << x << "returning State::GeneratingResponse");
 		return State::GeneratingResponse;
+	}
 }
 
 State HttpRequest::parse_body(std::vector<char>& data)
 {
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(data.begin()), std::make_move_iterator(data.end()));
-	_body_buffer.push_back('\0');
 	data.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
 	//extract filename if not yet extracted -> set file extracted true
@@ -141,10 +148,6 @@ State HttpRequest::parse_body(std::vector<char>& data)
 		else
 		{
 			_file.data.assign(body_data_start, body_data_end - 2);
-			for (auto it : _file.data)
-			{
-				LOG_DEBUG("f: " << it << ", asci: " << (int)it);
-			}
 			_file.finished = false;
 			_file.bytes_uploaded = 0;
 			LOG_NOTICE("Ending boundary extracted: " << _boundary_end);
@@ -247,13 +250,23 @@ std::string HttpRequest::_extract_boundary(std::string_view content_type)
 	}
 	boundary_begin += 9; // Move past 'boundary='
 	std::string boundary(content_type.substr(boundary_begin));
+	// LOG_DEBUG("pos of /r " << boundary.find('\r'));
+	int pos_r = boundary.find('\r');
+	boundary = boundary.substr(0, pos_r);
+
+	int x = 0;
+	for (auto it : boundary)
+	{
+		LOG_DEBUG("Char: " << it << " , ascii: " << (int)it << ", " << x);
+		x++;
+	}
 	if (boundary.find("WebKitFormBoundary") == std::string::npos)
 	{
 		return boundary;
 	}
 	else //Perhaps remove this and only focus on chrome requests
 	{
-		boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up string manipulation whenever I'm dealing with a webkit boundary (!????)
+		// boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up string manipulation whenever I'm dealing with a webkit boundary (!????)
 		return boundary;
 	}
 }

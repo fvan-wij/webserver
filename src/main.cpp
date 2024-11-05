@@ -35,16 +35,12 @@ void loop(ConnectionManager &cm, char *envp[])
 				else if (type == FdType::CLIENT && pfd.revents & POLLIN)
 				{
 					// Parse request and generate response
-					// LOG_INFO("fd: " << pfd.fd << " POLLIN (client)");
+					LOG_INFO("fd: " << pfd.fd << " POLLIN (client)");
 					std::optional<std::vector<char>> read_data = ci.get_socket().read();
 					auto protocol = ci.get_protocol();
 					if (read_data)
 					{
-						for (auto it : read_data.value())
-						{
-							std::cout << it;
-						}
-						std::cout << std::endl;
+						LOG_DEBUG("read_data size: " << read_data.value().size());
 						protocol->handle(read_data.value());
 						if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
 						{
