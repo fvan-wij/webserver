@@ -20,12 +20,12 @@ const Location DEFAULT_LOCATION = {
 
 struct Config {
 	std::vector<std::string>					server_name;
-	std::vector<std::pair<std::string, int>>	listen; 
+	std::vector<std::pair<std::string, int>>	listen;
 	std::vector<std::string>					methods;
 	std::unordered_map<std::string, Location>	location;
 	std::string									root;
 	int											client_max_body_size;
-	std::vector<std::pair<int, std::string>>	error_page; 
+	std::unordered_map<int, std::string>		error_page;
 	std::vector<std::string>					paths;
 	std::string									index;
 };

@@ -16,7 +16,7 @@ static std::vector<std::string> tokenize_string(std::string string, std::string 
         while (pos != std::string::npos)
         {
 			std::string token = string.substr(0, pos);
-			if (!token.empty() && token != "\n") 
+			if (!token.empty() && token != "\n")
 			{
 				token.erase(0, token.find_first_not_of("\t\r\n "));
                 tokens.push_back(token);
@@ -131,7 +131,7 @@ std::pair<int, std::string> parse_error_page(std::vector<std::string> tokens, un
 	i++;
 	error_page.first = std::stoi(tokens[i]);
 	i++;
-	error_page.second = tokens[i];
+	error_page.second = tokens[i].substr(0, tokens[i].size() - 1);
 	i++;
 	return (error_page);
 
@@ -190,7 +190,7 @@ Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 		}
 		if (tokens[i] == "error_page")
 		{
-			server_config.error_page.push_back(parse_error_page(tokens, i));
+			server_config.error_page.insert(parse_error_page(tokens, i));
 			continue;
 		}
 		if (tokens[i] == "client_max_body_size")

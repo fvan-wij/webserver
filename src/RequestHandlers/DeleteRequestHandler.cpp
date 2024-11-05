@@ -16,12 +16,12 @@ HttpResponse	DeleteRequestHandler::handle_request(const HttpRequest &request, Co
 	{
 		std::string sv_loc (uri.data(), request.get_uri().find_last_of('/'));
 		if (!location_exists(config, sv_loc))
-			return generate_error_response(404, "Not Found - Page not found");
+			return generate_error_response(404, "Not Found - Page not found", config);
 		if (!method_is_valid(sv_loc, request.get_method(), config))
-			return generate_error_response(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
+			return generate_error_response(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource", config);
 		if (std::remove(filepath.c_str()) == 0)
 			LOG_NOTICE("Successfully deleted " << filepath);
 		return generate_successful_response(200, directorypath.string(), ResponseType::DELETE);
 	}
-	return generate_error_response(400, "Bad Request");
+	return generate_error_response(400, "Bad Request", config);
 }
