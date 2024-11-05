@@ -12,15 +12,15 @@
 class ConnectionInfo
 {
 	public:
-		ConnectionInfo(Socket s, HttpProtocol *p, t_config c);
+		ConnectionInfo(Socket s, HttpProtocol *p, Config c);
 		~ConnectionInfo();
 
-		t_config 		get_config();
+		Config 		get_config();
 		Socket 			get_socket();
 		HttpProtocol 	*get_protocol();
 
 	private:
 		Socket			_socket;
 		HttpProtocol	*_protocol;
-		t_config		_config;
+		Config		_config;
 };
