@@ -1,6 +1,10 @@
 #include "RequestHandler.hpp"
 #include "HttpResponse.hpp"
+#include "Utility.hpp"
+
 #include <filesystem>
+#include <fstream>
+#include <algorithm>
 
 RequestHandler::~RequestHandler()
 {
@@ -248,13 +252,3 @@ std::filesystem::path RequestHandler::build_path(std::optional<std::string> root
 	}
 	return p;
 }
-
-// std::filesystem::path RequestHandler::build_error_path(std::optional<std::string> root, std::optional<std::string> error)
-// {
-// 	std::filesystem::path error_path(root.value());
-// 	if (error)
-// 	{
-// 		p /= error.value();
-// 	}
-// 	return error_path;
-// }

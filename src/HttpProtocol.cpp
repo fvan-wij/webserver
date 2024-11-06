@@ -2,6 +2,7 @@
 #include "HandlerFactory.hpp"
 #include <cwchar>
 #include <string>
+#include <fstream>
 
 HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _state(State::ParsingHeaders)
 {
@@ -50,12 +51,6 @@ void	HttpProtocol::parse_data(std::vector<char>& data)
 		LOG_DEBUG("Content-Length: " << request.get_value("Content-Length").value_or("0"));
 		generate_response();
 	}
-}
-
-void	HttpProtocol::init_path()
-{
-	_path /= _config.root;
-	_path /= request.get_uri();
 }
 
 void	HttpProtocol::handle(std::vector<char>& data)

@@ -174,32 +174,35 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 		throw HttpException("HttpRequest: Missing method, location or protocol!");
 	if (tokens[0] != "GET" && tokens[0] != "POST" && tokens[0] != "DELETE")
 		throw HttpException("HttpRequest: Missing or incorrect request method!");
+
+	//Extract method
 	_method = tokens[0];
+
+	//Extract type
 	_type = REQUEST_TYPE.at(_method);
 
+	//Extract uri
 	if (tokens[1][0] != '/')
 		throw HttpException("HttpRequest: URI not present!");
 	_uri = tokens[1];
-	if (_uri.rfind('.') != std::string::npos)
+
+	//Extract filename, location and is_file_boolean
+	std::filesystem::path p(_uri);
+	_filename = p.filename().string();
+	if (p.has_extension())
 	{
 		_b_file = true;
-		_filename = _uri.substr(_uri.rfind('/'), _uri.length());
-		if (std::count(_uri.begin(), _uri.end(), '/') == 1)
-			_location = "/";
-		else
-			_location = _uri.substr(0, _uri.find("/", 1));
+		_location = p.parent_path().string();
 	}
-	else 
+	else
 	{
-		_location = _uri.substr(0, _uri.find("/", 1));
-		_b_file = false;
+		_location = "/" + p.stem().string();
 	}
+
+	//Extract protocol
 	if (tokens[2] != "HTTP/1.1\r")
 		throw HttpException("HttpRequest: Protocol not present!");
 	_protocol = tokens[2];
-	LOG_DEBUG("Request line parsed\n uri: " << _uri << "\nmethod: " << _method << "\nfilename: " << _filename << "\nlocation: " << _location);
-	std::filesystem::path p(_uri);
-	LOG_DEBUG("p file name: " << p.filename().string() << ", file stem: " << p.stem().string() << ", extension: " << p.extension().string() << ", parent path: " << p.parent_path().string() << ", root name: " << p.root_name().string());
 }
 
 void	HttpRequest::_extract_header_fields(std::string_view data_sv)

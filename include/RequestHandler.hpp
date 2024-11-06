@@ -2,11 +2,8 @@
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
 #include "Config.hpp"
-#include "Utility.hpp"
 
 #include <string_view>
-#include <fstream>
-#include <algorithm>
 
 class RequestHandler {
 	public:

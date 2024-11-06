@@ -1,10 +1,11 @@
 #pragma once
 
 #include "CGI.hpp"
-#include <string>
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
 #include "Config.hpp"
+
+#include <string>
 
 class HttpProtocol
 {
@@ -15,15 +16,12 @@ class HttpProtocol
 		HttpProtocol &operator=(const HttpProtocol &);
 		~HttpProtocol();
 
-
 		//			Methods
 		void		handle(std::vector<char>& data);
-		void		respond();
 		void		generate_response();
 		void		parse_file_data(std::vector<char> buffer, t_config& config, std::string_view uri);
 		void		build_error_response(int error_code, std::string_view message);
 		void		parse_data(std::vector<char>& data);
-		void		init_path();
 
 		//			File uploading/fetching
 		bool		upload_chunk();
@@ -45,16 +43,14 @@ class HttpProtocol
 		int			get_pipe_fd();
 		State		get_state();
 
-
-		HttpResponse	response;
-		HttpRequest		request;
+		HttpResponse			response;
+		HttpRequest				request;
 
 	private:
 		FileUpload				_file;
 		CGI						_cgi;
 		bool					_b_headers_complete; 	// Can be moved to request object
 		bool					_b_body_complete;		// Can be moved to request object
-		std::filesystem::path	_path;
 		State					_state;
 		t_config				_config;
 
