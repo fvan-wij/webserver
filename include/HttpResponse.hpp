@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include "meta.hpp"
 
 enum {
 	NOT_READY = false,
@@ -9,17 +8,20 @@ enum {
 };
 
 enum class ResponseType:int {
-	REGULAR = 0,
-	UPLOAD = 1,
-	DELETE = 2,
+	Regular = 0,
+	Upload = 1,
+	Delete = 2,
 	CGI = 3,
-	FETCH_FILE = 4,
-	ERROR = 5,
+	Fetch = 4,
+	Error = 5,
+	Unknown = 6,
 };
 
 class HttpResponse 
 {
 	public:
+		HttpResponse();
+		~HttpResponse();
 		void			set_status_code(const int status);
 		void			set_status_mssg(const std::string &mssg);
 		void			set_body(const std::string &body);

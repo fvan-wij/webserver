@@ -20,17 +20,22 @@ HttpRequest::~HttpRequest()
 
 }
 
-std::string	HttpRequest::get_method() const
+std::string_view HttpRequest::get_method() const
 {
 	return _method;
 }
 
-std::string	HttpRequest::get_uri() const
+std::string_view HttpRequest::get_uri() const
 {
 	return _uri;
 }
 
-std::string	HttpRequest::get_protocol() const
+std::filesystem::path HttpRequest::get_uri_as_path() const
+{
+	return std::filesystem::path(_uri);
+}
+
+std::string_view HttpRequest::get_protocol() const
 {
 	return _protocol;
 }
@@ -55,13 +60,13 @@ void HttpRequest::set_file_upload_path(std::string_view root)
 	_file.path = root.data() + _file.filename;
 }
 
-State	HttpRequest::parse_header(std::vector<char>& data)
+State	HttpRequest::parse_header(std::vector<char>& buffer)
 {
-	std::string_view data_sv(data.data(), data.size());
+	std::string_view data_sv(buffer.data(), buffer.size());
 	static int x;
 
 	x++;
-	LOG_DEBUG("Incoming datachunk on iteration " << x << " = " << data.size());
+	LOG_DEBUG("Incoming datachunk on iteration " << x << " = " << buffer.size());
 	if (not _b_header_parsed)
 	{
 		size_t	header_end = data_sv.find("\r\n\r\n", 0); //0 can be removed, right. Right???
@@ -70,33 +75,33 @@ State	HttpRequest::parse_header(std::vector<char>& data)
 			_header_buffer += data_sv.substr(0, header_end);
 			_extract_header_fields(data_sv);
 			_b_header_parsed = true;
-			data.erase(data.begin(), data.begin() + header_end + 4);
+			buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
 			LOG_DEBUG("Iteration #" << x << "_b_header_parsed = true");
 		}
 		else
 		{
-			_header_buffer.append(data.data(), data.size());
-			data.clear();
+			_header_buffer.append(buffer.data(), buffer.size());
+			buffer.clear();
 			LOG_DEBUG("Iteration #" << x << "returning State::ReadingHeaders");
-			return State::ReadingHeaders;
+			return State::ParsingHeaders;
 		}
 	}
-	if (not data.empty() && _b_header_parsed)
+	if (not buffer.empty() && _b_header_parsed)
 	{
 		LOG_DEBUG("Iteration #" << x << "returning State::ReadingBody");
-		return State::ReadingBody;
+		return State::ParsingBody;
 	}
 	else
 	{
 		LOG_DEBUG("Iteration #" << x << "returning State::GeneratingResponse");
-		return State::GeneratingResponse;
+		return State::BuildingResponse;
 	}
 }
 
-State HttpRequest::parse_body(std::vector<char>& data)
+State HttpRequest::parse_body(std::vector<char>& buffer)
 {
-	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(data.begin()), std::make_move_iterator(data.end()));
-	data.clear();
+	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
+	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
 	//extract filename if not yet extracted -> set file extracted true
 	if (not _b_file_extracted)
@@ -135,7 +140,7 @@ State HttpRequest::parse_body(std::vector<char>& data)
 		if (crln_pos == std::string::npos)
 		{
 			LOG_ERROR("No end CRLF found... ");
-			return State::ReadingBody;
+			return State::ParsingBody;
 		}
 
 		_boundary_end = "--" + _boundary + "--";
@@ -151,10 +156,10 @@ State HttpRequest::parse_body(std::vector<char>& data)
 			_file.finished = false;
 			_file.bytes_uploaded = 0;
 			LOG_NOTICE("Ending boundary extracted: " << _boundary_end);
-			return State::GeneratingResponse;
+			return State::BuildingResponse;
 		}
 	}
-	return State::ReadingBody;
+	return State::ParsingBody;
 }
 
 //		extraction methods (private)
@@ -192,6 +197,9 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 	if (tokens[2] != "HTTP/1.1\r")
 		throw HttpException("HttpRequest: Protocol not present!");
 	_protocol = tokens[2];
+	LOG_DEBUG("Request line parsed\n uri: " << _uri << "\nmethod: " << _method << "\nfilename: " << _filename << "\nlocation: " << _location);
+	std::filesystem::path p(_uri);
+	LOG_DEBUG("p file name: " << p.filename().string() << ", file stem: " << p.stem().string() << ", extension: " << p.extension().string() << ", parent path: " << p.parent_path().string() << ", root name: " << p.root_name().string());
 }
 
 void	HttpRequest::_extract_header_fields(std::string_view data_sv)
@@ -217,9 +225,9 @@ void	HttpRequest::_extract_header_fields(std::string_view data_sv)
 	_b_header_parsed = true;
 }
 
-std::string HttpRequest::_extract_file_path(std::string_view filename)
+std::filesystem::path HttpRequest::_extract_file_path(std::string_view filename)
 {
-	return get_uri() + "/" + filename.data();
+	return std::filesystem::path(std::string(get_uri()) +  "/" +  std::string(filename));
 }
 
 std::string HttpRequest::_extract_filename(std::string_view body_buffer)

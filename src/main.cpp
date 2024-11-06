@@ -77,11 +77,11 @@ void loop(ConnectionManager &cm, char *envp[])
 						}
 						cm.remove(i);
 					}
-					else if (protocol->response.get_type() == ResponseType::UPLOAD)
+					else if (protocol->response.get_type() == ResponseType::Upload)
 					{
 						protocol->poll_upload();
 					}
-					else if (protocol->response.get_type() == ResponseType::FETCH_FILE) // Note: Fetching requires both reading and writing... but does both when there's a POLLOUT revent.
+					else if (protocol->response.get_type() == ResponseType::Fetch) // Note: Fetching requires both reading and writing... but does both when there's a POLLOUT revent.
 					{
 						// LOG_INFO("fd: " << pfd.fd << " POLLOUT (Fetch file)"); 
 						protocol->poll_fetch();

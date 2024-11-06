@@ -23,6 +23,7 @@ class HttpProtocol
 		void		parse_file_data(std::vector<char> buffer, t_config& config, std::string_view uri);
 		void		build_error_response(int error_code, std::string_view message);
 		void		parse_data(std::vector<char>& data);
+		void		init_path();
 
 		//			File uploading/fetching
 		bool		upload_chunk();
@@ -44,17 +45,17 @@ class HttpProtocol
 		int			get_pipe_fd();
 		State		get_state();
 
+
 		HttpResponse	response;
 		HttpRequest		request;
 
 	private:
-		// std::string			_header_buffer;
-		// std::vector<char> 	_body_buffer;
-		FileUpload			_file;
-		CGI					_cgi;
-		bool				_b_headers_complete; // Can be moved to request object
-		bool				_b_body_complete;// Can be moved to request object
-		State				_state;
-		t_config			_config;
+		FileUpload				_file;
+		CGI						_cgi;
+		bool					_b_headers_complete; 	// Can be moved to request object
+		bool					_b_body_complete;		// Can be moved to request object
+		std::filesystem::path	_path;
+		State					_state;
+		t_config				_config;
 
 };

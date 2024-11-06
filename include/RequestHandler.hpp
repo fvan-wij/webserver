@@ -25,5 +25,6 @@ class RequestHandler {
 		std::optional<std::string> 			retrieve_index_html(std::string_view path);
 		std::string							get_path(std::string_view root, std::string_view uri);
 		std::string 						get_file_extension(std::string path);
+		std::filesystem::path 				build_path(std::optional<std::string> root, std::string_view uri, std::optional<std::string> index);
 		virtual ~RequestHandler();
 };

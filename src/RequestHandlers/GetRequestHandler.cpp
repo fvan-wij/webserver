@@ -10,18 +10,19 @@ HttpResponse	GetRequestHandler::handle_request(HttpRequest &request, t_config &c
 		return generate_error_response(404, "Not Found - The server cannot find the requested resource");
 	if (!method_is_valid(request.get_uri(), request.get_method(), config))
 		return generate_error_response(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
-	std::string path = get_path(config.root, request.get_uri());
-	if (request.is_file())
+	std::filesystem::path path = build_path(config.root, request.get_uri(), std::nullopt);
+	if (std::filesystem::is_regular_file(path))
 	{
-		std::string ext = get_file_extension(request.get_uri());
-		if (ext == ".py")
-			return generate_successful_response(200, path, ResponseType::CGI);
+		if (path.extension().string() == ".py")
+			return generate_successful_response(200, path.string(), ResponseType::CGI);
 		else
-			return generate_successful_response(200, path, ResponseType::FETCH_FILE);
+			return generate_successful_response(200, path.string(), ResponseType::Fetch);
+	}
+	else if (std::filesystem::is_directory(path))
+	{
+		path += config.location[request.get_location().data()].index;
+		return generate_successful_response(200, path.string(), ResponseType::Regular);
 	}
 	else
-		path += config.location[request.get_location()].index;
-	if (path.empty())
 		return generate_error_response(404, "Not Found - The server cannot find the requested resource");
-	return generate_successful_response(200, path, ResponseType::REGULAR);
 }

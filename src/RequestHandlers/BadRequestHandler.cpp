@@ -12,7 +12,7 @@ HttpResponse	BadRequestHandler::handle_request(HttpRequest &request, t_config &c
 	response.set_status_code(400);
 	response.set_status_mssg("Bad Request");
 	response.set_state(READY);
-	response.set_type(ResponseType::ERROR);
+	response.set_type(ResponseType::Error);
 	response.set_body("\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>");
 	return response;
 }

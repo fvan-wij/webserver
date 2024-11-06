@@ -36,9 +36,9 @@
 #define END		"\033[0m\t\t"
 
 enum class State {
-	ReadingHeaders,
-	ReadingBody,
-	GeneratingResponse,
+	ParsingHeaders,
+	ParsingBody,
+	BuildingResponse,
 	ProcessingCGI,
 	UploadingFile,
 	FetchingFile,

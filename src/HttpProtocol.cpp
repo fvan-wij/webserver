@@ -3,14 +3,14 @@
 #include <cwchar>
 #include <string>
 
-HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _state(State::ReadingHeaders)
+HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _state(State::ParsingHeaders)
 {
-	response.set_state(NOT_READY);
+
 }
 
-HttpProtocol::HttpProtocol(t_config &config) : _b_headers_complete(false), _b_body_complete(false), _state(State::ReadingHeaders), _config(config)
+HttpProtocol::HttpProtocol(t_config &config) : _b_headers_complete(false), _b_body_complete(false), _state(State::ParsingHeaders), _config(config)
 {
-	response.set_state(NOT_READY);
+
 }
 
 HttpProtocol::~HttpProtocol()
@@ -29,13 +29,13 @@ void	HttpProtocol::parse_data(std::vector<char>& data)
 	{
 		switch (_state)
 		{
-			case State::ReadingHeaders:
+			case State::ParsingHeaders:
 				{
 					LOG_NOTICE("Parsing header...");
 					_state = request.parse_header(data);
 				}
 				break;
-			case State::ReadingBody:
+			case State::ParsingBody:
 				{
 					LOG_NOTICE("Parsing body...");
 					_state = request.parse_body(data);
@@ -43,13 +43,19 @@ void	HttpProtocol::parse_data(std::vector<char>& data)
 				break;
 		}
 	}
-	if (_state == State::GeneratingResponse)
+	if (_state == State::BuildingResponse)
 	{
 		LOG_NOTICE("Finished reading/parsing, on to generating a response!");
 		LOG_DEBUG("Size of body: " << request.get_body_buffer().size());
 		LOG_DEBUG("Content-Length: " << request.get_value("Content-Length").value_or("0"));
 		generate_response();
 	}
+}
+
+void	HttpProtocol::init_path()
+{
+	_path /= _config.root;
+	_path /= request.get_uri();
 }
 
 void	HttpProtocol::handle(std::vector<char>& data)
@@ -65,13 +71,12 @@ void		HttpProtocol::generate_response()
 	{
 		_state = State::ProcessingCGI;
 	}
-	else if (response.get_type() == ResponseType::UPLOAD)
+	else if (response.get_type() == ResponseType::Upload)
 	{
-		_state = State::UploadingFile;
 		_file = request.get_file_upload();
-		//Set file from request
+		_state = State::UploadingFile;
 	}
-	else if (response.get_type() == ResponseType::FETCH_FILE)
+	else if (response.get_type() == ResponseType::Fetch)
 	{
 		_state = State::FetchingFile;
 	}
@@ -81,13 +86,12 @@ void		HttpProtocol::generate_response()
 //CGI can be triggered by both POST and GET requests
 //CGI can accept uploaded files and configure where they should be saved
 //Trailing pathnames that follow the scriptname should be added to PATH_INFO
-
 void	HttpProtocol::start_cgi(char *envp[])
 {
 	std::vector<const char*> args;
 
 	//To do: find /usr/bin/python3
-	//Differentiate between UPLOAD, FETCH or simply running a script
+	//Differentiate between Upload, FETCH or simply running a script
 
 	std::string path = response.get_path();
 	LOG_DEBUG("path: " << path);
@@ -123,28 +127,24 @@ State HttpProtocol::get_state()
 	return _state;
 }
 
-
 bool		HttpProtocol::is_ready()
 {
-	return this->response.is_ready();
+	return response.is_ready();
 }
 
 void 		HttpProtocol::poll_cgi()
 {
-	if (response.get_type() == ResponseType::CGI)
-		response.set_state(_cgi.poll());
+	response.set_state(_cgi.poll());
 }
 
 void	HttpProtocol::poll_upload()
 {
-	if (response.get_type() == ResponseType::UPLOAD)
-		response.set_state(upload_chunk());
+	response.set_state(upload_chunk());
 }
 
 void	HttpProtocol::poll_fetch()
 {
-	if (response.get_type() == ResponseType::FETCH_FILE)
-		response.set_state(fetch_file(response.get_path()));
+	response.set_state(fetch_file(response.get_path()));
 }
 
 static bool file_exists(std::string_view file_name)
@@ -189,7 +189,7 @@ void	HttpProtocol::build_error_response(int error_code, std::string_view message
 	std::string mssg = "\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n";
 	response.set_body(mssg);
 	response.set_state(READY);
-	response.set_type(ResponseType::ERROR);
+	response.set_type(ResponseType::Error);
 }
 
 bool HttpProtocol::fetch_file(std::string_view path)

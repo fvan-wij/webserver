@@ -127,7 +127,7 @@ HttpResponse	RequestHandler::generate_error_response(int error_code, std::string
 	std::string mssg = "\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n";
 	response.set_body(mssg);
 	response.set_state(READY);
-	response.set_type(ResponseType::ERROR);
+	response.set_type(ResponseType::Error);
 	return response;
 }
 
@@ -139,7 +139,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	response.set_type(type);
 	switch (type)
 	{
-		case ResponseType::REGULAR:
+		case ResponseType::Regular:
 			{
 				response.set_state(READY);
 				std::optional<std::string> html = retrieve_index_html(path);
@@ -161,20 +161,20 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 				}
 			}
 			break;
-		case ResponseType::FETCH_FILE:
+		case ResponseType::Fetch:
 			{
 				response.set_state(NOT_READY);
 				response.set_streamcount(0);
 				response.set_path(path.data());
 			}
 			break;
-		case ResponseType::UPLOAD:
+		case ResponseType::Upload:
 			{
 				response.set_state(NOT_READY);
 				response.set_body("\r\n<h1>File uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
 			}
 			break;
-		case ResponseType::DELETE:
+		case ResponseType::Delete:
 			{
 				response.set_state(READY);
 				response.set_body("\r\n<h1>File deleted</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
@@ -187,7 +187,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 				response.set_path(path.data());
 			}
 			break;
-		case ResponseType::ERROR:
+		case ResponseType::Error:
 			{
 				response.set_state(READY);
 				response.set_status_mssg("ERROR");
@@ -234,3 +234,27 @@ std::string RequestHandler::get_file_extension(std::string path)
 	size_t	extension_pos = path.find_last_of(".");
 	return std::string(&path[extension_pos]);
 }
+
+std::filesystem::path RequestHandler::build_path(std::optional<std::string> root, std::string_view uri, std::optional<std::string> index)
+{
+	std::filesystem::path p(".");
+	p += root.value();
+	LOG_NOTICE("p: " << p);
+	p += uri;
+	LOG_NOTICE("uri: " << uri << ", p /= uri: " << p);
+	if (index)
+	{
+		p /= index.value();
+	}
+	return p;
+}
+
+// std::filesystem::path RequestHandler::build_error_path(std::optional<std::string> root, std::optional<std::string> error)
+// {
+// 	std::filesystem::path error_path(root.value());
+// 	if (error)
+// 	{
+// 		p /= error.value();
+// 	}
+// 	return error_path;
+// }

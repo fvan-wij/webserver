@@ -12,12 +12,12 @@ HttpResponse	PostRequestHandler::handle_request(HttpRequest &request, t_config &
 	std::string path = get_path(config.root, request.get_uri());
 	if (content_length_exceeded(request, config))
 		return generate_error_response(413, "Content Too Large");
-	else if (get_file_extension(request.get_uri()) == ".py")
+	else if (get_file_extension(request.get_uri().data()) == ".py")
 		return generate_successful_response(200, path, ResponseType::CGI);
 	else if (is_multipart_content(request))
 	{
 		request.set_file_upload_path(path);
-		return generate_successful_response(200, path, ResponseType::UPLOAD);
+		return generate_successful_response(200, path, ResponseType::Upload);
 	}
 	return generate_error_response(400, "Bad Request");
 }
