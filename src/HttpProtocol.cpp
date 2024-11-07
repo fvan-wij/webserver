@@ -1,8 +1,10 @@
 #include "HttpProtocol.hpp"
 #include "HandlerFactory.hpp"
+
 #include <cwchar>
 #include <string>
 #include <fstream>
+#include <algorithm>
 
 HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _state(State::ParsingHeaders)
 {
@@ -10,7 +12,7 @@ HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(fals
 }
 
 
-HttpProtocol::HttpProtocol(Config &config) : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ParsingHeaders), _config(config)
+HttpProtocol::HttpProtocol(Config &config) : _b_headers_complete(false), _b_body_complete(false), _state(State::ParsingHeaders), _config(config)
 
 {
 
