@@ -25,7 +25,7 @@ static std::string generate_list(std::filesystem::path path)
 	}
 	if (list.empty())
 		return {};
-	else 
+	else
 	{
 		list.insert(0, "<ul>");
 		list.append("</ul>");
@@ -81,9 +81,9 @@ bool			RequestHandler::method_is_allowed(std::string_view method, std::vector<st
 	return allowed;
 }
 
-bool	RequestHandler::method_is_valid(std::string_view uri, std::string_view method, t_config &config)
+bool	RequestHandler::method_is_valid(std::string_view uri, std::string_view method, Config &config)
 {
-	t_location loc;
+	Location loc;
 	auto it = config.location.find(uri.data());
 	if (it != config.location.end())
 	{
@@ -108,7 +108,7 @@ bool	RequestHandler::method_is_valid(std::string_view uri, std::string_view meth
 	return false;
 }
 
-bool RequestHandler::content_length_exceeded(const HttpRequest &request, t_config &config)
+bool RequestHandler::content_length_exceeded(const HttpRequest &request, Config &config)
 {
 	std::optional<std::string_view> sv_conlen = request.get_value("Content-Length");
 	if (sv_conlen)
@@ -122,14 +122,52 @@ bool RequestHandler::content_length_exceeded(const HttpRequest &request, t_confi
 	return false;
 }
 
-HttpResponse	RequestHandler::generate_error_response(int error_code, std::string_view message)
+
+/**
+ * @brief Searches the list of error pages and returns the correct one.
+ *
+ * @param error_code
+ * @param config
+ * @return std::optional<std::string>
+ */
+std::optional<std::string> RequestHandler::retrieve_error_path(int error_code, Config &config)
+{
+	std::string error = config.error_page[error_code];
+	if (!error.empty())
+		return ("." + config.root + error);
+	return ("");
+}
+
+/**
+ * @brief Generate or retrieve the error body.
+ * If the error code has a corresponding error page, we retrieve the body file.
+ * Else we construct a html string based on the code and the given message.
+ *
+ * @param error_code
+ * @param message
+ * @param config
+ * @return std::string with the body html
+ */
+std::string RequestHandler::generate_error_body(int error_code, std::string_view message, Config &config)
+{
+	std::optional<std::string> error_path = retrieve_error_path(error_code, config);
+
+	if (!error_path.value().empty())
+	{
+		std::optional<std::string> error_html = retrieve_index_html(error_path.value());
+		if (error_html)
+			return (error_html.value());
+	}
+	return ("\r\n<h1>" + std::to_string(error_code) + " " + message.data() + "</h1>\r\n");
+}
+
+HttpResponse	RequestHandler::generate_error_response(int error_code, std::string_view message, Config &config)
 {
 	HttpResponse	response;
 
 	response.set_status_code(error_code);
 	response.set_status_mssg(message.data());
-	std::string mssg = "\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n";
-	response.set_body(mssg);
+	response.set_body(generate_error_body(error_code, message, config));
 	response.set_state(READY);
 	response.set_type(ResponseType::Error);
 	return response;
@@ -146,6 +184,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 		case ResponseType::Regular:
 			{
 				response.set_state(READY);
+				LOG_DEBUG(path);
 				std::optional<std::string> html = retrieve_index_html(path);
 				bool autoindexing = true;
 				if (html)
@@ -210,7 +249,7 @@ std::string	RequestHandler::get_path(std::string_view root, std::string_view uri
 	return path;
 }
 
-bool	RequestHandler::location_exists(t_config &config, std::string_view loc)
+bool	RequestHandler::location_exists(Config &config, std::string_view loc)
 {
 	auto it = config.location.find(loc.data());
 	if (it != config.location.end())

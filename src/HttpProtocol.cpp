@@ -9,7 +9,9 @@ HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(fals
 
 }
 
-HttpProtocol::HttpProtocol(t_config &config) : _b_headers_complete(false), _b_body_complete(false), _state(State::ParsingHeaders), _config(config)
+
+HttpProtocol::HttpProtocol(Config &config) : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ParsingHeaders), _config(config)
+
 {
 
 }
@@ -107,7 +109,7 @@ std::string	HttpProtocol::get_data()
 	return response.to_string();
 }
 
-t_config	HttpProtocol::get_config()
+Config	HttpProtocol::get_config()
 {
 	return (_config);
 }
@@ -139,7 +141,97 @@ void	HttpProtocol::poll_upload()
 
 void	HttpProtocol::poll_fetch()
 {
+
 	response.set_state(fetch_file(response.get_path()));
+}
+
+static std::string get_file_path(std::string_view root, std::string_view uri, std::string_view filename)
+{
+	std::string path = ".";
+
+	return path + root.data() + uri.data() + "/" + filename.data();
+}
+
+static std::string get_filename(std::string_view body_buffer)
+{
+	size_t filename_begin = body_buffer.find("filename=\"");
+	if (filename_begin == std::string::npos)
+	{
+		LOG_ERROR("Filename not found in body buffer");
+		return {};
+	}
+	filename_begin += 10; // Move past 'filename="'
+	size_t filename_end = body_buffer.find("\r\n", filename_begin);
+	if (filename_end == std::string::npos)
+	{
+		LOG_ERROR("Malformed filename in body buffer");
+		return {};
+	}
+	return std::string(&body_buffer[filename_begin], &body_buffer[filename_end - 1]);
+}
+
+static std::string get_boundary(std::string_view content_type)
+{
+	size_t boundary_begin = content_type.find("boundary=");
+	if (boundary_begin == std::string::npos)
+	{
+		LOG_ERROR("Boundary not found in Content-Type header");
+		return {};
+	}
+	boundary_begin += 9; // Move past 'boundary='
+	std::string boundary(content_type.substr(boundary_begin));
+	if (boundary.find("WebKitFormBoundary") == std::string::npos)
+	{
+		return boundary;
+	}
+	else
+	{
+		boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up string manipulation whenever I'm dealing with a webkit boundary (!????)
+		return boundary;
+	}
+}
+
+void	HttpProtocol::parse_file_data(std::vector<char> buffer, Config& config, std::string_view uri)
+{
+	std::string_view 	sv_buffer(buffer.data(), buffer.size());
+
+	_file.filename = get_filename(sv_buffer);
+	if (_file.filename.empty())
+	{
+		LOG_ERROR("No filename extracted... aborting parse_file_data()");
+		return;
+	}
+	_file.path = get_file_path(config.root, uri.data(), _file.filename);
+
+	std::string_view content_type = request.get_value("Content-Type").value_or("");
+	std::string boundary = get_boundary(content_type);
+	if (boundary.empty())
+	{
+		LOG_ERROR("No boundary extracted... aborting parse_file_data()");
+		return;
+	}
+	std::string	boundary_end = "--" + boundary + "--";
+	size_t crln_pos = sv_buffer.find("\r\n\r\n");
+	if (crln_pos == std::string::npos)
+	{
+		LOG_ERROR("No CRLF found... aborting parse_file_data()");
+		return;
+	}
+
+	auto body_data_start = (buffer.begin() + crln_pos) + 4;
+	auto body_data_end = std::search(body_data_start, buffer.end(), boundary_end.begin(), boundary_end.end());
+
+	if (body_data_end == buffer.end())
+	{
+		LOG_ERROR("Ending boundary not present... aborting parse_file_data()");
+		return;
+	}
+	else
+	{
+		_file.data.assign(body_data_start, body_data_end - 2);
+		_file.finished = false;
+		_file.bytes_uploaded = 0;
+	}
 }
 
 static bool file_exists(std::string_view file_name)

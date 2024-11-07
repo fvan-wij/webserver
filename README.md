@@ -1,44 +1,84 @@
-https://stackoverflow.com/a/3233022
-https://www.baeldung.com/cs/tcp-fin-vs-rst
-https://stackoverflow.com/a/12925016
-https://thelinuxcode.com/setsockopt-function-c/
+# websrv
 
-
-
-webserv -> server(s) ->
-
-webserv
-- loads config file
-- poll loop which iterates over all the `server` instances
-- for server in servers;
-    for fds in server.getfds:
-        poll (fds)
-        if (event)
-        if (event == dataIn)
-        {
-            server.handleInEvent()
-        }
-        else if (event == dataOut)
-        {
-            server.handleOutEvent()
-        }
-
-
-server 
-- runs on specific port(s) (so has its own socket)
-- can have multiple `location` routings
-- list of client/listening fds
-
-
-route
+A HTTP server written in ✨ *C++17* ✨.
 
 
 
 
+## Building
+
+Clone to repo
+```
+git clone git@github.com:fvan-wij/webserver.git
+cd webserver
+make
+```
+
+## Usage
+Running the webserver.
+```
+./app [CONFIG]
+```
+Or via the makefile (this will load `test.conf` from the root of the project)
+```
+make run
+```
 
 
 
-plan
-1. fixed response
-2. read body content from file
-3. try to upload file
+## Running Tests
+There are some end-to-end tests  written in Python using [pytest](https://docs.pytest.org/en/stable/) they are stored in the `pytests` directory. <br>
+This directory contains some subdirectories (`test_<NAME>`), essentially acting as seperate test-environments because they all have their own `test.conf` file.
+
+
+
+Install the required packages using pip.
+```
+pip install -r pytests/requirements.txt
+```
+
+Pytest will automatically look for the `pytests` [directory](https://docs.pytest.org/en/stable/explanation/goodpractices.html#conventions-for-python-test-discovery).
+
+Running all of the tests.
+```
+pytest
+```
+
+To run a specific test directory/file.
+```
+pytest [PATH]
+```
+
+Or a specific test function.
+```
+pytest -k NAME 
+```
+
+### Pytest flags
+| flag | description |
+|---------|-----------------------------|
+| [PATH] | path to python file containing the tests |
+| -s | disable output capture |
+| -k NAME | only run tests which match the given substring |
+
+
+
+## Dev
+
+
+### Archiving stale branches
+It is recommeded to archive stale branches instead of deleting them
+
+Archive
+```
+git tag archive/<branchname> <branchname>
+git push origin archive/<branchname>
+git branch -D <branchname>
+```
+
+Restore a branch
+```
+git checkout -b <branchname> archive/<branchname>
+```
+
+> [from](https://stackoverflow.com/a/4292670)

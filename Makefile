@@ -1,8 +1,11 @@
 NAME		:= app
 RUN_CMD		:= ./$(NAME) test.conf
 
-# CFLAGS		+= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
-CFLAGS		+= -Wall -Wextra -std=c++17 -g -pedantic
+ifdef DEBUG
+	CFLAGS		:= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
+else
+	CFLAGS		:= -Wall -Wextra -std=c++17 -g -pedantic
+endif
 
 IFLAGS		:=	-Iinclude
 
@@ -88,3 +91,12 @@ norm:
 cgi:
 	mkdir -p ~/.local/bin
 	gcc sleep_echo_prog.c -o ~/.local/bin/sleep_echo_var
+
+test: all
+	pytest pytests/
+
+debug:
+	$(MAKE) DEBUG=1
+
+test: all
+	pytest pytests/
