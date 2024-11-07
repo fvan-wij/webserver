@@ -8,6 +8,7 @@
 #include <string>
 #include <sys/poll.h>
 #include <vector>
+#include <iostream>
 
 void poll_loop(ConnectionManager &cm, char *envp[])
 {

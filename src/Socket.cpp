@@ -8,10 +8,10 @@
 #include <sys/types.h>
 #include <iostream>
 
-
-#ifndef DEBUG_SOCKET
-#define LOG_DEBUG(x) do { } while (0)
-#endif
+//
+// #ifndef DEBUG_SOCKET
+// #define LOG_DEBUG(x) do { } while (0)
+// #endif
 
 
 
@@ -83,7 +83,8 @@ std::optional<std::vector<char>> Socket::read()
 		std::vector<char> data(buffer, buffer + n);
 		return data;
 	}
-	else {
+	else
+	{
 		return std::nullopt;
 	}
 }

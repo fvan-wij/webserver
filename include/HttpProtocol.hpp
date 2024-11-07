@@ -1,22 +1,11 @@
 #pragma once
 
-#include "Socket.hpp"
 #include "CGI.hpp"
-#include <string>
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
-#include "HandlerFactory.hpp"
 #include "Config.hpp"
-#include <charconv>
 
-typedef struct FileUpload
-{
-	std::string			filename;
-	std::string			path;
-	std::vector<char> 	data;
-	size_t				bytes_uploaded;
-	bool				finished;
-} FileUpload;
+#include <string>
 
 class HttpProtocol
 {
@@ -27,49 +16,43 @@ class HttpProtocol
 		HttpProtocol &operator=(const HttpProtocol &);
 		~HttpProtocol();
 
-		enum class State {
-			ReadingHeaders,
-			ReadingBody,
-			GeneratingResponse,
-			ProcessingCGI,
-			UploadingFile,
-			FetchingFile,
-		};
-
-		void		handle(std::vector<char> data);
-		void 		poll_cgi();
-		void		poll_upload();
-		void		poll_fetch();
-		void		respond();
-		void		on_data_received(std::vector<char> data);
-		void		handle_headers(std::vector<char> data);
-		void		handle_body(std::vector<char> data);
+		//			Methods
+		void		handle(std::vector<char>& data);
 		void		generate_response();
 		void		parse_file_data(std::vector<char> buffer, Config& config, std::string_view uri);
 		void		build_error_response(int error_code, std::string_view message);
+		void		parse_data(std::vector<char>& data);
+
+		//			File uploading/fetching
 		bool		upload_chunk();
 		bool		fetch_file(std::string_view path);
+		void		poll_upload();
+		void		poll_fetch();
 
+		//			CGI
 		void		start_cgi(char *envp[]);
+		void 		poll_cgi();
 
+		//			Bools
 		bool		is_ready();
 		// TODO Put this in .cpp file
 		bool		is_cgi_running() {return _cgi.is_running();};
+
+		//			Getters
 		std::string	get_data();
 		Config	get_config();
 		int			get_pipe_fd();
+		State		get_state();
 
-		HttpResponse	response;
-		HttpRequest		request;
+		HttpResponse			response;
+		HttpRequest				request;
 
 	private:
-		std::string			_header_buffer;
-		std::vector<char> 	_body_buffer;
-		FileUpload			_file;
-		CGI					_cgi;
-		bool				_b_headers_complete;
-		bool				_b_body_complete;
-		State				_current_state;
-		Config			_config;
+		FileUpload				_file;
+		CGI						_cgi;
+		bool					_b_headers_complete; 	// Can be moved to request object
+		bool					_b_body_complete;		// Can be moved to request object
+		State					_state;
+		Config				_config;
 
 };

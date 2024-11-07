@@ -1,5 +1,16 @@
 #include "HttpResponse.hpp"
 
+HttpResponse::HttpResponse() : _status_code(0), _streamcount(0), _ready(NOT_READY), _type(ResponseType::Unknown)
+{
+
+
+}
+
+HttpResponse::~HttpResponse()
+{
+
+}
+
 void		HttpResponse::set_status_code(const int status)
 {
 	_status_code = status;

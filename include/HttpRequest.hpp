@@ -6,8 +6,10 @@
 #include <sstream>
 #include <exception>
 #include <optional>
+#include <filesystem>
 
 #include "meta.hpp"
+
 
 enum class RequestType:int
 {
@@ -27,68 +29,84 @@ const static std::unordered_map<std::string, RequestType> REQUEST_TYPE =
 class HttpRequest
 {
 	public:
-		std::string 									get_method() const;
-		std::string 									get_uri() const;
-		std::string 									get_protocol() const;
-		const std::string 								get_buffer() const {return _buffer;};
-		std::string										get_location() const {return _location;};
-		std::string										get_filename() const {return _filename;};
-
-		std::vector<char> 								get_body() const {return _body;};
-		std::unordered_map<std::string, std::string>	get_headers() const {return _header;};
-		std::optional<std::string_view>					get_value(const std::string &key) const;
-
+		HttpRequest();
+		~HttpRequest();
+		//												Getters
+		std::string_view 								get_method() const;
+		std::string_view								get_uri() const;
+		std::filesystem::path							get_uri_as_path() const;
+		std::string_view								get_protocol() const;
+		std::string_view								get_location() const {return _location;};
+		std::string_view								get_filename() const {return _filename;};
 		RequestType										get_type() const {return _type;};
+		std::vector<char>& 								get_body_buffer() {return _body_buffer;};
+		std::optional<std::string_view>					get_value(const std::string &key) const;
+		std::unordered_map<std::string, std::string>	get_headers() const {return _header;};
+		FileUpload&										get_file_upload() {return _file;};
 
-		bool											get_header_parsed() {return _b_header_parsed;};
-		bool											get_body_parsed() {return _b_body_parsed;};
+		//												Bools
+		bool											is_header_parsed() {return _b_header_parsed;};
+		bool											is_body_parsed() {return _b_body_parsed;};
 		bool											is_file() const {return _b_file;};
 
+		//												Setters
 		void											set_type(RequestType type);
 		void											set_header_parsed(bool state) {_b_header_parsed = state;};
 		void											set_body_parsed(bool state) {_b_body_parsed = state;};
-		void											set_body(std::vector<char> body) {_body = body;};
-		void											append_buffer(std::string &data);
+		void											set_file_upload_path(std::string_view root);
+		void											append_buffer(std::string &buffer);
 
-		void											parse_header(const std::string &data);
-		void 											parse_body(std::vector<char> data);
+		//												Parsing methods
+		State											parse_header(std::vector<char>& buffer);
+		State 											parse_body(std::vector<char>& buffer);
 
+		//												Exceptions
 		class HttpException : public std::exception
-	{
-		private:
-			std::string	message;
-
-		public:
-			HttpException(const char* msg) : message(msg){};
-			const char* what() const throw()
-			{
-				return message.c_str();
-			}
-	};
+		{
+			private:
+				std::string	message;
+			public:
+				HttpException(const char* msg) : message(msg){};
+				const char* what() const throw()
+				{
+					return message.c_str();
+				}
+		};
 
 	private:
-		size_t		_body_size;
-		size_t		_body_index;
+		bool											_b_header_parsed;
+		bool											_b_body_parsed;
+		bool											_b_file;
+		bool											_b_file_extracted;
+		bool											_b_file_path_extracted;
+		bool											_b_boundary_extracted;
+		bool											_b_file_data_extracted;
 
-		bool		_b_header_parsed;
-		bool		_b_body_parsed;
-		bool		_b_file;
+		std::string 									_method;
+		std::string 									_protocol;
+		std::string 									_uri;
+		std::string 									_filename;
+		std::string 									_location;
+		std::string 									_boundary;
+		std::string 									_boundary_end;
 
-		std::string	_buffer;
-		std::string _method;
-		std::string _protocol;
-		std::string _uri;
-		std::string _filename;
-		std::string _location;
 
-		std::vector<char> _body;
-
+		std::string										_header_buffer;
+		std::vector<char> 								_body_buffer;
 		std::unordered_map<std::string, std::string>	_header;
 
 		RequestType	_type;
+		FileUpload										_file;
 
-		void		_parse_request_line(std::istringstream 	&stream);
+		//												Data extraction methods
+		void											_extract_request_line(std::istringstream 	&stream);
+		void											_extract_header_fields(std::string_view data_sv);
+		std::string										_extract_boundary(std::string_view content_type);
+		std::filesystem::path							_extract_file_path(std::string_view filename);
+		std::string 									_extract_filename(std::string_view body_buffer);
+
 };
 
+//Insertion overloading
 std::ostream & operator << (std::ostream &out, HttpRequest &request);
 std::ostream & operator << (std::ostream &out, const HttpRequest &request);

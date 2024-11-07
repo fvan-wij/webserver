@@ -5,5 +5,5 @@
 class GetRequestHandler : public RequestHandler
 {
 	public:
-		HttpResponse	handle_request(const HttpRequest &request, Config &config);
+		HttpResponse	handle_request(HttpRequest &request, Config &config);
 };

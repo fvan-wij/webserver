@@ -1,6 +1,7 @@
 #pragma once
 #include <string_view>
 #include <optional>
+#include <vector>
 #include <charconv>
 #include "Logger.hpp"
 
@@ -15,5 +16,6 @@ class Utility {
 
 		static std::optional<int>	svtoi(std::string_view str);
 		static std::optional<int>	svtoi(std::optional<std::string_view> str);
+		static std::vector<std::string>	tokenize_string(std::string string, std::string delimiter);
 };
 

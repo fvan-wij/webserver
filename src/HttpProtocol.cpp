@@ -1,150 +1,81 @@
 #include "HttpProtocol.hpp"
-#include "meta.hpp"
+#include "HandlerFactory.hpp"
 #include <cwchar>
 #include <string>
-#include <filesystem>
+#include <fstream>
 
-HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders)
+HttpProtocol::HttpProtocol() : _b_headers_complete(false), _b_body_complete(false), _state(State::ParsingHeaders)
 {
-	response.set_state(NOT_READY);
+
 }
 
-HttpProtocol::HttpProtocol(Config &config) : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ReadingHeaders), _config(config)
+
+HttpProtocol::HttpProtocol(Config &config) : _b_headers_complete(false), _b_body_complete(false), _current_state(State::ParsingHeaders), _config(config)
+
 {
-	response.set_state(NOT_READY);
+
 }
 
 HttpProtocol::~HttpProtocol()
 {
-	// LOG(RED << "DELETING HTTPSERVER!" << END);
+
 }
 
-HttpProtocol::HttpProtocol(const HttpProtocol &other) : _header_buffer(other._header_buffer), _body_buffer(other._body_buffer), _b_headers_complete(other._b_headers_complete), _b_body_complete(other._b_body_complete), _current_state(other._current_state)
+HttpProtocol::HttpProtocol(const HttpProtocol &other) : _b_headers_complete(other._b_headers_complete), _b_body_complete(other._b_body_complete), _state(other._state)
 {
-	// LOG("HttpServer : copied for sock_fd: " << _socket.get_fd());
+
 }
 
-
-void	HttpProtocol::handle(std::vector<char> data)
+void	HttpProtocol::parse_data(std::vector<char>& data)
 {
-	on_data_received(data);
-}
-
-void		HttpProtocol::on_data_received(std::vector<char> data)
-{
-	switch (_current_state)
+	while (not data.empty())
 	{
-		case State::ReadingHeaders:
-			handle_headers(data);
-			break;
-		case State::ReadingBody:
-			handle_body(data);
-			break;
-		case State::GeneratingResponse:
-			generate_response();
-			break;
-		case State::ProcessingCGI:
-			break;
-		case State::UploadingFile:
-			break;
-		case State::FetchingFile:
-			break;
-	}
-}
-
-void		HttpProtocol::handle_headers(std::vector<char> data)
-{
-	std::string_view str(data.data(), data.size());
-	size_t	header_size = str.find("\r\n\r\n", 0);
-
-	if (header_size != std::string::npos)
-	{
-		_header_buffer += str.substr(0, header_size);
-		_b_headers_complete = true;
-		_body_buffer.insert(_body_buffer.end(), data.begin() + (header_size + 4), data.end());
-		request.parse_header(_header_buffer);
-		std::string_view sv_body(_body_buffer.data(), _body_buffer.size());
-		if (str.find("WebKitFormBoundary") != std::string::npos)
+		switch (_state)
 		{
-			_current_state = State::ReadingBody;
-			return;
-		}
-		else if ((header_size + 4) == str.length())
-		{
-			_current_state = State::GeneratingResponse;
-			_b_body_complete = true;
-			generate_response();
-		}
-		std::optional<std::string_view> val = request.get_value("Content-Length");
-		if (val)
-		{
-			try {
-				auto len = Utility::svtoi(val);
-				if (len && len == _body_buffer.size())
+			case State::ParsingHeaders:
 				{
-					_current_state = State::GeneratingResponse;
-					_b_body_complete = true;
-					generate_response();
-					return;
+					LOG_NOTICE("Parsing header...");
+					_state = request.parse_header(data);
 				}
-				else
+				break;
+			case State::ParsingBody:
 				{
-					_current_state = State::ReadingBody;
-					return;
+					LOG_NOTICE("Parsing body...");
+					_state = request.parse_body(data);
 				}
-			}
-			catch (std::invalid_argument &e)
-			{
-				exit(123);
-			}
+				break;
 		}
 	}
-	else {
-		_header_buffer.append(data.data(), data.size());
+	if (_state == State::BuildingResponse)
+	{
+		LOG_NOTICE("Finished reading/parsing, on to generating a response!");
+		LOG_DEBUG("Size of body: " << request.get_body_buffer().size());
+		LOG_DEBUG("Content-Length: " << request.get_value("Content-Length").value_or("0"));
+		generate_response();
 	}
 }
 
-
-void		HttpProtocol::handle_body(std::vector<char> data)
+void	HttpProtocol::handle(std::vector<char>& data)
 {
-	std::string_view sv(_body_buffer.data(), _body_buffer.size());
-	if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
-	{
-			_current_state = State::GeneratingResponse;
-			LOG_DEBUG("Generating response... ");
-			generate_response();
-			return;
-	}
-	else
-	{
-		_body_buffer.insert(_body_buffer.end(), data.begin(), data.end());
-		if (_body_buffer.size() == Utility::svtoi(request.get_value("Content-Length")))
-		{
-			LOG_DEBUG("Generating response... ");
-			generate_response();
-			return;
-		}
-	}
+	parse_data(data);
 }
 
 void		HttpProtocol::generate_response()
 {
-	_body_buffer.push_back('\0');
-	request.set_body(_body_buffer);
 	auto handler = HandlerFactory::create_handler(request.get_type());
 	response = handler->handle_request(request, _config);
 	if (response.get_type() == ResponseType::CGI)
 	{
-		_current_state = State::ProcessingCGI;
+		_state = State::ProcessingCGI;
 	}
-	else if (response.get_type() == ResponseType::UPLOAD)
+	else if (response.get_type() == ResponseType::Upload)
 	{
-		_current_state = State::UploadingFile;
-		parse_file_data(request.get_body(), _config, request.get_uri());
+		_file = request.get_file_upload();
+		_state = State::UploadingFile;
 	}
-	else if (response.get_type() == ResponseType::FETCH_FILE)
+	else if (response.get_type() == ResponseType::Fetch)
 	{
-		_current_state = State::FetchingFile;
+		_state = State::FetchingFile;
 	}
 }
 
@@ -152,13 +83,12 @@ void		HttpProtocol::generate_response()
 //CGI can be triggered by both POST and GET requests
 //CGI can accept uploaded files and configure where they should be saved
 //Trailing pathnames that follow the scriptname should be added to PATH_INFO
-
 void	HttpProtocol::start_cgi(char *envp[])
 {
 	std::vector<const char*> args;
 
 	//To do: find /usr/bin/python3
-	//Differentiate between UPLOAD, FETCH or simply running a script
+	//Differentiate between Upload, FETCH or simply running a script
 
 	std::string path = response.get_path();
 	LOG_DEBUG("path: " << path);
@@ -189,27 +119,30 @@ int	HttpProtocol::get_pipe_fd()
 	return _cgi.get_pipe_fd();
 }
 
+State HttpProtocol::get_state()
+{
+	return _state;
+}
+
 bool		HttpProtocol::is_ready()
 {
-	return this->response.is_ready();
+	return response.is_ready();
 }
 
 void 		HttpProtocol::poll_cgi()
 {
-	if (response.get_type() == ResponseType::CGI)
-		response.set_state(_cgi.poll());
+	response.set_state(_cgi.poll());
 }
 
 void	HttpProtocol::poll_upload()
 {
-	if (response.get_type() == ResponseType::UPLOAD)
-		response.set_state(upload_chunk());
+	response.set_state(upload_chunk());
 }
 
 void	HttpProtocol::poll_fetch()
 {
-	if (response.get_type() == ResponseType::FETCH_FILE)
-		response.set_state(fetch_file(response.get_path()));
+
+	response.set_state(fetch_file(response.get_path()));
 }
 
 static std::string get_file_path(std::string_view root, std::string_view uri, std::string_view filename)
@@ -317,6 +250,11 @@ bool	HttpProtocol::upload_chunk()
 	{
 		buffer_size = bytes_left;
 	}
+	if (bytes_left <= 0)
+	{
+		_file.finished = true;
+		return true;
+	}
 	if (!file_exists(_file.path))
 	{
 		std::ofstream outfile(_file.path, std::ios::binary);
@@ -328,11 +266,6 @@ bool	HttpProtocol::upload_chunk()
 		outfile.write(&_file.data[_file.bytes_uploaded], buffer_size);
 	}
 	_file.bytes_uploaded += buffer_size;
-	if (bytes_left <= 0)
-	{
-		_file.finished = true;
-		return true;
-	}
 	return bytes_left <= 0;
 }
 
@@ -343,7 +276,7 @@ void	HttpProtocol::build_error_response(int error_code, std::string_view message
 	std::string mssg = "\r\n<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n";
 	response.set_body(mssg);
 	response.set_state(READY);
-	response.set_type(ResponseType::ERROR);
+	response.set_type(ResponseType::Error);
 }
 
 bool HttpProtocol::fetch_file(std::string_view path)
@@ -385,10 +318,8 @@ bool HttpProtocol::fetch_file(std::string_view path)
 
 HttpProtocol &HttpProtocol::operator=(const HttpProtocol &other)
 {
-	_header_buffer = other._header_buffer;
-	_body_buffer = other._body_buffer;
 	_b_headers_complete = other._b_headers_complete;
 	_b_body_complete = other._b_body_complete;
-	_current_state = other._current_state;
+	_state = other._state;
 	return *this;
 }

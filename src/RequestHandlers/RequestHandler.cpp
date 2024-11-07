@@ -1,6 +1,10 @@
 #include "RequestHandler.hpp"
 #include "HttpResponse.hpp"
+#include "Utility.hpp"
+
 #include <filesystem>
+#include <fstream>
+#include <algorithm>
 
 RequestHandler::~RequestHandler()
 {
@@ -165,7 +169,7 @@ HttpResponse	RequestHandler::generate_error_response(int error_code, std::string
 	response.set_status_mssg(message.data());
 	response.set_body(generate_error_body(error_code, message, config));
 	response.set_state(READY);
-	response.set_type(ResponseType::ERROR);
+	response.set_type(ResponseType::Error);
 	return response;
 }
 
@@ -177,7 +181,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	response.set_type(type);
 	switch (type)
 	{
-		case ResponseType::REGULAR:
+		case ResponseType::Regular:
 			{
 				response.set_state(READY);
 				LOG_DEBUG(path);
@@ -200,20 +204,20 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 				}
 			}
 			break;
-		case ResponseType::FETCH_FILE:
+		case ResponseType::Fetch:
 			{
 				response.set_state(NOT_READY);
 				response.set_streamcount(0);
 				response.set_path(path.data());
 			}
 			break;
-		case ResponseType::UPLOAD:
+		case ResponseType::Upload:
 			{
 				response.set_state(NOT_READY);
 				response.set_body("\r\n<h1>File uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
 			}
 			break;
-		case ResponseType::DELETE:
+		case ResponseType::Delete:
 			{
 				response.set_state(READY);
 				response.set_body("\r\n<h1>File deleted</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
@@ -226,7 +230,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 				response.set_path(path.data());
 			}
 			break;
-		case ResponseType::ERROR:
+		case ResponseType::Error:
 			{
 				response.set_state(READY);
 				response.set_status_mssg("ERROR");
@@ -272,4 +276,16 @@ std::string RequestHandler::get_file_extension(std::string path)
 {
 	size_t	extension_pos = path.find_last_of(".");
 	return std::string(&path[extension_pos]);
+}
+
+std::filesystem::path RequestHandler::build_path(std::optional<std::string> root, std::string_view uri, std::optional<std::string> index)
+{
+	std::filesystem::path p(".");
+	p += root.value();
+	p += uri;
+	if (index)
+	{
+		p /= index.value();
+	}
+	return p;
 }

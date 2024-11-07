@@ -1,7 +1,7 @@
 #pragma once
 
-#include <iostream>
 #include "Logger.hpp"
+#include <vector>
 
 
 #define POLL_TIMEOUT 100
@@ -34,3 +34,23 @@
 #define GREEN 	"\x1B[32m"
 #define YELLOW 	"\x1B[33m"
 #define END		"\033[0m\t\t"
+
+enum class State {
+	ParsingHeaders,
+	ParsingBody,
+	BuildingResponse,
+	ProcessingCGI,
+	UploadingFile,
+	FetchingFile,
+	Ready,
+};
+
+typedef struct FileUpload 
+{
+	std::string			filename;
+	std::string			path;
+	std::vector<char> 	data;
+	size_t				bytes_uploaded;
+	bool				finished;
+} FileUpload;
+
