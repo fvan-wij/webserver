@@ -77,6 +77,11 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 			_b_header_parsed = true;
 			buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
 			LOG_DEBUG("Iteration #" << x << "_b_header_parsed = true");
+			if (buffer.size() < (SOCKET_READ_SIZE - 1)) // THIS IS A CRUCIAL STEP IN THE SOLUTION, WHLY DOES IT READ BELOW 1024 ON THE FIRST READ CALL WHEN UPLOADING BIG ASS FILE??? WTF?
+			{
+				buffer.clear();
+				return State::BuildingResponse;
+			}
 		}
 		else
 		{
@@ -222,6 +227,8 @@ void	HttpRequest::_extract_header_fields(std::string_view data_sv)
 			{
 				std::string key = line.substr(0, colon_index);
 				std::string value = line.substr(colon_index + 2, line.length() - colon_index);
+				if (value.rfind('\r') != std::string::npos)
+					value.pop_back();
 				_header.emplace(key, value);
 			}
 	}
@@ -261,25 +268,7 @@ std::string HttpRequest::_extract_boundary(std::string_view content_type)
 	}
 	boundary_begin += 9; // Move past 'boundary='
 	std::string boundary(content_type.substr(boundary_begin));
-	// LOG_DEBUG("pos of /r " << boundary.find('\r'));
-	int pos_r = boundary.find('\r');
-	boundary = boundary.substr(0, pos_r);
-
-	int x = 0;
-	for (auto it : boundary)
-	{
-		LOG_DEBUG("Char: " << it << " , ascii: " << (int)it << ", " << x);
-		x++;
-	}
-	if (boundary.find("WebKitFormBoundary") == std::string::npos)
-	{
-		return boundary;
-	}
-	else //Perhaps remove this and only focus on chrome requests
-	{
-		// boundary.pop_back(); // For some reason, there's an extra null terminator that fucks up string manipulation whenever I'm dealing with a webkit boundary (!????)
-		return boundary;
-	}
+	return boundary;
 }
 
 std::ostream & operator << (std::ostream &out, const HttpRequest &request)

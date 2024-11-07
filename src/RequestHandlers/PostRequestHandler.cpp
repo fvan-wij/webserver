@@ -9,11 +9,10 @@ HttpResponse	PostRequestHandler::handle_request(HttpRequest &request, t_config &
 		return generate_error_response(404, "Not Found - The server cannot find the requested resource");
 	if (!method_is_valid(request.get_location(), request.get_method(), config))
 		return generate_error_response(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
-	// std::string path = get_path(config.root, request.get_uri());
 	std::filesystem::path path = build_path(config.root, request.get_uri(), std::nullopt);
 	if (content_length_exceeded(request, config))
 		return generate_error_response(413, "Content Too Large");
-	else if (get_file_extension(request.get_uri_as_path().extension()) == ".py")
+	else if (request.get_uri_as_path().extension() == ".py")
 		return generate_successful_response(200, path.string(), ResponseType::CGI);
 	else if (is_multipart_content(request))
 	{

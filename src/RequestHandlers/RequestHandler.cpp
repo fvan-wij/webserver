@@ -243,9 +243,7 @@ std::filesystem::path RequestHandler::build_path(std::optional<std::string> root
 {
 	std::filesystem::path p(".");
 	p += root.value();
-	LOG_NOTICE("p: " << p);
 	p += uri;
-	LOG_NOTICE("uri: " << uri << ", p /= uri: " << p);
 	if (index)
 	{
 		p /= index.value();
