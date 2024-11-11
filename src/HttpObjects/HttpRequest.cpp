@@ -75,13 +75,14 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 			_header_buffer += data_sv.substr(0, header_end);
 			_extract_header_fields(data_sv);
 			_b_header_parsed = true;
-			buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
 			LOG_DEBUG("Iteration #" << x << "_b_header_parsed = true");
 			if (buffer.size() < (SOCKET_READ_SIZE - 1)) // THIS IS A CRUCIAL STEP IN THE SOLUTION, WHLY DOES IT READ BELOW 1024 ON THE FIRST READ CALL WHEN UPLOADING BIG ASS FILE??? WTF?
 			{
 				buffer.clear();
 				return State::BuildingResponse;
 			}
+			else
+				buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
 		}
 		else
 		{

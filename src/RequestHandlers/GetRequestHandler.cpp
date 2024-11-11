@@ -22,10 +22,7 @@ HttpResponse	GetRequestHandler::handle_request(HttpRequest &request, Config &con
 	}
 	else if (std::filesystem::is_directory(path))
 	{
-		// path += config.location[request.get_location().data()].index;
-		LOG_NOTICE("request.get_location: " << request.get_location());
 		path /= config.location[request.get_location().data()].index;
-		LOG_NOTICE("Path passing to generate_succsful response: " << path);
 		return generate_successful_response(200, path.string(), ResponseType::Regular);
 	}
 	else

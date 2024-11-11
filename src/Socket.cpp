@@ -42,7 +42,7 @@ Socket &Socket::operator=(const Socket &rhs)
 
 Socket::~Socket()
 {
-	LOG_DEBUG(*this << " destroyed");
+	// LOG_DEBUG(*this << " destroyed");
 	_fd = -1;
 
 }

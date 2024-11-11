@@ -18,15 +18,12 @@ HttpResponse	PostRequestHandler::handle_request(HttpRequest &request, Config &co
 	else if (is_multipart_content(request))
 	{
 		std::string_view len = request.get_value("Content-Length").value_or("0");
-		LOG_DEBUG("CONT LEN: " << len <<  ", " << request.get_body_buffer().size());
-		LOG_DEBUG("SVTOI : " << Utility::svtoi(len).value());
 		if (Utility::svtoi(len).value_or(0) != static_cast<int>(request.get_body_buffer().size()))
 		{
-			LOG_DEBUG("WHY NO ERROR RESPONSE SENT TO CLIENT?");
 			return generate_error_response(400, "Bad Request", config);
 		}
 		request.set_file_upload_path(path.string());
-		return generate_successful_response(200, path.string(), ResponseType::Upload);
+		return generate_successful_response(200, request.get_file_upload().filename, ResponseType::Upload);
 	}
 	return generate_error_response(400, "Bad Request", config);
 }

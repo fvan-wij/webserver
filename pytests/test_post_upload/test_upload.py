@@ -76,10 +76,8 @@ def send_upload_request(port: int, file_path: str, expected_status_code: int):
 
 def test_webserv_instance_pid_check(webserv_instance: WebservInstance) -> None:
     assert webserv_instance.proc.pid is not 0
-    # send_webkitformboundary_post_request(webserv_instance.config.ports[0], 'test_image1.png', 'image/png', 200)
-    # send_basic_upload_request(webserv_instance.config.ports[0], "test_file.txt", 200)
-    # send_upload_request(webserv_instance.config.ports[0], "test_file.txt", 200)
+    send_upload_request(webserv_instance.config.ports[0], "test_file.txt", 200)
     send_upload_request(webserv_instance.config.ports[0], "test_image1.png", 200)
-    # send_upload_request(webserv_instance.config.ports[0], "test_audio1.mp3", 200)
-    # send_upload_request(webserv_instance.config.ports[0], "test_audio2.mp3", 200)
+    send_upload_request(webserv_instance.config.ports[0], "test_audio1.mp3", 200)
+    send_upload_request(webserv_instance.config.ports[0], "test_audio2.mp3", 200)
 

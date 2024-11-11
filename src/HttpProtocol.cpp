@@ -46,6 +46,8 @@ void	HttpProtocol::parse_data(std::vector<char>& data)
 					_state = request.parse_body(data);
 				}
 				break;
+			default:
+				break;
 		}
 	}
 	if (_state == State::BuildingResponse)
@@ -288,8 +290,6 @@ bool HttpProtocol::fetch_file(std::string_view path)
 	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
 	auto 			out 		= std::string();
 
-	if (response.get_streamcount() == 0)
-		LOG_DEBUG("Fetching " << path.data());
 	if (not file_stream)
 	{
 		build_error_response(404, "Not Found - The server cannot find the requested resource");
@@ -308,7 +308,6 @@ bool HttpProtocol::fetch_file(std::string_view path)
 		response.append_body(str);
 		if (bytes < 1024)
 		{
-			LOG_DEBUG("Finished... size: " << response.get_body().size());
 			response.set_status_code(200);
 			response.set_state(READY);
 			response.set_streamcount(0);
