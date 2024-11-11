@@ -214,13 +214,13 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 		case ResponseType::Upload:
 			{
 				response.set_state(NOT_READY);
-				response.set_body("\r\n<h1>File uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
+				response.set_body("\r\n<h1>File "+ std::string(path.data()) + " uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
 			}
 			break;
 		case ResponseType::Delete:
 			{
 				response.set_state(READY);
-				response.set_body("\r\n<h1>File deleted</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
+				response.set_body("\r\n<h1>File " + std::string(path.data()) + " deleted</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
 			}
 			break;
 		case ResponseType::CGI:
@@ -236,6 +236,8 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 				response.set_status_mssg("ERROR");
 				response.set_body("\r\n<h1>ERROR</h1>\r\n");
 			}
+			break;
+		default:
 			break;
 	}
 	return response;
