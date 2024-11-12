@@ -1,5 +1,5 @@
 NAME		:= app
-RUN_CMD		:= ./$(NAME) test.conf
+RUN_CMD		:= ./$(NAME) conf/test.conf
 
 ifdef DEBUG
 	CFLAGS		:= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
