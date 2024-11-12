@@ -1,0 +1,45 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server; 
+    root /var/www/html;  
+    index index.html; 
+    server_name _;  
+    location / {
+       try_files $uri $uri/ =404;
+    }
+    location /api/ {
+           proxy_pass http://localhost:8080/;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+    }    location /images {
+           alias uploads/images/;
+    }
+}
+
+
+
+
+server {
+
+
+  server_name example.com;
+  listen 443 ssl;
+  root /home/user/main/dist;
+  location / {
+     index index.html;
+     # If you have some sort of React or Angular App you might want to use this
+     # try_files $uri $uri/ /index.html;
+     # If you just host a local files (css, js, html, png)...
+     # try_files $uri $uri/ =404;
+  }
+
+  location /two {
+     alias /home/main/example;
+     index index.html;
+  }
+
+
+}
