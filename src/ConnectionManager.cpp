@@ -1,4 +1,4 @@
-// this class will be accessable by both the `VirtualServer` and the main poll loop.
+// this class will be accessible by both the `VirtualServer` and the main poll loop.
 // #include "Server.hpp"
 #include "Socket.hpp"
 #include "ConnectionManager.hpp"
@@ -200,8 +200,7 @@ void ConnectionManager::_client_read_data(ConnectionInfo &ci, pollfd &pfd, char 
 	auto const &protocol = ci.get_protocol();
 	if (read_data)
 	{
-		std::vector<char> data = read_data.value();
-		protocol->handle(data);
+		protocol->parse_data(read_data.value());
 		if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
 		{
 			protocol->start_cgi(envp);

@@ -17,9 +17,7 @@ class HttpProtocol
 		~HttpProtocol();
 
 		//			Methods
-		void		handle(std::vector<char>& data);
 		void		generate_response();
-		void		parse_file_data(std::vector<char> buffer, Config& config, std::string_view uri);
 		void		build_error_response(int error_code, std::string_view message);
 		void		parse_data(std::vector<char>& data);
 
@@ -35,12 +33,11 @@ class HttpProtocol
 
 		//			Bools
 		bool		is_ready();
-		// TODO Put this in .cpp file
-		bool		is_cgi_running() {return _cgi.is_running();};
+		bool		is_cgi_running();
 
 		//			Getters
 		std::string	get_data();
-		Config	get_config();
+		Config		get_config();
 		int			get_pipe_fd();
 		State		get_state();
 
@@ -50,9 +47,7 @@ class HttpProtocol
 	private:
 		FileUpload				_file;
 		CGI						_cgi;
-		bool					_b_headers_complete; 	// Can be moved to request object
-		bool					_b_body_complete;		// Can be moved to request object
 		State					_state;
-		Config				_config;
+		Config					_config;
 
 };

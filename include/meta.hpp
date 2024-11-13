@@ -1,15 +1,20 @@
 #pragma once
 
 #include "Logger.hpp"
+#include <climits>
 #include <vector>
 
 
 #define POLL_TIMEOUT 100
 #define LISTEN_BACKLOG 8
 
-#define SOCKET_READ_SIZE 1024
+// Chunk sizes
+#define CHUNK_SIZE 			4096
 
-#define PIPE_READ_SIZE 1024
+#define SOCKET_READ_SIZE 	CHUNK_SIZE
+#define UPLOAD_CHUNK_SIZE 	CHUNK_SIZE
+#define FETCH_READ_SIZE 	CHUNK_SIZE
+#define PIPE_READ_SIZE 		PIPE_BUF
 
 
 #define UNUSED(x) (void)(x)
