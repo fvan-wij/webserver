@@ -41,10 +41,11 @@ HEADERS 	:=  Socket.hpp \
 				PostRequestHandler.hpp \
 				DeleteRequestHandler.hpp \
 				RequestHandler.hpp	\
-				HandlerFactory.hpp \
-				Utility.hpp				\
-				Config.hpp				\
-				ConfigParser.hpp		\
+				HandlerFactory.hpp	\
+				Utility.hpp			\
+				Config.hpp			\
+				ConfigParser.hpp	\
+				Action.hpp			\
 
 OBJ_DIR		:=	obj
 

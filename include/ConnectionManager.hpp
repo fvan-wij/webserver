@@ -8,6 +8,7 @@
 #include <utility>
 #include <memory>
 #include <ConnectionInfo.hpp>
+#include <Action.hpp>
 
 /**
  * @brief Enum class to differentiate between different fd types.
@@ -41,7 +42,8 @@ class ConnectionManager {
 		ConnectionManager &operator=(const ConnectionManager &) = default;
 		~ConnectionManager() = default;
 
-		void	add(Config config, Socket);
+		void	add(Config config, Socket socket);
+		void	add(int fd, short events, ActionBase *action);
 		void 	remove(size_t index);
 		void 	remove_pipe(int client_fd);
 
@@ -57,8 +59,10 @@ class ConnectionManager {
 
 	private:
 		std::vector<pollfd>	_pfds;
-		std::vector<FdType>	_fd_types;
+		// std::vector<FdType>	_fd_types;
 		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> _connection_info;
+
+		std::unordered_map<int, std::unordered_map<short, ActionBase *>> _actions;
 
 		void _client_send_response(ConnectionInfo &ci, pollfd &pfd, size_t i);
 		void _client_read_data(ConnectionInfo &ci, pollfd &pfd, char *envp[], size_t i);

@@ -71,6 +71,14 @@ void ConnectionManager::add_client(ConnectionInfo &ci)
 	_connection_info[socket.get_fd()] = std::shared_ptr<ConnectionInfo>(new_ci);
 }
 
+void	ConnectionManager::add(int fd, short events, ActionBase *action)
+{
+	_pfds.push_back({fd, events, 0});
+	// _fd_types.push_back(FdType::CLIENT);
+	_actions[fd][events] = action;
+
+}
+
 /**
  * @brief CGI input pipe is added to the pollfd list.
  * This pipe is linked in the connection info map to the ConnectionInfo object of the client socket.
