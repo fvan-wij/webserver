@@ -12,12 +12,13 @@ class HttpClientHandler {
 		HttpClientHandler &operator=(const HttpClientHandler &) = default;
 		~HttpClientHandler() = default;
 
-		void	handle_request();
+		void	handle_request(short events);
 
 	private:
-		std::string			_request;
-		std::string			_response;
-		std::vector<Config>	_configs;
-		Socket				_socket;
-		ConnectionManager	&_connection_manager;
+		std::optional<std::vector<char>>	_request;
+		std::string					_response;
+		std::vector<Config>			_configs;
+		Socket						_socket;
+		ConnectionManager			&_connection_manager;
+		HttpProtocol				_protocol;
 };

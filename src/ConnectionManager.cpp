@@ -34,6 +34,7 @@ void ConnectionManager::add(int fd, short events, ActionBase *action)
 {
 	_pfds.push_back({fd, events, 0});
 	_actions[fd] = action;
+	_fd_index[fd] = _pfds.size() - 1;
 }
 
 /**
@@ -54,8 +55,8 @@ void ConnectionManager::add(int fd, short events, ActionBase *action)
 void ConnectionManager::add_listener(Config config, uint16_t port)
 {
 	HttpListener *listener = new HttpListener(port, *this);
-
 	listener->add_config(config);
+	LOG_NOTICE("Adding listener socket for " << config.server_name[0] << " on port: " << port);
 }
 
 /**
@@ -109,18 +110,16 @@ void ConnectionManager::add_pipe(int client_fd, int read_pipe)
 // 	_connection_info.erase(fd);
 // }
 
-void ConnectionManager::remove(size_t index)
+void ConnectionManager::remove(int fd)
 {
-	int fd = _pfds[index].fd;
-	// LOG_INFO("Client (fd " << fd << ") disconnected from " << _connection_info[fd]->get_config().server_name[0] << " on port: " << _connection_info[fd]->get_socket().get_port());
+	size_t index = _fd_index[fd];
+	LOG_INFO("Client (fd " << fd << ") disconnected");
 	close(fd);
 	ActionBase *action = _actions[fd];
 	delete action;
 	_actions.erase(fd);
 	_pfds.erase(_pfds.begin() + index);
-	// // _fd_types.erase(_fd_types.begin() + index);
-	// _connection_info.erase(fd);
-
+	_fd_index.erase(fd);
 }
 
 /**
@@ -251,7 +250,7 @@ void ConnectionManager::iterate_fds(char *envp[])
 		if (pfd.revents)
 		{
 			auto action = _actions[pfd.fd];
-			action->execute();
+			action->execute(pfd.revents);
 		}
 		// FdType &type = _fd_types[i];
 		// ConnectionInfo &ci = *_connection_info[pfd.fd].get();

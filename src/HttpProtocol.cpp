@@ -11,7 +11,7 @@ HttpProtocol::HttpProtocol() : _state(State::ParsingHeaders)
 }
 
 
-HttpProtocol::HttpProtocol(Config &config) : _state(State::ParsingHeaders), _config(config)
+HttpProtocol::HttpProtocol(Config config) : _state(State::ParsingHeaders), _config(config)
 
 {
 
@@ -22,7 +22,7 @@ HttpProtocol::~HttpProtocol()
 
 }
 
-HttpProtocol::HttpProtocol(const HttpProtocol &other) : _state(other._state)
+HttpProtocol::HttpProtocol(const HttpProtocol &other) : _state(other._state), _config(other._config)
 {
 
 }
@@ -86,7 +86,7 @@ void		HttpProtocol::generate_response()
 }
 
 /**
- * @brief Starts the CGI which spawns a child process that runs .py scripts. 
+ * @brief Starts the CGI which spawns a child process that runs .py scripts.
  * Can be triggered by both POST and GET requests.
  * Trailing pathnames that follow the scriptname (i.e. '/hello.py/yeet/') should be added to PATH_INFO.
  */
@@ -107,8 +107,8 @@ void	HttpProtocol::start_cgi(char *envp[])
 }
 
 /**
- * @brief 
- * @return the response as a std::string 
+ * @brief
+ * @return the response as a std::string
  */
 std::string	HttpProtocol::get_data()
 {
@@ -145,6 +145,11 @@ int	HttpProtocol::get_pipe_fd()
 State HttpProtocol::get_state()
 {
 	return _state;
+}
+
+void		HttpProtocol::set_config(Config config)
+{
+	_config = config;
 }
 
 /**
@@ -193,7 +198,7 @@ void	HttpProtocol::poll_fetch()
 static bool file_exists(std::string_view file_name)
 {
 	std::ifstream in_file(file_name.data());
-	return in_file.good();  
+	return in_file.good();
 }
 
 /**

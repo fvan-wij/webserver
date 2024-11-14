@@ -11,7 +11,7 @@ class HttpProtocol
 {
 	public:
 		HttpProtocol();
-		HttpProtocol(Config &config);
+		HttpProtocol(Config config);
 		HttpProtocol(const HttpProtocol &);
 		HttpProtocol &operator=(const HttpProtocol &);
 		~HttpProtocol();
@@ -40,6 +40,9 @@ class HttpProtocol
 		Config		get_config();
 		int			get_pipe_fd();
 		State		get_state();
+
+		//			Setters
+		void		set_config(Config config);
 
 		HttpResponse			response;
 		HttpRequest				request;

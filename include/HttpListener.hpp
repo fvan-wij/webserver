@@ -18,7 +18,7 @@ class HttpListener {
 		uint16_t			get_port();
 		Socket				get_socket();
 
-		void				listen_handle();
+		void				listen_handle(short events);
 
 	private:
 		std::vector<Config>	_configs;

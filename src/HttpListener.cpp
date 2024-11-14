@@ -30,20 +30,14 @@ Socket				HttpListener::get_socket()
 	return (_socket);
 }
 
-void				HttpListener::listen_handle()
+void				HttpListener::listen_handle(short events)
 {
+	(void )events;
 	short mask = POLLIN | POLLOUT;
 	Socket socket = _socket.accept();
 
 	HttpClientHandler *client_handler = new HttpClientHandler(_connection_manager, socket, _configs);
 	Action<HttpClientHandler> *action = new Action<HttpClientHandler>(client_handler, &HttpClientHandler::handle_request);
 	_connection_manager.add(socket.get_fd(), mask, action);
-
-
-	// LOG_INFO("Client (fd " << socket.get_fd() << ") connected to: " << config.server_name[0] << " on port: " << socket.get_port());
-
-	// ConnectionInfo *new_ci = new ConnectionInfo(socket, new HttpProtocol(config), config);
-	// _pfds.push_back({socket.get_fd(), mask, 0});
-	// _fd_types.push_back(FdType::CLIENT);
-	// _connection_info[socket.get_fd()] = std::shared_ptr<ConnectionInfo>(new_ci);
+	LOG_INFO("Client (fd " << socket.get_fd() << ") connected to: " << " on port: " << socket.get_port());
 }
