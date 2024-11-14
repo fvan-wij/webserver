@@ -42,18 +42,18 @@ class ConnectionManager {
 		ConnectionManager &operator=(const ConnectionManager &) = default;
 		~ConnectionManager() = default;
 
-		void	add(Config config, Socket socket);
+		// void	add(Config config, Socket socket);
 		void	add(int fd, short events, ActionBase *action);
 		void 	remove(size_t index);
 		void 	remove_pipe(int client_fd);
 
 		void	add_listeners(std::vector<Config> &configs);
 		void	add_listener(Config config, uint16_t port);
-		void	add_client(ConnectionInfo &ci);
+		// void	add_client(ConnectionInfo &ci);
 		void	add_pipe(int client_fd, int read_pipe);
 
 		std::vector<pollfd>&		get_pfds();
-		std::vector<FdType>&		get_fd_types();
+		// std::vector<FdType>&		get_fd_types();
 		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> get_connection_info();
 		void						iterate_fds(char *envp[]);
 
@@ -62,7 +62,7 @@ class ConnectionManager {
 		// std::vector<FdType>	_fd_types;
 		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> _connection_info;
 
-		std::unordered_map<int, std::unordered_map<short, ActionBase *>> _actions;
+		std::unordered_map<int, ActionBase *> _actions;
 
 		void _client_send_response(ConnectionInfo &ci, pollfd &pfd, size_t i);
 		void _client_read_data(ConnectionInfo &ci, pollfd &pfd, char *envp[], size_t i);

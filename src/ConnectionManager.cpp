@@ -2,6 +2,7 @@
 // #include "Server.hpp"
 #include "Socket.hpp"
 #include "ConnectionManager.hpp"
+#include <HttpListener.hpp>
 
 ConnectionManager::ConnectionManager()
 {
@@ -23,6 +24,19 @@ void ConnectionManager::add_listeners(std::vector<Config> &configs)
 }
 
 /**
+ * @brief This function adds a file descriptor to the pollfd list and adds an action coupled to that fd.
+ *
+ * @param fd
+ * @param events
+ * @param action
+ */
+void ConnectionManager::add(int fd, short events, ActionBase *action)
+{
+	_pfds.push_back({fd, events, 0});
+	_actions[fd] = action;
+}
+
+/**
  * @brief adds a listener socket to the pollfd list and adds a type to the fd_types list.
  *
  * The fd_types list is parallel to the pollfd list. It is used to keep track of the types of the pollfd list.
@@ -39,14 +53,9 @@ void ConnectionManager::add_listeners(std::vector<Config> &configs)
  */
 void ConnectionManager::add_listener(Config config, uint16_t port)
 {
-	short mask = POLLIN;
-	Socket listener = {SocketType::LISTENER, port};
-	ConnectionInfo *ci = new ConnectionInfo(listener, new HttpProtocol(config), config);
+	HttpListener *listener = new HttpListener(port, *this);
 
-	_pfds.push_back({listener.get_fd(), mask, 0});
-	_fd_types.push_back(FdType::LISTENER);
-	_connection_info[listener.get_fd()] = std::shared_ptr<ConnectionInfo>(ci);
-	LOG_NOTICE("Adding listener socket for " << config.server_name[0] << " on port: " << port);
+	listener->add_config(config);
 }
 
 /**
@@ -58,26 +67,18 @@ void ConnectionManager::add_listener(Config config, uint16_t port)
  * @param config The config of the server connection.
  * @param socket The socket to add.
  */
-void ConnectionManager::add_client(ConnectionInfo &ci)
-{
-	short mask = POLLIN | POLLOUT;
-	Config config = ci.get_config();
-	Socket socket = ci.get_socket().accept();
-	LOG_INFO("Client (fd " << socket.get_fd() << ") connected to: " << config.server_name[0] << " on port: " << socket.get_port());
+// void ConnectionManager::add_client(ConnectionInfo &ci)
+// {
+// 	short mask = POLLIN | POLLOUT;
+// 	Config config = ci.get_config();
+// 	Socket socket = ci.get_socket().accept();
+// 	LOG_INFO("Client (fd " << socket.get_fd() << ") connected to: " << config.server_name[0] << " on port: " << socket.get_port());
 
-	ConnectionInfo *new_ci = new ConnectionInfo(socket, new HttpProtocol(config), config);
-	_pfds.push_back({socket.get_fd(), mask, 0});
-	_fd_types.push_back(FdType::CLIENT);
-	_connection_info[socket.get_fd()] = std::shared_ptr<ConnectionInfo>(new_ci);
-}
-
-void	ConnectionManager::add(int fd, short events, ActionBase *action)
-{
-	_pfds.push_back({fd, events, 0});
-	// _fd_types.push_back(FdType::CLIENT);
-	_actions[fd][events] = action;
-
-}
+// 	ConnectionInfo *new_ci = new ConnectionInfo(socket, new HttpProtocol(config), config);
+// 	_pfds.push_back({socket.get_fd(), mask, 0});
+// 	// _fd_types.push_back(FdType::CLIENT);
+// 	_connection_info[socket.get_fd()] = std::shared_ptr<ConnectionInfo>(new_ci);
+// }
 
 /**
  * @brief CGI input pipe is added to the pollfd list.
@@ -90,22 +91,36 @@ void ConnectionManager::add_pipe(int client_fd, int read_pipe)
 {
 	short mask = POLLIN;
 	_pfds.push_back({read_pipe, mask, 0});
-	_fd_types.push_back(FdType::PIPE);
+	// _fd_types.push_back(FdType::PIPE);
 	_connection_info[read_pipe] = _connection_info[client_fd];
 	LOG_DEBUG("Adding pipe for client cgi request. client_fd: " << client_fd << ", pipe_fd: " << read_pipe);
 }
 
 /**
  * @brief using an index remove the file descriptor (socket, pollfd, pipe) and connectionInfo.
- */
+//  */
+// void ConnectionManager::remove(size_t index)
+// {
+// 	int fd = _pfds[index].fd;
+// 	LOG_INFO("Client (fd " << fd << ") disconnected from " << _connection_info[fd]->get_config().server_name[0] << " on port: " << _connection_info[fd]->get_socket().get_port());
+// 	close(fd);
+// 	_pfds.erase(_pfds.begin() + index);
+// 	// // _fd_types.erase(_fd_types.begin() + index);
+// 	_connection_info.erase(fd);
+// }
+
 void ConnectionManager::remove(size_t index)
 {
 	int fd = _pfds[index].fd;
-	LOG_INFO("Client (fd " << fd << ") disconnected from " << _connection_info[fd]->get_config().server_name[0] << " on port: " << _connection_info[fd]->get_socket().get_port());
+	// LOG_INFO("Client (fd " << fd << ") disconnected from " << _connection_info[fd]->get_config().server_name[0] << " on port: " << _connection_info[fd]->get_socket().get_port());
 	close(fd);
+	ActionBase *action = _actions[fd];
+	delete action;
+	_actions.erase(fd);
 	_pfds.erase(_pfds.begin() + index);
-	_fd_types.erase(_fd_types.begin() + index);
-	_connection_info.erase(fd);
+	// // _fd_types.erase(_fd_types.begin() + index);
+	// _connection_info.erase(fd);
+
 }
 
 /**
@@ -120,7 +135,7 @@ void ConnectionManager::remove_pipe(int client_fd)
 			int fd = _pfds[i].fd;
 			LOG_DEBUG("Removing pipe_fd: " << fd);
 			_pfds.erase(_pfds.begin() + i);
-			_fd_types.erase(_fd_types.begin() + i);
+			// // _fd_types.erase(_fd_types.begin() + i);
 			_connection_info.erase(fd);
 		}
 	}
@@ -139,10 +154,10 @@ std::vector<pollfd>&	ConnectionManager::get_pfds()
  * @brief
  * @return vector of File descriptor types.
  */
-std::vector<FdType>&	ConnectionManager::get_fd_types()
-{
-	return (_fd_types);
-}
+// std::vector<FdType>&	ConnectionManager::get_fd_types()
+// {
+// 	return (_fd_types);
+// }
 
 /**
  * @brief
@@ -233,34 +248,39 @@ void ConnectionManager::iterate_fds(char *envp[])
 	for (size_t i = 0; i < pfds.size(); i++)
 	{
 		pollfd &pfd = pfds[i];
-		FdType &type = _fd_types[i];
-		ConnectionInfo &ci = *_connection_info[pfd.fd].get();
-		if (type == FdType::LISTENER && pfd.revents & POLLIN)
+		if (pfd.revents)
 		{
-			LOG_INFO("fd: " << pfd.fd << " POLLIN (listener)");
-			add_client(ci);
+			auto action = _actions[pfd.fd];
+			action->execute();
 		}
-		else if (type == FdType::CLIENT && pfd.revents & POLLIN)
-		{
-			_client_read_data(ci, pfd, envp, i);
-		}
-		else if (type == FdType::PIPE && pfd.revents & POLLIN)
-		{
-			LOG_INFO("fd: " << pfd.fd << " POLLIN (pipe)");
-			auto protocol = ci.get_protocol();
-			protocol->poll_cgi();
-		}
-		else if (type == FdType::CLIENT && pfd.revents & POLLOUT)
-		{
-			_client_send_response(ci, pfd, i);
-		}
-		else if (pfd.revents & POLLERR)
-		{
-			LOG_ERROR("POLLERR error occurred with fd: " << pfd.fd << ", type: " << int(type));
-		}
-		else if (pfd.revents & POLLNVAL)
-		{
-			LOG_ERROR("POLLNVAL error occurred with fd: " << pfd.fd << ", type: " << int(type));
-		}
+		// FdType &type = _fd_types[i];
+		// ConnectionInfo &ci = *_connection_info[pfd.fd].get();
+		// if (type == FdType::LISTENER && pfd.revents & POLLIN)
+		// {
+		// 	LOG_INFO("fd: " << pfd.fd << " POLLIN (listener)");
+		// 	add_client(ci);
+		// }
+		// else if (type == FdType::CLIENT && pfd.revents & POLLIN)
+		// {
+		// 	_client_read_data(ci, pfd, envp, i);
+		// }
+		// else if (type == FdType::PIPE && pfd.revents & POLLIN)
+		// {
+		// 	LOG_INFO("fd: " << pfd.fd << " POLLIN (pipe)");
+		// 	auto protocol = ci.get_protocol();
+		// 	protocol->poll_cgi();
+		// }
+		// else if (type == FdType::CLIENT && pfd.revents & POLLOUT)
+		// {
+		// 	_client_send_response(ci, pfd, i);
+		// }
+		// else if (pfd.revents & POLLERR)
+		// {
+		// 	LOG_ERROR("POLLERR error occurred with fd: " << pfd.fd << ", type: " << int(type));
+		// }
+		// else if (pfd.revents & POLLNVAL)
+		// {
+		// 	LOG_ERROR("POLLNVAL error occurred with fd: " << pfd.fd << ", type: " << int(type));
+		// }
 	}
 }

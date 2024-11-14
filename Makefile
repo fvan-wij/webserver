@@ -28,6 +28,8 @@ SRCS		:=	Socket.cpp \
 				Utility.cpp							\
 				ConnectionManager.cpp				\
 				ConnectionInfo.cpp					\
+				HttpClientHandler.cpp				\
+				HttpListener.cpp					\
 
 
 HEADER_DIR	:=	include
@@ -46,6 +48,8 @@ HEADERS 	:=  Socket.hpp \
 				Config.hpp			\
 				ConfigParser.hpp	\
 				Action.hpp			\
+				HttpClientHandler.hpp \
+				HttpListener.hpp	\
 
 OBJ_DIR		:=	obj
 
