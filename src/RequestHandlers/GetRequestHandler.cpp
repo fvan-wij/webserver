@@ -23,8 +23,10 @@ HttpResponse	GetRequestHandler::handle_request(HttpRequest &request, Config &con
 	else if (std::filesystem::is_directory(path))
 	{
 		path /= config.location[request.get_location().data()].index;
-		return generate_successful_response(200, path.string(), ResponseType::Regular); 
-		// return generate_successful_response(200, path.string(), ResponseType::Fetch); // Fetch also works
+		// return generate_successful_response(200, path.string(), ResponseType::Regular); 
+		LOG_DEBUG("Path: " << path.string());
+		request.set_file_path(path.string());
+		return generate_successful_response(200, path.string(), ResponseType::Fetch); // Fetch also works
 	}
 	else
 		return generate_error_response(404, "Not Found - The server cannot find the requested resource", config);

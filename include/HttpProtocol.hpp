@@ -40,15 +40,18 @@ class HttpProtocol
 		Config		get_config();
 		int			get_pipe_fd();
 		State		get_state();
+		File		get_file(){return _file;};
 
 		//			Setters
 		void		set_config(Config config);
+		void		set_state(State state) {_state = state;};
+		void		set_file(File& file) {_file = file;};
 
 		HttpResponse			response;
 		HttpRequest				request;
 
 	private:
-		FileUpload				_file;
+		File					_file;
 		CGI						_cgi;
 		State					_state;
 		Config					_config;

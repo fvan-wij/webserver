@@ -22,8 +22,8 @@ HttpResponse	PostRequestHandler::handle_request(HttpRequest &request, Config &co
 		{
 			return generate_error_response(400, "Bad Request", config);
 		}
-		request.set_file_upload_path(path.string());
-		return generate_successful_response(200, request.get_file_upload().filename, ResponseType::Upload);
+		request.set_file_path(path.string());
+		return generate_successful_response(200, request.get_file().name, ResponseType::Upload);
 	}
 	return generate_error_response(400, "Bad Request", config);
 }

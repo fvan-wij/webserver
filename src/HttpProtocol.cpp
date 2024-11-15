@@ -4,6 +4,9 @@
 #include <cwchar>
 #include <string>
 #include <fstream>
+#include <fcntl.h>
+#include <unistd.h>
+#include <cstring>
 
 HttpProtocol::HttpProtocol() : _state(State::ParsingHeaders)
 {
@@ -74,10 +77,21 @@ void		HttpProtocol::generate_response()
 			_state = State::ProcessingCGI;
 			break;
 		case ResponseType::Upload:
-			_file = request.get_file_upload();
+			// _file = request.get_file_upload();
 			_state = State::UploadingFile;
 			break;
 		case ResponseType::Fetch:
+			LOG_DEBUG("Filename: " << request.get_filename());
+			_file.path = response.get_path();
+			_file.finished = false;
+			_file.fd = ::open(_file.path.c_str(), O_RDONLY);
+			if (_file.fd < 0)
+			{
+				LOG_ERROR("Failed opening file '" << _file.path.c_str() << "' in order to handle the static file request");
+				_file.is_open = false;
+			}
+			else
+				_file.is_open = true;
 			_state = State::FetchingFile;
 			break;
 		default:
@@ -207,7 +221,7 @@ static bool file_exists(std::string_view file_name)
  */
 bool	HttpProtocol::upload_chunk()
 {
-	size_t bytes_left = _file.data.size() - _file.bytes_uploaded;
+	size_t bytes_left = _file.data.size() - _file.streamcount;
 	size_t buffer_size = UPLOAD_CHUNK_SIZE;
 
 	if (bytes_left < UPLOAD_CHUNK_SIZE)
@@ -222,14 +236,14 @@ bool	HttpProtocol::upload_chunk()
 	if (!file_exists(_file.path))
 	{
 		std::ofstream outfile(_file.path, std::ios::binary);
-		outfile.write(&_file.data[_file.bytes_uploaded], buffer_size);
+		outfile.write(&_file.data[_file.streamcount], buffer_size);
 	}
 	else
 	{
 		std::ofstream outfile(_file.path, std::ios::binary | std::ios::app);
-		outfile.write(&_file.data[_file.bytes_uploaded], buffer_size);
+		outfile.write(&_file.data[_file.streamcount], buffer_size);
 	}
-	_file.bytes_uploaded += buffer_size;
+	_file.streamcount += buffer_size;
 	return bytes_left <= 0;
 }
 

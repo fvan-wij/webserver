@@ -1,14 +1,11 @@
 #include "ConnectionManager.hpp"
-#include "ConnectionInfo.hpp"
 #include "Logger.hpp"
 #include "ConfigParser.hpp"
 
 #include <cstring>
-#include <optional>
 #include <string>
 #include <sys/poll.h>
 #include <vector>
-#include <iostream>
 
 void poll_loop(ConnectionManager &cm, char *envp[])
 {
@@ -17,7 +14,7 @@ void poll_loop(ConnectionManager &cm, char *envp[])
 		std::vector<pollfd> &pfds = cm.get_pfds();
 		int n_ready = ::poll(pfds.data(), pfds.size(), POLL_TIMEOUT);
 		if (n_ready > 0)
-			cm.iterate_fds(envp);
+			cm.handle_pfd_events(envp);
 	}
 }
 
