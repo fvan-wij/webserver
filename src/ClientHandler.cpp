@@ -2,7 +2,8 @@
 #include "HandlerFactory.hpp"
 #include <iostream>
 
-ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs) : _configs(configs), _socket(socket), _connection_manager(cm), _state(State::ParsingHeaders)
+ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs) 
+	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders)
 {
 
 }
@@ -27,13 +28,24 @@ void ClientHandler::handle_request(short events)
 		{
 			case State::Ready:
 				// Gather data
-				response.set_body(_file_handler->get_file().data.data());
+				if (_file_handler != nullptr)
+				{
+					std::vector<char>& data = _file_handler->get_file().data;
+					if (not data.empty())
+					{
+						data.push_back('\0');
+						response.set_body(data.data());
+					}
+				}
+				else
+					response.set_body("Yeeting");
 				// Send data
 				_socket.write(response.to_string());
 				LOG_DEBUG("Sending data: " << response.to_string());
 				_connection_manager.remove(_socket.get_fd());
-				if (_file_handler)
+				if (_file_handler != nullptr)
 					_connection_manager.remove(_file_handler->get_fd());
+				_file_handler = nullptr;
 				break;
 			case State::FetchingFile:
 				// Wait on FileHandler

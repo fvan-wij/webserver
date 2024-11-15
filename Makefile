@@ -4,7 +4,7 @@ RUN_CMD		:= ./$(NAME) conf/test.conf
 ifdef DEBUG
 	CFLAGS		:= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
 else
-	CFLAGS		:= -Wall -Wextra -std=c++17 -g -pedantic
+	CFLAGS		:= -Wall -Wextra -std=c++17 -pedantic
 endif
 
 IFLAGS		:=	-Iinclude
