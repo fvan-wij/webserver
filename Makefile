@@ -4,7 +4,7 @@ RUN_CMD		:= ./$(NAME) conf/test.conf
 ifdef DEBUG
 	CFLAGS		:= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
 else
-	CFLAGS		:= -Wall -Wextra -std=c++17 -g -pedantic
+	CFLAGS		:= -Wall -Wextra -std=c++17 -pedantic
 endif
 
 IFLAGS		:=	-Iinclude
@@ -28,8 +28,9 @@ SRCS		:=	Socket.cpp \
 				Utility.cpp							\
 				ConnectionManager.cpp				\
 				ConnectionInfo.cpp					\
-				HttpClientHandler.cpp				\
+				ClientHandler.cpp				\
 				HttpListener.cpp					\
+				FileHandler.cpp						\
 
 
 HEADER_DIR	:=	include
@@ -48,8 +49,9 @@ HEADERS 	:=  Socket.hpp \
 				Config.hpp			\
 				ConfigParser.hpp	\
 				Action.hpp			\
-				HttpClientHandler.hpp \
+				ClientHandler.hpp \
 				HttpListener.hpp	\
+				FileHandler.hpp		\
 
 OBJ_DIR		:=	obj
 

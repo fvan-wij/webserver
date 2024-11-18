@@ -43,6 +43,7 @@
 enum class State {
 	ParsingHeaders,
 	ParsingBody,
+	ProcessingRequest,
 	BuildingResponse,
 	ProcessingCGI,
 	UploadingFile,
@@ -58,4 +59,16 @@ typedef struct FileUpload
 	size_t				bytes_uploaded;
 	bool				finished;
 } FileUpload;
+
+typedef struct File
+{
+	int					fd;
+	std::string			name;
+	std::string			path;
+	std::vector<char> 	data;
+	size_t				streamcount;
+	bool				finished;
+	bool				is_open;
+} File;
+
 

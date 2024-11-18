@@ -3,9 +3,6 @@
 #include <cstdint>
 #include <vector>
 #include <sys/poll.h>
-#include "Socket.hpp"
-#include "HttpProtocol.hpp"
-#include <utility>
 #include <memory>
 #include <ConnectionInfo.hpp>
 #include <Action.hpp>
@@ -42,7 +39,7 @@ class ConnectionManager {
 		ConnectionManager &operator=(const ConnectionManager &) = default;
 		~ConnectionManager() = default;
 
-		void	add(int fd, short events, ActionBase *action);
+		void	add(int fd, short events, ActionBase* action);
 		void 	remove(int fd);
 		void 	remove_pipe(int client_fd);
 
@@ -52,14 +49,14 @@ class ConnectionManager {
 
 		std::vector<pollfd>&		get_pfds();
 		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> get_connection_info();
-		void						iterate_fds(char *envp[]);
+		void 						handle_pfd_events(char *envp[]);
 
 	private:
 		std::vector<pollfd>	_pfds;
 		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> _connection_info;
 
 		std::unordered_map<int, ActionBase *>	_actions;
-		std::unordered_map<int, size_t>			_fd_index;
+		// std::unordered_map<int, size_t>			_fd_index;
 
 		void _client_send_response(ConnectionInfo &ci, pollfd &pfd, size_t i);
 		void _client_read_data(ConnectionInfo &ci, pollfd &pfd, char *envp[], size_t i);

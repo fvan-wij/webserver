@@ -34,7 +34,7 @@ void ConnectionManager::add(int fd, short events, ActionBase *action)
 {
 	_pfds.push_back({fd, events, 0});
 	_actions[fd] = action;
-	_fd_index[fd] = _pfds.size() - 1;
+	// _fd_index[fd] = _pfds.size() - 1;
 }
 
 /**
@@ -112,14 +112,17 @@ void ConnectionManager::add_pipe(int client_fd, int read_pipe)
 
 void ConnectionManager::remove(int fd)
 {
-	size_t index = _fd_index[fd];
+	// size_t index = _fd_index[fd];
+	for (size_t i = 0; i < _pfds.size(); i++)
+	{
+		if (fd == _pfds[i].fd)
+			_pfds.erase(_pfds.begin() + i);
+	}
 	LOG_INFO("Client (fd " << fd << ") disconnected");
 	close(fd);
-	ActionBase *action = _actions[fd];
-	delete action;
 	_actions.erase(fd);
-	_pfds.erase(_pfds.begin() + index);
-	_fd_index.erase(fd);
+	// LOG_DEBUG("index: " << index << ", _pfds.size: " << _pfds.size());
+	// _fd_index.erase(fd);
 }
 
 /**
@@ -241,45 +244,17 @@ void ConnectionManager::_client_read_data(ConnectionInfo &ci, pollfd &pfd, char 
  *
  * @param envp
  */
-void ConnectionManager::iterate_fds(char *envp[])
+void ConnectionManager::handle_pfd_events(char *envp[])
 {
+	(void) envp;
+
 	std::vector<pollfd> &pfds = get_pfds();
 	for (size_t i = 0; i < pfds.size(); i++)
 	{
-		pollfd &pfd = pfds[i];
-		if (pfd.revents)
+		if (pfds[i].revents)
 		{
-			auto action = _actions[pfd.fd];
-			action->execute(pfd.revents);
+			auto action = _actions[pfds[i].fd];
+			action->execute(pfds[i].revents);
 		}
-		// FdType &type = _fd_types[i];
-		// ConnectionInfo &ci = *_connection_info[pfd.fd].get();
-		// if (type == FdType::LISTENER && pfd.revents & POLLIN)
-		// {
-		// 	LOG_INFO("fd: " << pfd.fd << " POLLIN (listener)");
-		// 	add_client(ci);
-		// }
-		// else if (type == FdType::CLIENT && pfd.revents & POLLIN)
-		// {
-		// 	_client_read_data(ci, pfd, envp, i);
-		// }
-		// else if (type == FdType::PIPE && pfd.revents & POLLIN)
-		// {
-		// 	LOG_INFO("fd: " << pfd.fd << " POLLIN (pipe)");
-		// 	auto protocol = ci.get_protocol();
-		// 	protocol->poll_cgi();
-		// }
-		// else if (type == FdType::CLIENT && pfd.revents & POLLOUT)
-		// {
-		// 	_client_send_response(ci, pfd, i);
-		// }
-		// else if (pfd.revents & POLLERR)
-		// {
-		// 	LOG_ERROR("POLLERR error occurred with fd: " << pfd.fd << ", type: " << int(type));
-		// }
-		// else if (pfd.revents & POLLNVAL)
-		// {
-		// 	LOG_ERROR("POLLNVAL error occurred with fd: " << pfd.fd << ", type: " << int(type));
-		// }
 	}
 }

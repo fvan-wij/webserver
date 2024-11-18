@@ -54,10 +54,9 @@ void	HttpRequest::set_type(RequestType type)
 	_type = type;
 }
 
-void HttpRequest::set_file_upload_path(std::string_view root)
+void HttpRequest::set_file_path(std::string_view path)
 {
-	_file.filename.insert(0, "/");
-	_file.path = root.data() + _file.filename;
+	_file.path = path.data();
 }
 
 State	HttpRequest::parse_header(std::vector<char>& buffer)
@@ -73,13 +72,13 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 		if (header_end != std::string::npos)
 		{
 			_header_buffer += data_sv.substr(0, header_end);
-			_extract_header_fields(data_sv);
+			_extract_header_fields(_header_buffer);
 			_b_header_parsed = true;
 			LOG_DEBUG("Iteration #" << x << "_b_header_parsed = true");
 			if (buffer.size() < (SOCKET_READ_SIZE - 1)) // THIS IS A CRUCIAL STEP IN THE SOLUTION, WHLY DOES IT READ BELOW 1024 ON THE FIRST READ CALL WHEN UPLOADING BIG ASS FILE??? WTF?
 			{
 				buffer.clear();
-				return State::BuildingResponse;
+				return State::ProcessingRequest;
 			}
 			else
 				buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
@@ -99,8 +98,8 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 	}
 	else
 	{
-		LOG_DEBUG("Iteration #" << x << "returning State::GeneratingResponse");
-		return State::BuildingResponse;
+		LOG_DEBUG("Iteration #" << x << "returning State::ProcessingRequest");
+		return State::ProcessingRequest;
 	}
 }
 
@@ -112,15 +111,15 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 	//extract filename if not yet extracted -> set file extracted true
 	if (not _b_file_extracted)
 	{
-		_file.filename = _extract_filename(sv_buffer);
-		if (_file.filename.empty())
+		_file.name = _extract_filename(sv_buffer);
+		if (_file.name.empty())
 		{
 			LOG_ERROR("No filename extracted...");
 		}
 		else
 		{
 			_b_file_extracted = true;
-			LOG_NOTICE("Filename extracted: " << _file.filename);
+			LOG_NOTICE("Filename extracted: " << _file.name);
 		}
 	}
 	//extract boundary if not yet extracted -> set boundary extracted true
@@ -160,9 +159,9 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 		{
 			_file.data.assign(body_data_start, body_data_end - 2);
 			_file.finished = false;
-			_file.bytes_uploaded = 0;
+			_file.streamcount = 0;
 			LOG_NOTICE("Ending boundary extracted: " << _boundary_end);
-			return State::BuildingResponse;
+			return State::ProcessingRequest;
 		}
 	}
 	return State::ParsingBody;
@@ -234,11 +233,6 @@ void	HttpRequest::_extract_header_fields(std::string_view data_sv)
 			}
 	}
 	_b_header_parsed = true;
-}
-
-std::filesystem::path HttpRequest::_extract_file_path(std::string_view filename)
-{
-	return std::filesystem::path(std::string(get_uri()) +  "/" +  std::string(filename));
 }
 
 std::string HttpRequest::_extract_filename(std::string_view body_buffer)
