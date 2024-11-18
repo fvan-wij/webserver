@@ -62,14 +62,13 @@ Socket Socket::accept()
 
 std::optional<std::vector<char>> Socket::read()
 {
-	// std::vector<char> buffer(SOCKET_READ_SIZE);
 	char buffer[SOCKET_READ_SIZE];
 
 	bzero(&buffer, sizeof(buffer));
 	int n;
 	if ((n = recv(_fd, buffer, SOCKET_READ_SIZE - 1, 0)) == -1)
 	{
-		LOG_DEBUG("n of bytes received" << n);
+		LOG_DEBUG("n of bytes received " << n);
 		UNIMPLEMENTED("recv failed");
 	}
 	else if (n == 0)
