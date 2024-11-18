@@ -15,16 +15,17 @@ HttpResponse	GetRequestHandler::handle_request(HttpRequest &request, Config &con
 	std::filesystem::path path = build_path(config.root, request.get_uri(), std::nullopt);
 	if (std::filesystem::is_regular_file(path))
 	{
+		request.set_file_path(path.string());
 		if (path.extension().string() == ".py")
 			return generate_successful_response(200, path.string(), ResponseType::CGI);
 		else
+		{
 			return generate_successful_response(200, path.string(), ResponseType::Fetch);
+		}
 	}
 	else if (std::filesystem::is_directory(path))
 	{
 		path /= config.location[request.get_location().data()].index;
-		// return generate_successful_response(200, path.string(), ResponseType::Regular); 
-		LOG_DEBUG("Path: " << path.string());
 		request.set_file_path(path.string());
 		return generate_successful_response(200, path.string(), ResponseType::Fetch); // Fetch also works
 	}

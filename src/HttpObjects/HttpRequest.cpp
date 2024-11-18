@@ -54,10 +54,9 @@ void	HttpRequest::set_type(RequestType type)
 	_type = type;
 }
 
-void HttpRequest::set_file_path(std::string_view root)
+void HttpRequest::set_file_path(std::string_view path)
 {
-	_file.name.insert(0, "/");
-	_file.path = root.data() + _file.name;
+	_file.path = path.data();
 }
 
 State	HttpRequest::parse_header(std::vector<char>& buffer)
@@ -234,11 +233,6 @@ void	HttpRequest::_extract_header_fields(std::string_view data_sv)
 			}
 	}
 	_b_header_parsed = true;
-}
-
-std::filesystem::path HttpRequest::_extract_file_path(std::string_view filename)
-{
-	return std::filesystem::path(std::string(get_uri()) +  "/" +  std::string(filename));
 }
 
 std::string HttpRequest::_extract_filename(std::string_view body_buffer)

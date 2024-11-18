@@ -34,7 +34,7 @@ void ConnectionManager::add(int fd, short events, ActionBase *action)
 {
 	_pfds.push_back({fd, events, 0});
 	_actions[fd] = action;
-	_fd_index[fd] = _pfds.size() - 1;
+	// _fd_index[fd] = _pfds.size() - 1;
 }
 
 /**
@@ -112,12 +112,17 @@ void ConnectionManager::add_pipe(int client_fd, int read_pipe)
 
 void ConnectionManager::remove(int fd)
 {
-	size_t index = _fd_index[fd];
+	// size_t index = _fd_index[fd];
+	for (size_t i = 0; i < _pfds.size(); i++)
+	{
+		if (fd == _pfds[i].fd)
+			_pfds.erase(_pfds.begin() + i);
+	}
 	LOG_INFO("Client (fd " << fd << ") disconnected");
 	close(fd);
 	_actions.erase(fd);
-	_pfds.erase(_pfds.begin() + index);
-	_fd_index.erase(fd);
+	// LOG_DEBUG("index: " << index << ", _pfds.size: " << _pfds.size());
+	// _fd_index.erase(fd);
 }
 
 /**
@@ -244,12 +249,12 @@ void ConnectionManager::handle_pfd_events(char *envp[])
 	(void) envp;
 
 	std::vector<pollfd> &pfds = get_pfds();
-	for (auto& pfd : pfds)
+	for (size_t i = 0; i < pfds.size(); i++)
 	{
-		if (pfd.revents)
+		if (pfds[i].revents)
 		{
-			auto action = _actions[pfd.fd];
-			action->execute(pfd.revents);
+			auto action = _actions[pfds[i].fd];
+			action->execute(pfds[i].revents);
 		}
 	}
 }

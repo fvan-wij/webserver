@@ -103,7 +103,6 @@ class HttpRequest
 		void											_extract_request_line(std::istringstream 	&stream);
 		void											_extract_header_fields(std::string_view data_sv);
 		std::string										_extract_boundary(std::string_view content_type);
-		std::filesystem::path							_extract_file_path(std::string_view filename);
 		std::string 									_extract_filename(std::string_view body_buffer);
 
 };

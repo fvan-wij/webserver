@@ -7,9 +7,6 @@ class ClientHandler;
 
 FileHandler::FileHandler(File& file) : _file(file)
 {
-	LOG_DEBUG("Pop back b4" << _file.path);
-	_file.path.pop_back();
-	LOG_DEBUG("Pop back after" << _file.path);
 	open_file();
 }
 

@@ -38,7 +38,8 @@ void ClientHandler::handle_request(short events)
 					}
 				}
 				else
-					response.set_body("Yeeting");
+					response.set_body("Test body");
+
 				// Send data
 				_socket.write(response.to_string());
 				LOG_DEBUG("Sending data: " << response.to_string());
@@ -47,6 +48,13 @@ void ClientHandler::handle_request(short events)
 					_connection_manager.remove(_file_handler->get_fd());
 				_file_handler = nullptr;
 				break;
+				
+
+
+
+
+
+
 			case State::FetchingFile:
 				// Wait on FileHandler
 				LOG_DEBUG("Waiting on FileHandler...");
@@ -62,7 +70,7 @@ void ClientHandler::handle_request(short events)
 					{
 						LOG_DEBUG("Creating FileHandler with file " << request.get_file().path);
 						_file_handler = new FileHandler(request.get_file());
-						_file_handler->open_file();
+						// _file_handler->open_file();
 						short mask = POLLIN | POLLOUT;
 						Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
 						_connection_manager.add(_file_handler->get_fd(), mask, file_action);
