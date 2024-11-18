@@ -71,7 +71,6 @@ bool CGI::poll()
 		UNIMPLEMENTED("waitpid failed" << strerror(errno));
 	}
 
-	// NOTE maybe we can just straight up attach the pipe from the CGI to the client's socket_fd.
 	if (WIFEXITED(status))
 	{
 		LOG_DEBUG("CGI exited with code: " << WEXITSTATUS(status));
@@ -85,7 +84,7 @@ bool CGI::poll()
 		_is_running = false;
 		return true;
 	}
-	return false;	
+	return false;
 }
 
 
