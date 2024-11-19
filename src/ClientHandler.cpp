@@ -7,9 +7,9 @@
  * Acts as as finite-state machine based on its state (uploading, fetching, processingCGI).
  * Triggers timeouts when the timeout time is exceeded
  *
- * @param cm
- * @param socket
- * @param configs
+ * @param cm: ConnectionManager object
+ * @param socket: Socket object
+ * @param configs: vector of configs
  */
 ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs) 
 	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders)
@@ -20,7 +20,7 @@ ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<C
 /**
  * @brief handles incoming data (POLLIN) and/or outgoing data (POLLOUT) based on the set 'events'
  *
- * @param events
+ * @param events: POLLIN and/or POLLOUT
  */
 void ClientHandler::handle_request(short events)
 {
@@ -80,7 +80,7 @@ void	ClientHandler::_handle_outgoing_data()
  * With each parsing call, the data is being moved to the request object
  * and repeated until the incoming data buffer is empty.
  *
- * @param data
+ * @param data: vector<char> read from client
  */
 void	ClientHandler::_parse(std::vector<char>& data)
 {
@@ -107,9 +107,9 @@ void	ClientHandler::_parse(std::vector<char>& data)
 }
 
 /**
- * @brief Sends a response based on the given type (Fetch, Upload, Delete, CGI)
+ * @brief Sends a response based on the given type 
  *
- * @param type
+ * @param type: ResponseType::(Fetch, Upload, Delete, CGI)
  */
 bool	ClientHandler::_send_response(ResponseType type)
 {
@@ -160,8 +160,11 @@ void	ClientHandler::_process_request()
 	}
 }
 
-// To do: this function should either add a 'fetch' filehandler or a 'upload'file handler.
+// To do: this function should either add a 'fetch' filehandler or a 'upload' file handler.
 // This impacts POLLIN | POLLOUT
+/**
+ * @brief Creates a file_handler, which is responsible for reading/writing from/to files
+ */
 void	ClientHandler::_add_file_handler()
 {
 	LOG_DEBUG("Creating FileHandler with file " << request.get_file().path);

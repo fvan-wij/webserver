@@ -34,7 +34,6 @@ void ConnectionManager::add(int fd, short events, ActionBase *action)
 {
 	_pfds.push_back({fd, events, 0});
 	_actions[fd] = action;
-	// _fd_index[fd] = _pfds.size() - 1;
 }
 
 /**
