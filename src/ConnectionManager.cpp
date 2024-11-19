@@ -34,7 +34,6 @@ void ConnectionManager::add(int fd, short events, ActionBase *action)
 {
 	_pfds.push_back({fd, events, 0});
 	_actions[fd] = action;
-	// _fd_index[fd] = _pfds.size() - 1;
 }
 
 /**
@@ -112,17 +111,14 @@ void ConnectionManager::add_pipe(int client_fd, int read_pipe)
 
 void ConnectionManager::remove(int fd)
 {
-	// size_t index = _fd_index[fd];
 	for (size_t i = 0; i < _pfds.size(); i++)
 	{
 		if (fd == _pfds[i].fd)
 			_pfds.erase(_pfds.begin() + i);
 	}
-	LOG_INFO("Client (fd " << fd << ") disconnected");
 	close(fd);
 	_actions.erase(fd);
-	// LOG_DEBUG("index: " << index << ", _pfds.size: " << _pfds.size());
-	// _fd_index.erase(fd);
+	LOG_INFO("Client (fd " << fd << ") disconnected");
 }
 
 /**

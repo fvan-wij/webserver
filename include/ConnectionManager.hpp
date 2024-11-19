@@ -56,7 +56,6 @@ class ConnectionManager {
 		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> _connection_info;
 
 		std::unordered_map<int, ActionBase *>	_actions;
-		// std::unordered_map<int, size_t>			_fd_index;
 
 		void _client_send_response(ConnectionInfo &ci, pollfd &pfd, size_t i);
 		void _client_read_data(ConnectionInfo &ci, pollfd &pfd, char *envp[], size_t i);

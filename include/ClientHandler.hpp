@@ -5,17 +5,17 @@
 #include <Socket.hpp>
 #include <ConnectionManager.hpp>
 #include <FileHandler.hpp>
+#include <Timer.hpp>
 
 class ClientHandler {
 	public:
-		ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config> &configs);
+		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs);
 		ClientHandler(const ClientHandler &) = default;
 		ClientHandler &operator=(const ClientHandler &) = default;
 		~ClientHandler() = default;
 
 								// Methods
 		void					handle_request(short events);
-		void					parse(std::vector<char>& data);
 
 								// Getters
 		std::vector<Config>&	get_configs(){return _configs;};
@@ -32,4 +32,15 @@ class ClientHandler {
 		ConnectionManager					&_connection_manager;
 		FileHandler					 		*_file_handler;
 		State								_state;
+		Timer								_timer;
+
+		bool					_handle_incoming_data();
+		void					_handle_outgoing_data();
+		void					_parse(std::vector<char>& data);
+		bool					_send_response(ResponseType type);
+		void 					_poll_file_handler();
+		void					_process_request();
+		void					_add_file_handler();
+		bool					_is_timeout();
+		void					_close_connection();
 };
