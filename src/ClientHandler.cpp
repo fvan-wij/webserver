@@ -24,7 +24,12 @@ ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<C
  */
 void ClientHandler::handle_request(short events)
 {
-	if (events & POLLIN)
+	if (_is_timeout())
+	{
+		LOG_ERROR("Client on fd " << _socket.get_fd() << " timed out");
+		_close_connection();
+	}
+	else if (events & POLLIN)
 	{
 		_handle_incoming_data();
 	}
@@ -121,8 +126,8 @@ bool	ClientHandler::_send_response(ResponseType type)
 			data.push_back('\0');
 			response.set_body(data.data());
 			_socket.write(response.to_string());
-			_connection_manager.remove(_socket.get_fd());
-			_connection_manager.remove(_file_handler->get_fd());
+			LOG_NOTICE("Response sent to fd=" << _socket.get_fd());
+			_close_connection();
 			return true;
 		}
 		else
@@ -136,7 +141,7 @@ bool	ClientHandler::_send_response(ResponseType type)
  */
 void ClientHandler::_poll_file_handler()
 {
-	LOG_DEBUG("Waiting on FileHandler...");
+	LOG_NOTICE("Waiting on FileHandler...");
 
 	if (_file_handler->is_finished())
 	{
@@ -150,7 +155,7 @@ void ClientHandler::_poll_file_handler()
  */
 void	ClientHandler::_process_request()
 {
-	LOG_DEBUG("Processing request...");
+	LOG_NOTICE("Processing request...");
 
 	auto handler 	= HandlerFactory::create_handler(request.get_type());
 	response 		= handler->handle_request(request, _configs[0]);
@@ -167,10 +172,28 @@ void	ClientHandler::_process_request()
  */
 void	ClientHandler::_add_file_handler()
 {
-	LOG_DEBUG("Creating FileHandler with file " << request.get_file().path);
+	LOG_NOTICE("Creating FileHandler with file " << request.get_file().path);
 
 	_file_handler = new FileHandler(request.get_file());
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
 	_connection_manager.add(_file_handler->get_fd(), POLLIN | POLLOUT, file_action);
 	_state = State::FetchingFile;
+}
+
+/**
+ * @brief Returns true if elapsed time is bigger than TIME_OUT
+ */
+bool	ClientHandler::_is_timeout()
+{
+	return _timer.elapsed_time().count() > TIME_OUT;
+}
+
+/**
+ * @brief Removes and closes the client and/or filehandler connection
+ */
+void	ClientHandler::_close_connection()
+{
+	if (_file_handler != nullptr)
+		_connection_manager.remove(_file_handler->get_fd());
+	_connection_manager.remove(_socket.get_fd());
 }

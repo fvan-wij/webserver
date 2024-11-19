@@ -31,6 +31,7 @@ SRCS		:=	Socket.cpp \
 				ClientHandler.cpp				\
 				HttpListener.cpp					\
 				FileHandler.cpp						\
+				Timer.cpp							\
 
 
 HEADER_DIR	:=	include
@@ -52,6 +53,7 @@ HEADERS 	:=  Socket.hpp \
 				ClientHandler.hpp \
 				HttpListener.hpp	\
 				FileHandler.hpp		\
+				Timer.hpp			\
 
 OBJ_DIR		:=	obj
 

@@ -5,6 +5,7 @@
 #include <Socket.hpp>
 #include <ConnectionManager.hpp>
 #include <FileHandler.hpp>
+#include <Timer.hpp>
 
 class ClientHandler {
 	public:
@@ -31,6 +32,7 @@ class ClientHandler {
 		ConnectionManager					&_connection_manager;
 		FileHandler					 		*_file_handler;
 		State								_state;
+		Timer								_timer;
 
 		bool					_handle_incoming_data();
 		void					_handle_outgoing_data();
@@ -39,4 +41,6 @@ class ClientHandler {
 		void 					_poll_file_handler();
 		void					_process_request();
 		void					_add_file_handler();
+		bool					_is_timeout();
+		void					_close_connection();
 };
