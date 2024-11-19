@@ -11,7 +11,7 @@
  * @param socket
  * @param configs
  */
-ClientHandler::ClientHandler(ConnectionManager &cm, Socket& socket, std::vector<Config>& configs) 
+ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs) 
 	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders)
 {
 
@@ -137,8 +137,11 @@ bool	ClientHandler::_send_response(ResponseType type)
 void ClientHandler::_poll_file_handler()
 {
 	LOG_DEBUG("Waiting on FileHandler...");
+
 	if (_file_handler->is_finished())
+	{
 		_state = State::Ready;
+	}
 }
 
 /**
@@ -148,15 +151,23 @@ void ClientHandler::_poll_file_handler()
 void	ClientHandler::_process_request()
 {
 	LOG_DEBUG("Processing request...");
+
 	auto handler 	= HandlerFactory::create_handler(request.get_type());
 	response 		= handler->handle_request(request, _configs[0]);
 	if (response.get_type() == ResponseType::Fetch)
 	{
-		LOG_DEBUG("Creating FileHandler with file " << request.get_file().path);
-		_file_handler = new FileHandler(request.get_file());
-		short mask = POLLOUT;
-		Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
-		_connection_manager.add(_file_handler->get_fd(), mask, file_action);
-		_state = State::FetchingFile;
+		_add_file_handler();
 	}
+}
+
+// To do: this function should either add a 'fetch' filehandler or a 'upload'file handler.
+// This impacts POLLIN | POLLOUT
+void	ClientHandler::_add_file_handler()
+{
+	LOG_DEBUG("Creating FileHandler with file " << request.get_file().path);
+
+	_file_handler = new FileHandler(request.get_file());
+	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
+	_connection_manager.add(_file_handler->get_fd(), POLLIN | POLLOUT, file_action);
+	_state = State::FetchingFile;
 }

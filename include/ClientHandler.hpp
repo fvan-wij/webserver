@@ -8,7 +8,7 @@
 
 class ClientHandler {
 	public:
-		ClientHandler(ConnectionManager& cm, Socket& socket, std::vector<Config>& configs);
+		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs);
 		ClientHandler(const ClientHandler &) = default;
 		ClientHandler &operator=(const ClientHandler &) = default;
 		~ClientHandler() = default;
@@ -27,7 +27,7 @@ class ClientHandler {
 	private:
 		std::string							_response_data;
 		std::vector<Config>					_configs;
-		Socket								&_socket;
+		Socket								_socket;
 		ConnectionManager					&_connection_manager;
 		FileHandler					 		*_file_handler;
 		State								_state;
@@ -38,4 +38,5 @@ class ClientHandler {
 		bool					_send_response(ResponseType type);
 		void 					_poll_file_handler();
 		void					_process_request();
+		void					_add_file_handler();
 };
