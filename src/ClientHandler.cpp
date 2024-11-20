@@ -170,14 +170,8 @@ void	ClientHandler::_process_request()
 	{
 		_add_file_handler(type);
 	}
-	if (type == ResponseType::Autoindex)
-	{
+	else
 		_state = State::Ready;
-	}
-	if (type == ResponseType::Error)
-	{
-		_state = State::Ready;
-	}
 }
 
 /**
