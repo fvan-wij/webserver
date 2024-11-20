@@ -62,43 +62,33 @@ void HttpRequest::set_file_path(std::string_view path)
 State	HttpRequest::parse_header(std::vector<char>& buffer)
 {
 	std::string_view data_sv(buffer.data(), buffer.size());
-	static int x;
 
-	x++;
-	LOG_DEBUG("Incoming datachunk on iteration " << x << " = " << buffer.size());
 	if (not _b_header_parsed)
 	{
-		size_t	header_end = data_sv.find("\r\n\r\n", 0); //0 can be removed, right. Right???
+		size_t	header_end = data_sv.find("\r\n\r\n"); //0 can be removed, right. Right???
 		if (header_end != std::string::npos)
 		{
 			_header_buffer += data_sv.substr(0, header_end);
 			_extract_header_fields(_header_buffer);
 			_b_header_parsed = true;
-			LOG_DEBUG("Iteration #" << x << "_b_header_parsed = true");
-			if (buffer.size() < (SOCKET_READ_SIZE - 1)) // THIS IS A CRUCIAL STEP IN THE SOLUTION, WHLY DOES IT READ BELOW 1024 ON THE FIRST READ CALL WHEN UPLOADING BIG ASS FILE??? WTF?
-			{
-				buffer.clear();
-				return State::ProcessingRequest;
-			}
-			else
-				buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
+			buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
 		}
 		else
 		{
 			_header_buffer.append(buffer.data(), buffer.size());
 			buffer.clear();
-			LOG_DEBUG("Iteration #" << x << "returning State::ReadingHeaders");
 			return State::ParsingHeaders;
 		}
 	}
 	if (not buffer.empty() && _b_header_parsed)
 	{
-		LOG_DEBUG("Iteration #" << x << "returning State::ReadingBody");
 		return State::ParsingBody;
 	}
 	else
 	{
-		LOG_DEBUG("Iteration #" << x << "returning State::ProcessingRequest");
+		std::string_view len = get_value("Content-Length").value_or("0");
+		if (Utility::svtoi(len) != 0 && not _b_body_parsed)
+			return State::ParsingBody;
 		return State::ProcessingRequest;
 	}
 }
@@ -108,6 +98,7 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
+
 	//extract filename if not yet extracted -> set file extracted true
 	if (not _b_file_extracted)
 	{
@@ -122,6 +113,7 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 			LOG_NOTICE("Filename extracted: " << _file.name);
 		}
 	}
+
 	//extract boundary if not yet extracted -> set boundary extracted true
 	if (not _b_boundary_extracted)
 	{
@@ -137,8 +129,9 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 			_b_boundary_extracted = true;
 		}
 	}
+
 	//extract filedata if boundary is extracted
-		//finish if end boundary found -> return State::GeneratingResponse
+	//finish if end boundary found -> return State::GeneratingResponse
 	if (_b_boundary_extracted)
 	{
 		size_t crln_pos = sv_buffer.find("\r\n\r\n");

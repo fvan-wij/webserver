@@ -72,6 +72,9 @@ void	ClientHandler::_handle_outgoing_data()
 		case State::FetchingFile:
 			_poll_file_handler();
 			break;
+		case State::UploadingFile:
+			_poll_file_handler();
+			break;
 		case State::ProcessingRequest:
 			_process_request();
 			break;
@@ -116,7 +119,7 @@ void	ClientHandler::_parse(std::vector<char>& data)
  *
  * @param type: ResponseType::(Fetch, Upload, Delete, CGI)
  */
-bool	ClientHandler::_send_response(ResponseType type)
+void	ClientHandler::_send_response(ResponseType type)
 {
 	if (type == ResponseType::Fetch)
 	{
@@ -128,17 +131,14 @@ bool	ClientHandler::_send_response(ResponseType type)
 			_socket.write(response.to_string());
 			LOG_NOTICE("Response sent to fd=" << _socket.get_fd());
 			_close_connection();
-			return true;
 		}
 	}
-	if (type == ResponseType::Autoindex)
+	else
 	{
 		_socket.write(response.to_string());
 		LOG_NOTICE("Response sent to fd=" << _socket.get_fd());
 		_close_connection();
-		return true;
 	}
-	return false;
 }
 
 /**
@@ -162,31 +162,46 @@ void	ClientHandler::_process_request()
 {
 	LOG_NOTICE("Processing request...");
 
-	auto handler 	= HandlerFactory::create_handler(request.get_type());
-	response 		= handler->handle_request(request, _configs[0]);
-	if (response.get_type() == ResponseType::Fetch)
+	auto handler 		= HandlerFactory::create_handler(request.get_type());
+	response 			= handler->handle_request(request, _configs[0]);
+	ResponseType type 	= response.get_type();
+
+	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
-		_add_file_handler();
+		_add_file_handler(type);
 	}
-	if (response.get_type() == ResponseType::Autoindex)
+	if (type == ResponseType::Autoindex)
+	{
+		_state = State::Ready;
+	}
+	if (type == ResponseType::Error)
 	{
 		_state = State::Ready;
 	}
 }
 
-// To do: this function should either add a 'fetch' filehandler or a 'upload' file handler.
-// This impacts POLLIN | POLLOUT
 /**
  * @brief Creates a file_handler, which is responsible for reading/writing from/to files
  */
-void	ClientHandler::_add_file_handler()
+void	ClientHandler::_add_file_handler(ResponseType type)
 {
-	LOG_NOTICE("Creating FileHandler with file " << request.get_file().path);
+	short mask = POLLIN | POLLOUT;
 
-	_file_handler = new FileHandler(request.get_file());
+	if (type == ResponseType::Fetch)
+	{
+		mask = POLLIN;
+		_state = State::FetchingFile;
+		LOG_NOTICE("Creating FileHandler with file " << request.get_file().path);
+	}
+	else if (type == ResponseType::Upload)
+	{
+		mask = POLLOUT;
+		_state = State::UploadingFile;
+		LOG_NOTICE("Creating FileHandler with file " << request.get_file().path << "/" << request.get_file().name);
+	}
+	_file_handler = new FileHandler(request.get_file(), type);
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
-	_connection_manager.add(_file_handler->get_fd(), POLLIN | POLLOUT, file_action);
-	_state = State::FetchingFile;
+	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }
 
 /**

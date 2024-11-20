@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstring>
+#include <Utility.hpp>
 
 HttpProtocol::HttpProtocol() : _state(State::ParsingHeaders)
 {
@@ -209,12 +210,6 @@ void	HttpProtocol::poll_fetch()
 	response.set_state(fetch_file(response.get_path()));
 }
 
-static bool file_exists(std::string_view file_name)
-{
-	std::ifstream in_file(file_name.data());
-	return in_file.good();
-}
-
 /**
  * @brief Writes UPLOAD_CHUNK_SIZE bytes of data to location '_file.path' on the server.
  * @return true if finished.
@@ -233,7 +228,7 @@ bool	HttpProtocol::upload_chunk()
 		_file.finished = true;
 		return true;
 	}
-	if (!file_exists(_file.path))
+	if (Utility::file_exists(_file.path))
 	{
 		std::ofstream outfile(_file.path, std::ios::binary);
 		outfile.write(&_file.data[_file.streamcount], buffer_size);

@@ -16,10 +16,10 @@ class RequestHandler {
 		bool 								content_length_exceeded(const HttpRequest &request, Config &config);
 		bool								is_multipart_content(const HttpRequest &request);
 
-		std::string 				generate_error_body(int error_code, std::string_view message, Config &config);
-		std::optional<std::string>	retrieve_error_path(int error_code, Config &config);
-		HttpResponse			generate_error_response(int error_code, std::string_view message, Config &config);
-		HttpResponse			generate_successful_response(int status_code, std::string_view path, ResponseType type);
+		std::string 						generate_error_body(int error_code, std::string_view message, Config &config);
+		std::optional<std::string>			retrieve_error_path(int error_code, Config &config);
+		HttpResponse						generate_error_response(int error_code, std::string_view message, Config &config);
+		HttpResponse						generate_successful_response(int status_code, std::string_view path, ResponseType type);
 
 		std::optional<std::string> 			retrieve_index_html(std::string_view path);
 		std::string							get_path(std::string_view root, std::string_view uri);
