@@ -130,8 +130,13 @@ bool	ClientHandler::_send_response(ResponseType type)
 			_close_connection();
 			return true;
 		}
-		else
-			return false;
+	}
+	if (type == ResponseType::Autoindex)
+	{
+		_socket.write(response.to_string());
+		LOG_NOTICE("Response sent to fd=" << _socket.get_fd());
+		_close_connection();
+		return true;
 	}
 	return false;
 }
@@ -162,6 +167,10 @@ void	ClientHandler::_process_request()
 	if (response.get_type() == ResponseType::Fetch)
 	{
 		_add_file_handler();
+	}
+	if (response.get_type() == ResponseType::Autoindex)
+	{
+		_state = State::Ready;
 	}
 }
 
