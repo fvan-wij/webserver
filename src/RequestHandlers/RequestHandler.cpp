@@ -181,39 +181,14 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	response.set_type(type);
 	switch (type)
 	{
-		case ResponseType::Regular:
-			{
-				response.set_state(READY);
-				LOG_DEBUG(path);
-				std::optional<std::string> html = retrieve_index_html(path);
-				bool autoindexing = true;
-				if (html)
-				{
-					response.set_body("\r\n" + html.value() + "\r\n");
-				}
-				else if (autoindexing) // Temp flag, but should be retrieved from config
-				{
-					if (path.rfind(".html") != std::string::npos) // Strips off index.html path if cannot be retrieved
-					{
-						LOG_DEBUG("path .html found, path is: " << path);
-						path = path.substr(0, path.find_last_of("/"));
-						LOG_DEBUG("path substr is: " << path);
-					}
-					std::string directory_list = generate_directory_listing(path);
-					response.set_body("\r\n" + directory_list + "\r\n");
-				}
-			}
-			break;
 		case ResponseType::Fetch:
 			{
-				response.set_state(NOT_READY);
 				response.set_streamcount(0);
 				response.set_path(path.data());
 			}
 			break;
 		case ResponseType::Upload:
 			{
-				response.set_state(NOT_READY);
 				response.set_body("\r\n<h1>File "+ std::string(path.data()) + " uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
 			}
 			break;
@@ -225,7 +200,6 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 			break;
 		case ResponseType::CGI:
 			{
-				response.set_state(NOT_READY);
 				response.set_body("\r\n<h1>CGI data</h1>\r\n");
 				response.set_path(path.data());
 			}
@@ -237,6 +211,12 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 				response.set_body("\r\n<h1>ERROR</h1>\r\n");
 			}
 			break;
+		case ResponseType::Autoindex:
+			{
+				std::string directory_list = generate_directory_listing(path);
+				response.set_body("\r\n" + directory_list + "\r\n");
+				response.set_state(READY);
+			}
 		default:
 			break;
 	}

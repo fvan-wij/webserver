@@ -25,9 +25,14 @@ HttpResponse	GetRequestHandler::handle_request(HttpRequest &request, Config &con
 	}
 	else if (std::filesystem::is_directory(path))
 	{
-		path /= config.location[request.get_location().data()].index;
+
+		std::string index = config.location[request.get_location().data()].index;
+		path /= index;
 		request.set_file_path(path.string());
-		return generate_successful_response(200, path.string(), ResponseType::Fetch); // Fetch also works
+		if (not index.empty() && std::filesystem::exists(path))
+			return generate_successful_response(200, path.string(), ResponseType::Fetch);
+		else
+			return generate_successful_response(200, path.string(), ResponseType::Autoindex);
 	}
 	else
 		return generate_error_response(404, "Not Found - The server cannot find the requested resource", config);

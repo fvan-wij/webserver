@@ -9,12 +9,13 @@ enum {
 
 enum class ResponseType:int {
 	Regular = 0,
-	Upload = 1,
-	Delete = 2,
-	CGI = 3,
-	Fetch = 4,
-	Error = 5,
-	Unknown = 6,
+	Upload,
+	Delete,
+	CGI,
+	Fetch,
+	Error,
+	Autoindex,
+	Unknown,
 };
 
 class HttpResponse 
@@ -36,9 +37,9 @@ class HttpResponse
 
 		ResponseType	get_type(){return _type;};
 		int				get_status_code() const {return _status_code;};
+		size_t			get_streamcount() const {return _streamcount;};
 		std::string		get_status_mssg() const {return _status_message;};
 		std::string		get_path() const {return _path;};
-		size_t			get_streamcount() const {return _streamcount;};
 		std::string		get_body() const {return _body;};
 
 		std::string		to_string() const;
