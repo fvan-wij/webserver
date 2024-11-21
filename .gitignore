@@ -4,5 +4,4 @@ compile_commands.json
 app
 obj/
 *__pycache__*
-uploads/
 .vscode/*

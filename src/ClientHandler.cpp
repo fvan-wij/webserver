@@ -121,7 +121,7 @@ void	ClientHandler::_parse(std::vector<char>& data)
  */
 void	ClientHandler::_send_response(ResponseType type)
 {
-	if (type == ResponseType::Fetch)
+	if (type == ResponseType::Fetch || type == ResponseType::Error)
 	{
 		std::vector<char>& data = _file_handler->get_file().data;
 		if (not data.empty())
@@ -150,6 +150,7 @@ void ClientHandler::_poll_file_handler()
 
 	if (_file_handler->is_finished())
 	{
+		LOG_NOTICE("FileHandler is finished");
 		_state = State::Ready;
 	}
 }
@@ -170,6 +171,13 @@ void	ClientHandler::_process_request()
 	{
 		_add_file_handler(type);
 	}
+	else if (type == ResponseType::Error)
+	{
+		if (not request.get_file().path.empty())
+			_add_file_handler(type);
+		else
+			_state = State::Ready;
+	}
 	else
 		_state = State::Ready;
 }
@@ -179,21 +187,26 @@ void	ClientHandler::_process_request()
  */
 void	ClientHandler::_add_file_handler(ResponseType type)
 {
-	short mask = POLLIN | POLLOUT;
+	short mask = 0;
 
-	if (type == ResponseType::Fetch)
+	if (type == ResponseType::Fetch || type == ResponseType::Error)
 	{
 		mask = POLLIN;
 		_state = State::FetchingFile;
-		LOG_NOTICE("Creating FileHandler with file " << request.get_file().path);
+		LOG_NOTICE("Creating Fetch FileHandler with file " << request.get_file().path);
 	}
 	else if (type == ResponseType::Upload)
 	{
 		mask = POLLOUT;
 		_state = State::UploadingFile;
-		LOG_NOTICE("Creating FileHandler with file " << request.get_file().path << "/" << request.get_file().name);
+		LOG_NOTICE("Creating Upload FileHandler with file " << request.get_file().path << "/" << request.get_file().name);
 	}
 	_file_handler = new FileHandler(request.get_file(), type);
+	if (_file_handler->get_fd() < 0)
+	{
+		LOG_ERROR("Opening file didn't work out");
+		exit(123);
+	}
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
 	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }
