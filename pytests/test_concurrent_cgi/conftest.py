@@ -10,7 +10,7 @@ def webserv_config(child_stdout_level: LogLevel) -> WebservConfig:
     executable_name = 'app'
     args=["test.conf"]
     # This should match the ports specified in the config file.
-    ports=[8080, 8081, 9090, 9091]
+    ports=[9090]
     url = "http://localhost:"
 
     script_path = Path(__file__).parent.resolve()
