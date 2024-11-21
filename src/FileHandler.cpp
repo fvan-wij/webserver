@@ -13,6 +13,9 @@ FileHandler::FileHandler(File& file, ResponseType type) : _file(file), _type(typ
 		case ResponseType::Fetch:
 			_open_file();
 			break;
+		case ResponseType::Error:
+			_open_file();
+			break;
 		case ResponseType::Upload:
 			_create_file();
 			break;
@@ -50,6 +53,7 @@ void FileHandler::_open_file()
 	{
 		LOG_ERROR("Failed opening file '" << _file.path.c_str() << "' in order to handle the static file request");
 		_file.is_open = false;
+		exit(123);
 		return;
 	}
 	_file.is_open = true;
@@ -124,6 +128,7 @@ void	FileHandler::_write_file()
 	else
 	{
 		LOG_ERROR("Trying to write to non-existing file!");
+		exit(123);
 	}
 	_file.streamcount += buffer_size;
 	_file.finished = bytes_left <= 0;

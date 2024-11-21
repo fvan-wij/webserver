@@ -95,8 +95,7 @@ class HttpRequest
 		std::vector<char> 								_body_buffer;
 		std::unordered_map<std::string, std::string>	_header;
 
-		RequestType	_type;
-		// FileUpload										_file;
+		RequestType										_type;
 		File											_file;
 
 		//												Data extraction methods
