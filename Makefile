@@ -99,6 +99,10 @@ cgi:
 	mkdir -p ~/.local/bin
 	gcc sleep_echo_prog.c -o ~/.local/bin/sleep_echo_var
 
+test-install: all
+	pip install -r pytests/requirements.txt
+
+
 test: all
 	pytest pytests/ -s
 

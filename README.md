@@ -36,6 +36,10 @@ Install the required packages using pip.
 ```
 pip install -r pytests/requirements.txt
 ```
+or by running
+```
+make test-install
+```
 
 Pytest will automatically look for the `pytests` [directory](https://docs.pytest.org/en/stable/explanation/goodpractices.html#conventions-for-python-test-discovery).
 
