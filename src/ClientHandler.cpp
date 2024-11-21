@@ -99,13 +99,30 @@ void	ClientHandler::_parse(std::vector<char>& data)
 			case State::ParsingHeaders:
 				{
 					LOG_NOTICE("Parsing header...");
-					_state = request.parse_header(data);
+					try 
+					{
+						_state = request.parse_header(data);
+					}
+					catch (const HttpRequest::RequestBuilderException& e)
+					{
+						LOG_ERROR(e.what());
+						exit(123);
+					}
 				}
 				break;
 			case State::ParsingBody:
 				{
 					LOG_NOTICE("Parsing body...");
-					_state = request.parse_body(data);
+					try
+					{
+						_state = request.parse_body(data);
+					}
+					catch (const HttpRequest::RequestBuilderException& e)
+					{
+						LOG_ERROR(e.what());
+						exit(123);
+					}
+
 				}
 				break;
 			default:
