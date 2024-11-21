@@ -66,6 +66,9 @@ pytest -k NAME
 ## Dev
 
 
+### Adding python dependencies
+Whenever you add a new python module make sure to add it to the `requirements.txt` file.
+
 ### Archiving stale branches
 It is recommeded to archive stale branches instead of deleting them
 
