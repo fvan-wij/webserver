@@ -3,7 +3,7 @@
 #include <iostream>
 
 /**
- * @brief ClientHandler; responsible for reading and sending data from and to the client. 
+ * @brief ClientHandler; responsible for reading and sending data from and to the client.
  * Acts as as finite-state machine based on its state (uploading, fetching, processingCGI).
  * Triggers timeouts when the timeout time is exceeded
  *
@@ -11,7 +11,7 @@
  * @param socket: Socket object
  * @param configs: vector of configs
  */
-ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs) 
+ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs)
 	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders)
 {
 
@@ -115,7 +115,7 @@ void	ClientHandler::_parse(std::vector<char>& data)
 }
 
 /**
- * @brief Sends a response based on the given type 
+ * @brief Sends a response based on the given type
  *
  * @param type: ResponseType::(Fetch, Upload, Delete, CGI)
  */
@@ -155,8 +155,20 @@ void ClientHandler::_poll_file_handler()
 	}
 }
 
+Config	ClientHandler::_resolve_config(std::optional<std::string_view> host)
+{
+	if (not host)
+		return _configs[0];
+	for (auto it : _configs)
+	{
+		if (it.server_name[0] == host)
+			return it;
+	}
+	return _configs[0];
+}
+
 /**
- * @brief Processes and validates the request. 
+ * @brief Processes and validates the request.
  * Creates a new event handler based on the ResponseType (Fetch, Upload, Delete, CGI)
  */
 void	ClientHandler::_process_request()
@@ -164,7 +176,8 @@ void	ClientHandler::_process_request()
 	LOG_NOTICE("Processing request...");
 
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
-	response 			= handler->handle_request(request, _configs[0]);
+	Config config 		= _resolve_config(request.get_value("host"));
+	response 			= handler->handle_request(request, config);
 	ResponseType type 	= response.get_type();
 
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)

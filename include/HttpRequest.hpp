@@ -19,7 +19,7 @@ enum class RequestType:int
 	BadRequest,
 };
 
-const static std::unordered_map<std::string, RequestType> REQUEST_TYPE = 
+const static std::unordered_map<std::string, RequestType> REQUEST_TYPE =
 {
 	{"GET", RequestType::GetRequest},
 	{"POST", RequestType::PostRequest},
