@@ -17,6 +17,7 @@ enum class RequestType:int
 	GetRequest,
 	DeleteRequest,
 	BadRequest,
+	Timeout,
 };
 
 const static std::unordered_map<std::string, RequestType> REQUEST_TYPE = 

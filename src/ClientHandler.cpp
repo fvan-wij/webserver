@@ -51,7 +51,7 @@ void	ClientHandler::_handle_incoming_data()
 	}
 	else
 	{
-		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on server: " << _configs[0].server_name[0] << " on port: " << _socket.get_port());
+		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on server: " << _configs[0].server_name[0] 				<< " on port: " << _socket.get_port());
 		try 
 		{
 			_parse(incoming_data.value());
@@ -101,7 +101,6 @@ void	ClientHandler::_process_request()
 	response 			= handler->build_response(request, _configs[0]);
 	ResponseType type 	= response.get_type();
 
-	LOG_ERROR("ResponseType: " << (int)type << ", RequestType: " << (int)request.get_type());
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
 		_add_file_handler(type);
@@ -110,11 +109,8 @@ void	ClientHandler::_process_request()
 	{
 		if (not request.get_file().path.empty())
 			_add_file_handler(type);
-		else
-			_state = State::Ready;
 	}
-	else
-		_state = State::Ready;
+	_state = State::Ready;
 }
 
 /**
@@ -226,7 +222,7 @@ bool	ClientHandler::_is_timeout()
 	if (_timer.elapsed_time().count() > TIME_OUT)
 	{
 		LOG_ERROR("Client on fd " << _socket.get_fd() << " timed out");
-		request.set_type(RequestType::BadRequest);
+		request.set_type(RequestType::Timeout);
 		return true;
 	}
 	return false;

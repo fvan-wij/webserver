@@ -11,8 +11,6 @@ std::unique_ptr<RequestHandler> HandlerFactory::create_handler(RequestType type)
 			return std::make_unique<PostRequestHandler>();
 		case RequestType::DeleteRequest:
 			return std::make_unique<DeleteRequestHandler>();
-		case RequestType::BadRequest:
-			return std::make_unique<BadRequestHandler>();
 		default:
 			return std::make_unique<BadRequestHandler>();
 	}
