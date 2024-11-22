@@ -71,7 +71,7 @@ void	HttpProtocol::parse_data(std::vector<char>& data)
 void		HttpProtocol::generate_response()
 {
 	auto handler = HandlerFactory::create_handler(request.get_type());
-	response = handler->handle_request(request, _config);
+	response = handler->build_response(request, _config);
 	switch (response.get_type())
 	{
 		case ResponseType::CGI:

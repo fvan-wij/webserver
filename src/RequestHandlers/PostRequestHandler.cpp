@@ -1,7 +1,7 @@
 #include "PostRequestHandler.hpp"
 #include "Utility.hpp"
 
-HttpResponse	PostRequestHandler::handle_request(HttpRequest &request, Config &config)
+HttpResponse	PostRequestHandler::build_response(HttpRequest &request, Config &config)
 {
 	LOG_NOTICE("Handling POST request\n" << static_cast<const HttpRequest>(request));
 	// LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());

@@ -2,7 +2,7 @@
 #include "Logger.hpp"
 
 
-HttpResponse	GetRequestHandler::handle_request(HttpRequest &request, Config &config)
+HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &config)
 
 {
 	LOG_NOTICE("Handling GET request:\n" << static_cast<const HttpRequest>(request));

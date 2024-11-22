@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <filesystem>
 
-HttpResponse	DeleteRequestHandler::handle_request(HttpRequest &request, Config &config)
+HttpResponse	DeleteRequestHandler::build_response(HttpRequest &request, Config &config)
 {
 	LOG_NOTICE("Handling DELETE request...\n" << static_cast<const HttpRequest>(request));
 	// LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());

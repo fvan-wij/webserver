@@ -13,7 +13,7 @@
 
 enum class RequestType:int
 {
-	PostRequest,
+	PostRequest = 0,
 	GetRequest,
 	DeleteRequest,
 	BadRequest,

@@ -26,10 +26,7 @@ void ClientHandler::handle_request(short events)
 {
 	if (_is_timeout())
 	{
-		LOG_ERROR("Client on fd " << _socket.get_fd() << " timed out");
-		request.set_type(RequestType::BadRequest);
-		_state = State::ProcessingRequest;
-		// _close_connection();
+		_process_request();
 	}
 	if (events & POLLIN)
 	{
@@ -101,9 +98,10 @@ void	ClientHandler::_process_request()
 	LOG_NOTICE("Processing request...");
 
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
-	response 			= handler->handle_request(request, _configs[0]);
+	response 			= handler->build_response(request, _configs[0]);
 	ResponseType type 	= response.get_type();
 
+	LOG_ERROR("ResponseType: " << (int)type << ", RequestType: " << (int)request.get_type());
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
 		_add_file_handler(type);
@@ -225,7 +223,13 @@ void	ClientHandler::_add_file_handler(ResponseType type)
  */
 bool	ClientHandler::_is_timeout()
 {
-	return _timer.elapsed_time().count() > TIME_OUT;
+	if (_timer.elapsed_time().count() > TIME_OUT)
+	{
+		LOG_ERROR("Client on fd " << _socket.get_fd() << " timed out");
+		request.set_type(RequestType::BadRequest);
+		return true;
+	}
+	return false;
 }
 
 /**

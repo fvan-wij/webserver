@@ -17,8 +17,6 @@ def send_upload_request_wrong_content_length(port: int, file_path: str, expected
     url = "http://localhost:"
     url += str(port)
     url += "/uploads"
-    files={"upload_file": open(file_path, "rb")}
-    # r = requests.post(url, headers=headers, files=files)
     r = requests.post(url, headers=headers)
     print("Status code == ",  r.status_code)
     print("Expected code == ",  expected_status_code)
@@ -26,9 +24,8 @@ def send_upload_request_wrong_content_length(port: int, file_path: str, expected
     test_file_path = "./var/www/uploads/" + file_path
     print(r.request.headers)
 
-
 def test_webserv_instance_pid_check(webserv_instance: WebservInstance) -> None:
     assert webserv_instance.proc.pid is not 0
     for port in webserv_instance.config.ports:
         send_put_request(port, "/", 400)
-        send_upload_request_wrong_content_length(port, "test_file.txt", 400)
+        send_upload_request_wrong_content_length(port, "", 400)
