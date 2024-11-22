@@ -27,9 +27,11 @@ void ClientHandler::handle_request(short events)
 	if (_is_timeout())
 	{
 		LOG_ERROR("Client on fd " << _socket.get_fd() << " timed out");
-		_close_connection();
+		request.set_type(RequestType::BadRequest);
+		_state = State::ProcessingRequest;
+		// _close_connection();
 	}
-	else if (events & POLLIN)
+	if (events & POLLIN)
 	{
 		_handle_incoming_data();
 	}
@@ -42,20 +44,27 @@ void ClientHandler::handle_request(short events)
 /**
  * @brief Reads and parses the incoming data;
  */
-bool	ClientHandler::_handle_incoming_data()
+void	ClientHandler::_handle_incoming_data()
 {
 	std::optional<std::vector<char>> incoming_data = _socket.read();
 	if (not incoming_data)
 	{
 		LOG_ERROR("Failed to read request from client (fd " << _socket.get_fd() << ")");
-		_connection_manager.remove(_socket.get_fd());
-		return false;
+		_close_connection();
 	}
 	else
 	{
 		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on server: " << _configs[0].server_name[0] << " on port: " << _socket.get_port());
-		_parse(incoming_data.value());
-		return true;
+		try 
+		{
+			_parse(incoming_data.value());
+		}
+		catch (const HttpRequest::RequestBuilderException& e)
+		{
+			LOG_ERROR(e.what());
+			_state = State::ProcessingRequest;
+			request.set_type(RequestType::BadRequest);
+		}
 	}
 }
 
@@ -84,95 +93,6 @@ void	ClientHandler::_handle_outgoing_data()
 }
 
 /**
- * @brief Parses the chunk of incoming data.
- * With each parsing call, the data is being moved to the request object
- * and repeated until the incoming data buffer is empty.
- *
- * @param data: vector<char> read from client
- */
-void	ClientHandler::_parse(std::vector<char>& data)
-{
-	while (not data.empty())
-	{
-		switch (_state)
-		{
-			case State::ParsingHeaders:
-				{
-					LOG_NOTICE("Parsing header...");
-					try 
-					{
-						_state = request.parse_header(data);
-					}
-					catch (const HttpRequest::RequestBuilderException& e)
-					{
-						LOG_ERROR(e.what());
-						exit(123);
-					}
-				}
-				break;
-			case State::ParsingBody:
-				{
-					LOG_NOTICE("Parsing body...");
-					try
-					{
-						_state = request.parse_body(data);
-					}
-					catch (const HttpRequest::RequestBuilderException& e)
-					{
-						LOG_ERROR(e.what());
-						exit(123);
-					}
-
-				}
-				break;
-			default:
-				break;
-		}
-	}
-}
-
-/**
- * @brief Sends a response based on the given type 
- *
- * @param type: ResponseType::(Fetch, Upload, Delete, CGI)
- */
-void	ClientHandler::_send_response(ResponseType type)
-{
-	if (type == ResponseType::Fetch || type == ResponseType::Error)
-	{
-		std::vector<char>& data = _file_handler->get_file().data;
-		if (not data.empty())
-		{
-			data.push_back('\0');
-			response.set_body(data.data());
-			_socket.write(response.to_string());
-			LOG_NOTICE("Response sent to fd=" << _socket.get_fd());
-			_close_connection();
-		}
-	}
-	else
-	{
-		_socket.write(response.to_string());
-		LOG_NOTICE("Response sent to fd=" << _socket.get_fd());
-		_close_connection();
-	}
-}
-
-/**
- * @brief Polls the _file_handler and sets the finite-state machine to ready when the _file_handler is done
- */
-void ClientHandler::_poll_file_handler()
-{
-	LOG_NOTICE("Waiting on FileHandler...");
-
-	if (_file_handler->is_finished())
-	{
-		LOG_NOTICE("FileHandler is finished");
-		_state = State::Ready;
-	}
-}
-
-/**
  * @brief Processes and validates the request. 
  * Creates a new event handler based on the ResponseType (Fetch, Upload, Delete, CGI)
  */
@@ -197,6 +117,78 @@ void	ClientHandler::_process_request()
 	}
 	else
 		_state = State::Ready;
+}
+
+/**
+ * @brief Parses the chunk of incoming data.
+ * With each parsing call, the data is being moved to the request object
+ * and repeated until the incoming data buffer is empty.
+ *
+ * @param data: vector<char> read from client
+ */
+void	ClientHandler::_parse(std::vector<char>& data)
+{
+	while (not data.empty())
+	{
+		switch (_state)
+		{
+				case State::ParsingHeaders:
+				{
+					LOG_NOTICE("Parsing header...");
+					_state = request.parse_header(data);
+				}
+					break;
+				case State::ParsingBody:
+				{
+					LOG_NOTICE("Parsing body...");
+					_state = request.parse_body(data);
+				}
+					break;
+				default:
+					break;
+		}
+	}
+}
+
+/**
+ * @brief Sends a response based on the given type 
+ *
+ * @param type: ResponseType::(Fetch, Upload, Delete, CGI)
+ */
+void	ClientHandler::_send_response(ResponseType type)
+{
+	if (type == ResponseType::Fetch || (type == ResponseType::Error && _file_handler))
+	{
+		std::vector<char>& data = _file_handler->get_file().data;
+		if (not data.empty())
+		{
+			data.push_back('\0');
+			response.set_body(data.data());
+			_socket.write(response.to_string());
+			LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << response.to_string());
+			_close_connection();
+		}
+	}
+	else
+	{
+		_socket.write(response.to_string());
+		LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << response.to_string());
+		_close_connection();
+	}
+}
+
+/**
+ * @brief Polls the _file_handler and sets the finite-state machine to ready when the _file_handler is done
+ */
+void ClientHandler::_poll_file_handler()
+{
+	LOG_NOTICE("Waiting on FileHandler...");
+
+	if (_file_handler->is_finished())
+	{
+		LOG_NOTICE("FileHandler is finished");
+		_state = State::Ready;
+	}
 }
 
 /**

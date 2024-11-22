@@ -34,13 +34,13 @@ class ClientHandler {
 		State								_state;
 		Timer								_timer;
 
-		bool					_handle_incoming_data();
+		void					_handle_incoming_data();
 		void					_handle_outgoing_data();
+		void					_process_request();
 		void					_parse(std::vector<char>& data);
 		void					_send_response();
 		void					_send_response(ResponseType type);
 		void 					_poll_file_handler();
-		void					_process_request();
 		void					_add_file_handler(ResponseType type);
 		bool					_is_timeout();
 		void					_close_connection();
