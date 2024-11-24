@@ -18,7 +18,7 @@ enum class ResponseType:int {
 	Unknown,
 };
 
-class HttpResponse 
+class HttpResponse
 {
 	public:
 		HttpResponse();
@@ -30,6 +30,8 @@ class HttpResponse
 		void			set_type(ResponseType type){_type = type;};
 		void			set_path(std::string path){_path = path;};
 		void			set_streamcount(size_t bytes) {_streamcount = bytes;};
+		void			set_virtual_host(std::string virtual_host) {_virtual_host = virtual_host;};
+		void			set_server(std::string server) {_server = server;};
 		void			update_streamcount(size_t bytes) {_streamcount += bytes;};
 		void			append_body(std::string &buffer);
 
@@ -48,6 +50,8 @@ class HttpResponse
 		int				_status_code;
 		size_t			_streamcount;
 		std::string		_status_message;
+		std::string		_virtual_host;
+		std::string		_server;
 		std::string		_body;
 		std::string		_path;
 		bool			_ready;

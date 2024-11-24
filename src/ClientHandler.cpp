@@ -53,7 +53,7 @@ bool	ClientHandler::_handle_incoming_data()
 	}
 	else
 	{
-		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on server: " << _configs[0].server_name[0] << " on port: " << _socket.get_port());
+		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on port: " << _socket.get_port());
 		_parse(incoming_data.value());
 		return true;
 	}
@@ -128,6 +128,8 @@ void	ClientHandler::_send_response(ResponseType type)
 		{
 			data.push_back('\0');
 			response.set_body(data.data());
+			response.set_server("webserv");
+			response.set_virtual_host(_config.server_name[0]);
 			_socket.write(response.to_string());
 			LOG_NOTICE("Response sent to fd=" << _socket.get_fd());
 			_close_connection();
@@ -157,12 +159,13 @@ void ClientHandler::_poll_file_handler()
 
 Config	ClientHandler::_resolve_config(std::optional<std::string_view> host)
 {
+	LOG_DEBUG(host.value_or("No host"));
 	if (not host)
 		return _configs[0];
-	for (auto it : _configs)
+	for (auto conf : _configs)
 	{
-		if (it.server_name[0] == host)
-			return it;
+		if (conf.server_name[0] == host)
+			return conf;
 	}
 	return _configs[0];
 }
@@ -176,9 +179,10 @@ void	ClientHandler::_process_request()
 	LOG_NOTICE("Processing request...");
 
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
-	Config config 		= _resolve_config(request.get_value("host"));
-	response 			= handler->handle_request(request, config);
+	_config 			= _resolve_config(request.get_value("Host"));
+	response 			= handler->handle_request(request, _config);
 	ResponseType type 	= response.get_type();
+
 
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{

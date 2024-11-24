@@ -6,6 +6,7 @@
 #include <memory>
 #include <ConnectionInfo.hpp>
 #include <Action.hpp>
+// #include <HttpListener.hpp>
 
 /**
  * @brief Enum class to differentiate between different fd types.
@@ -18,6 +19,8 @@ enum class FdType
 	CLIENT,
 	PIPE,
 };
+
+class HttpListener;
 
 /**
  * @brief The ConnectionManager manages listeners, clients and pipes in the pollfd list.
@@ -44,7 +47,7 @@ class ConnectionManager {
 		void 	remove_pipe(int client_fd);
 
 		void	add_listeners(std::vector<Config> &configs);
-		void	add_listener(Config config, uint16_t port);
+		void	add_listener(Config config, int port);
 		void	add_pipe(int client_fd, int read_pipe);
 
 		std::vector<pollfd>&		get_pfds();
@@ -54,6 +57,7 @@ class ConnectionManager {
 	private:
 		std::vector<pollfd>	_pfds;
 		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> _connection_info;
+		std::unordered_map<int, std::shared_ptr<HttpListener>> _listeners;
 
 		std::unordered_map<int, ActionBase *>	_actions;
 

@@ -28,6 +28,7 @@ class ClientHandler {
 	private:
 		std::string							_response_data;
 		std::vector<Config>					_configs;
+		Config								_config;
 		Socket								_socket;
 		ConnectionManager					&_connection_manager;
 		FileHandler					 		*_file_handler;
