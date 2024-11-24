@@ -28,6 +28,7 @@ class ClientHandler {
 	private:
 		std::string							_response_data;
 		std::vector<Config>					_configs;
+		Config								_config;
 		Socket								_socket;
 		ConnectionManager					&_connection_manager;
 		FileHandler					 		*_file_handler;
@@ -40,6 +41,7 @@ class ClientHandler {
 		void					_send_response();
 		void					_send_response(ResponseType type);
 		void 					_poll_file_handler();
+		Config					_resolve_config(std::optional<std::string_view> host);
 		void					_process_request();
 		void					_add_file_handler(ResponseType type);
 		bool					_is_timeout();
