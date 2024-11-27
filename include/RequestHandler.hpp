@@ -7,7 +7,7 @@
 
 class RequestHandler {
 	public:
-		virtual HttpResponse				handle_request(HttpRequest &request, Config &config) = 0;
+		virtual HttpResponse				build_response(HttpRequest &request, Config &config) = 0;
 
 		bool								method_is_allowed(std::string_view method, std::vector<std::string> v);
 		bool								contains_body(const HttpRequest &request);

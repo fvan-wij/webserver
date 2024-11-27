@@ -5,5 +5,5 @@
 class BadRequestHandler : public RequestHandler
 {
 	public:
-		HttpResponse	handle_request(HttpRequest &request, Config &config);
+		HttpResponse	build_response(HttpRequest &request, Config &config);
 };

@@ -1,6 +1,7 @@
 #include "ConnectionManager.hpp"
 #include "Logger.hpp"
 #include "ConfigParser.hpp"
+#include <meta.hpp>
 
 #include <cstring>
 #include <string>
@@ -40,18 +41,3 @@ int main(int argc, char *argv[], char *envp[])
 	cm.add_listeners(configs);
 	poll_loop(cm, envp);
 }
-
-// #include <Utility.hpp>
-// #include <Timer.hpp>
-// #include <iostream>
-//
-// int main()
-// {
-// 	Timer t;
-// 	for (size_t i = 0; i < 1'000'000; i++)
-// 	{
-// 		std::cout << "test\n"; 
-// 	}
-//
-// 	std::cout << "Elapsed Time=" << t.elapsed_time().count();
-// }
