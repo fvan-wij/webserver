@@ -70,8 +70,6 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 			_extract_header_fields(_header_buffer);
 			_b_header_parsed = true;
 			buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
-			if (buffer.empty())
-				return State::ProcessingRequest;
 		}
 		else
 		{
@@ -89,12 +87,8 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 		std::string_view cont_len = get_value("Content-Length").value_or("0");
 		if (Utility::svtoi(cont_len) != 0 && not _b_body_parsed)
 		{
-			// LOG_DEBUG("Hier ga je in, toch?");
-			// parse_body(buffer);
 			return State::ParsingBody;
 		}
-		else if (buffer.size() > Utility::svtoi(cont_len))
-			throw InvalidBody("size of body does not match Content-Length");
 		return State::ProcessingRequest;
 	}
 }

@@ -11,6 +11,14 @@ HttpResponse::~HttpResponse()
 
 }
 
+void 		HttpResponse::set_error_response(const int status, const std::string &status_mssg)
+{
+	_status_code = status;
+	_status_message = status_mssg;
+	_type = ResponseType::Error;
+	set_body("\r\n<h1>" + std::to_string(_status_code) + " " + _status_message + "</h1>\r\n");
+}
+
 void		HttpResponse::set_status_code(const int status)
 {
 	_status_code = status;

@@ -33,9 +33,9 @@ class HttpResponse
 		void			update_streamcount(size_t bytes) {_streamcount += bytes;};
 		void			append_body(std::string &buffer);
 
-		bool			is_ready(){return _ready;};
+		bool			is_ready() {return _ready;};
 
-		ResponseType	get_type(){return _type;};
+		ResponseType	get_type() {return _type;};
 		int				get_status_code() const {return _status_code;};
 		size_t			get_streamcount() const {return _streamcount;};
 		std::string		get_status_mssg() const {return _status_message;};
@@ -43,6 +43,7 @@ class HttpResponse
 		std::string		get_body() const {return _body;};
 
 		std::string		to_string() const;
+		void 			set_error_response(const int status, const std::string &status_mssg);
 
 	private:
 		int				_status_code;

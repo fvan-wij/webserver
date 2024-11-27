@@ -48,15 +48,22 @@ File&	FileHandler::get_file()
 
 void FileHandler::_open_file()
 {
+	if (access(_file.path.c_str(), F_OK) == -1)
+	{
+		throw (PermissionException(_file.path + " doesn't exist"));
+	}
+	if (access(_file.path.c_str(), R_OK) == -1)
+	{
+		throw (PermissionException(_file.path + " has no reading permissions"));
+	}
 	_file.fd = ::open(_file.path.c_str(), O_RDONLY);
 	if (_file.fd < 0)
 	{
-		LOG_ERROR("Failed opening file '" << _file.path.c_str() << "' in order to handle the static file request");
 		_file.is_open = false;
-		exit(123);
-		return;
+		throw (OpeningFileException(_file.path + " couldn't open file"));
 	}
 	_file.is_open = true;
+	LOG_DEBUG("Opened file successfully");
 }
 
 void FileHandler::_create_file()
@@ -65,9 +72,8 @@ void FileHandler::_create_file()
 	_file.fd = ::open(_file.path.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644);
 	if (_file.fd < 0)
 	{
-		LOG_ERROR("Failed creating file '" << _file.path.c_str() << "' in order to handle the file upload");
 		_file.is_open = false;
-		return;
+		throw (CreatingFileException(_file.path + " could not be created in order to handle the file upload"));
 	}
 	_file.is_open = true;
 }
@@ -76,13 +82,17 @@ void	FileHandler::_read_file()
 {
 		char 	buffer[FETCH_READ_SIZE];
 
+		if (access(_file.path.c_str(), R_OK) == -1)
+		{
+			throw (PermissionException(_file.path + " doesn't have read permissions!"));
+		}
 		if (_file.is_open)
 		{
 			::memset(buffer, '\0', FETCH_READ_SIZE);
 			int bytes_read = read(_file.fd, buffer, FETCH_READ_SIZE - 1);
 			if (bytes_read < 0)
 			{
-				LOG_ERROR("Error while reading file...");
+				throw (ReadingFileException(_file.path));
 			}
 			if (bytes_read > 0)
 			{
@@ -99,7 +109,7 @@ void	FileHandler::_read_file()
 		}
 		else
 		{
-			LOG_ERROR("Attempting to read file that's not opened");
+			throw (ReadingFileException(_file.path + "'s filedescriptor is not opened!"));
 		}
 }
 
@@ -113,6 +123,10 @@ void	FileHandler::_write_file()
 	size_t bytes_left = _file.data.size() - _file.streamcount;
 	size_t buffer_size = UPLOAD_CHUNK_SIZE;
 
+	if (access(_file.path.c_str(), W_OK) == -1)
+	{
+		throw (PermissionException(_file.path + " doesn't have write permissions!"));
+	}
 	if (bytes_left < UPLOAD_CHUNK_SIZE)
 	{
 		buffer_size = bytes_left;
@@ -127,8 +141,7 @@ void	FileHandler::_write_file()
 	}
 	else
 	{
-		LOG_ERROR("Trying to write to non-existing file!");
-		exit(123);
+		throw (WritingFileException(_file.path + " appears to be a a non-existing file!"));
 	}
 	_file.streamcount += buffer_size;
 	_file.finished = bytes_left <= 0;

@@ -3,6 +3,7 @@
 #include "Socket.hpp"
 #include "ConnectionManager.hpp"
 #include <HttpListener.hpp>
+#include <FileHandler.hpp>
 
 ConnectionManager::ConnectionManager()
 {
@@ -167,75 +168,6 @@ std::unordered_map<int, std::shared_ptr<ConnectionInfo>> ConnectionManager::get_
 }
 
 /**
- * @brief Checks if the protocol is ready to send a response.
- * If the protocol is ready, send the response based on type.
- *
- * @param ci
- * @param cm
- * @param pfd
- * @param i
- */
-void ConnectionManager::_client_send_response(ConnectionInfo &ci, pollfd &pfd, size_t i)
-{
-	// Send response
-	// LOG_INFO("fd: " << pfd.fd << " POLLOUT (client)");
-	auto protocol = ci.get_protocol();
-	if (protocol->response.is_ready())
-	{
-		std::string data = protocol->get_data();
-		LOG_INFO("Sending response..." << protocol->response.get_status_code() << " " << protocol->response.get_status_mssg());
-		ci.get_socket().write(data);
-		if (protocol->response.get_type() == ResponseType::CGI) // Remove pipe_fd && pipe type
-		{
-			remove_pipe(pfd.fd);
-		}
-		remove(i);
-	}
-	else if (protocol->response.get_type() == ResponseType::Upload)
-	{
-		protocol->poll_upload();
-	}
-	else if (protocol->response.get_type() == ResponseType::Fetch) // Note: Fetching requires both reading and writing... but does both when there's a POLLOUT revent.
-	{
-		// LOG_INFO("fd: " << pfd.fd << " POLLOUT (Fetch file)");
-		protocol->poll_fetch();
-	}
-}
-
-
-/**
- * @brief Read data from the client socket.
- * If the data is a CGI request, start the CGI process.
- * If the data is not a CGI request, handle the data with the protocol.
- *
- * @param cm
- * @param ci
- * @param pfd
- * @param envp
- * @param i
- */
-void ConnectionManager::_client_read_data(ConnectionInfo &ci, pollfd &pfd, char *envp[], size_t i)
-{
-	LOG_INFO("fd: " << pfd.fd << " POLLIN (client)");
-	std::optional<std::vector<char>> read_data = ci.get_socket().read();
-	auto const &protocol = ci.get_protocol();
-	if (read_data)
-	{
-		protocol->parse_data(read_data.value());
-		if (protocol->response.get_type() == ResponseType::CGI && !protocol->is_cgi_running())
-		{
-			protocol->start_cgi(envp);
-			LOG_INFO("Starting CGI on port: " << ci.get_socket().get_port());
-			add_pipe(pfd.fd, protocol->get_pipe_fd());
-		}
-	}
-	else
-	{
-		remove(i);
-	}
-}
-
-/**
  * @brief Loop over the pollfd list and handle the events.
  *
  * @param envp
@@ -250,7 +182,15 @@ void ConnectionManager::handle_pfd_events(char *envp[])
 		if (pfds[i].revents)
 		{
 			auto action = _actions[pfds[i].fd];
-			action->execute(pfds[i].revents);
+			try
+			{
+				action->execute(pfds[i].revents);
+			} 
+			catch (FileHandler::FileHandlerException &e)
+			{
+				LOG_ERROR(e.what());
+				// Should disconnect
+			}
 		}
 	}
 }

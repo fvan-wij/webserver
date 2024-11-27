@@ -51,16 +51,16 @@ void	ClientHandler::_handle_incoming_data()
 	}
 	else
 	{
-		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on server: " << _configs[0].server_name[0] 				<< " on port: " << _socket.get_port());
+		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on server: " << _configs[0].server_name[0] << " on port: " << _socket.get_port());
 		try 
 		{
 			_parse(incoming_data.value());
 		}
-		catch (const HttpRequest::RequestBuilderException& e)
+		catch (HttpRequest::RequestBuilderException& e)
 		{
 			LOG_ERROR(e.what());
-			_state = State::ProcessingRequest;
-			request.set_type(RequestType::BadRequest);
+			response.set_error_response(400, "Bad Request");
+			_state = State::Ready;
 		}
 	}
 }
@@ -101,16 +101,24 @@ void	ClientHandler::_process_request()
 	response 			= handler->build_response(request, _configs[0]);
 	ResponseType type 	= response.get_type();
 
-	if (type == ResponseType::Fetch || type == ResponseType::Upload)
+	if (type == ResponseType::Fetch || type == ResponseType::Upload
+			|| (type == ResponseType::Error && not request.get_file().path.empty()))
 	{
-		_add_file_handler(type);
-	}
-	else if (type == ResponseType::Error)
-	{
-		if (not request.get_file().path.empty())
+		if (type == ResponseType::Error)
+			LOG_DEBUG("Hoovin");
+		try
+		{
 			_add_file_handler(type);
+		}
+		catch (FileHandler::FileHandlerException &e)
+		{
+			LOG_ERROR(e.what());
+			response.set_error_response(409, "Conflict");
+			_state = State::Ready;
+		}
 	}
-	_state = State::Ready;
+	else
+		_state = State::Ready;
 }
 
 /**
@@ -205,11 +213,6 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 		LOG_NOTICE("Creating Upload FileHandler with file " << request.get_file().path << "/" << request.get_file().name);
 	}
 	_file_handler = new FileHandler(request.get_file(), type);
-	if (_file_handler->get_fd() < 0)
-	{
-		LOG_ERROR("Opening file didn't work out");
-		exit(123);
-	}
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
 	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }
