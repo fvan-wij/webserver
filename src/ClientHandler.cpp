@@ -3,7 +3,7 @@
 #include <iostream>
 
 /**
- * @brief ClientHandler; responsible for reading and sending data from and to the client. 
+ * @brief ClientHandler; responsible for reading and sending data from and to the client.
  * Acts as as finite-state machine based on its state (uploading, fetching, processingCGI).
  * Triggers timeouts when the timeout time is exceeded
  *
@@ -11,8 +11,10 @@
  * @param socket: Socket object
  * @param configs: vector of configs
  */
+
 ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs) 
 	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false)
+
 {
 
 }
@@ -55,7 +57,7 @@ void	ClientHandler::_handle_incoming_data()
 	}
 	else
 	{
-		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on server: " << _configs[0].server_name[0] << " on port: " << _socket.get_port());
+		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on port: " << _socket.get_port());
 		_parse(incoming_data.value());
 	}
 }
@@ -123,7 +125,9 @@ void	ClientHandler::_process_request()
 {
 	LOG_NOTICE("Processing request...");
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
-	response 			= handler->build_response(request, _configs[0]);
+  _config 			= _resolve_config(request.get_value("Host"));
+	response 			= handler->build_response(request, _config);
+
 	ResponseType type 	= response.get_type();
 
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
@@ -160,7 +164,7 @@ void	ClientHandler::_parse(std::vector<char>& data)
 }
 
 /**
- * @brief Sends a response based on the given type 
+ * @brief Sends a response based on the given type
  *
  * @param type: ResponseType::(Fetch, Upload, Delete, CGI)
  */
@@ -173,6 +177,8 @@ void	ClientHandler::_send_response(ResponseType type)
 		{
 			data.push_back('\0');
 			response.set_body(data.data());
+			response.set_server("webserv");
+			response.set_virtual_host(_config.server_name[0]);
 			_socket.write(response.to_string());
 			LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << response.to_string());
 			_close_connection();
@@ -186,7 +192,19 @@ void	ClientHandler::_send_response(ResponseType type)
 	}
 }
 
-/**
+Config	ClientHandler::_resolve_config(std::optional<std::string_view> host)
+{
+	LOG_DEBUG(host.value_or("No host"));
+	if (not host)
+		return _configs[0];
+	for (auto conf : _configs)
+	{
+		if (conf.server_name[0] == host)
+			return conf;
+	}
+	return _configs[0];
+}
+
  * @brief Creates a file_handler, which is responsible for reading/writing from/to files
  */
 void	ClientHandler::_add_file_handler(ResponseType type)

@@ -6,6 +6,7 @@
 #include <Action.hpp>
 #include <Config.hpp>
 
+
 /**
  * @brief Enum class to differentiate between different fd types.
  * Types include: LISTENER, CLIENT, PIPE
@@ -17,6 +18,8 @@ enum class FdType
 	CLIENT,
 	PIPE,
 };
+
+class HttpListener;
 
 /**
  * @brief The ConnectionManager manages listeners, clients and pipes in the pollfd list.
@@ -43,6 +46,7 @@ class ConnectionManager {
 
 		void	add_listeners(std::vector<Config> &configs);
 		void	add_listener(Config config, uint16_t port);
+
 
 		std::vector<pollfd>&		get_pfds();
 		void 						handle_pfd_events(char *envp[]);
