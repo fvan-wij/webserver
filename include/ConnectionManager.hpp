@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
 #include <vector>
 #include <sys/poll.h>
 #include <Action.hpp>
 #include <Config.hpp>
+#include <memory>
 
 
 /**
@@ -45,7 +45,7 @@ class ConnectionManager {
 		void 	remove(int fd);
 
 		void	add_listeners(std::vector<Config> &configs);
-		void	add_listener(Config config, uint16_t port);
+		void	add_listener(Config config, int port);
 
 
 		std::vector<pollfd>&		get_pfds();
@@ -54,4 +54,5 @@ class ConnectionManager {
 	private:
 		std::vector<pollfd>	_pfds;
 		std::unordered_map<int, ActionBase *>	_actions;
+		std::unordered_map<int, std::shared_ptr<HttpListener>> _listeners;
 };

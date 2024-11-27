@@ -205,6 +205,7 @@ Config	ClientHandler::_resolve_config(std::optional<std::string_view> host)
 	return _configs[0];
 }
 
+/**
  * @brief Creates a file_handler, which is responsible for reading/writing from/to files
  */
 void	ClientHandler::_add_file_handler(ResponseType type)
