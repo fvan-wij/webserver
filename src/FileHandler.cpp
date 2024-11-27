@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <Utility.hpp>
+#include <HttpExceptions.hpp>
 
 class ClientHandler;
 
@@ -50,17 +51,20 @@ void FileHandler::_open_file()
 {
 	if (access(_file.path.c_str(), F_OK) == -1)
 	{
-		throw (PermissionException(_file.path + " doesn't exist"));
+		LOG_ERROR(_file.path + " doesn't exist");
+		throw HttpException(404, "Not Found");
 	}
 	if (access(_file.path.c_str(), R_OK) == -1)
 	{
-		throw (PermissionException(_file.path + " has no reading permissions"));
+		LOG_ERROR(_file.path + " has no reading permissions");
+		throw HttpException(409, "Conflict");
 	}
 	_file.fd = ::open(_file.path.c_str(), O_RDONLY);
 	if (_file.fd < 0)
 	{
 		_file.is_open = false;
-		throw (OpeningFileException(_file.path + " couldn't open file"));
+		LOG_ERROR(_file.path + " couldn't open file");
+		throw HttpException(409, "Conflict");
 	}
 	_file.is_open = true;
 	LOG_DEBUG("Opened file successfully");
@@ -73,7 +77,8 @@ void FileHandler::_create_file()
 	if (_file.fd < 0)
 	{
 		_file.is_open = false;
-		throw (CreatingFileException(_file.path + " could not be created in order to handle the file upload"));
+		LOG_ERROR(_file.path + " could not be created in order to handle the file upload");
+		throw HttpException(409, "Conflict");
 	}
 	_file.is_open = true;
 }
@@ -84,7 +89,8 @@ void	FileHandler::_read_file()
 
 		if (access(_file.path.c_str(), R_OK) == -1)
 		{
-			throw (PermissionException(_file.path + " doesn't have read permissions!"));
+			LOG_ERROR(_file.path + " doesn't have read permissions!");
+			throw HttpException(409, "Conflict");
 		}
 		if (_file.is_open)
 		{
@@ -92,7 +98,8 @@ void	FileHandler::_read_file()
 			int bytes_read = read(_file.fd, buffer, FETCH_READ_SIZE - 1);
 			if (bytes_read < 0)
 			{
-				throw (ReadingFileException(_file.path));
+				LOG_ERROR("Error reading " << _file.path);
+				throw HttpException(409, "Conflict");
 			}
 			if (bytes_read > 0)
 			{
@@ -109,7 +116,8 @@ void	FileHandler::_read_file()
 		}
 		else
 		{
-			throw (ReadingFileException(_file.path + "'s filedescriptor is not opened!"));
+			LOG_ERROR(_file.path + "'s filedescriptor is not opened!");
+			throw HttpException(409, "Conflict");
 		}
 }
 
@@ -125,7 +133,8 @@ void	FileHandler::_write_file()
 
 	if (access(_file.path.c_str(), W_OK) == -1)
 	{
-		throw (PermissionException(_file.path + " doesn't have write permissions!"));
+		LOG_ERROR(_file.path + " doesn't have write permissions!");
+		throw HttpException(409, "Conflict");
 	}
 	if (bytes_left < UPLOAD_CHUNK_SIZE)
 	{
@@ -141,7 +150,8 @@ void	FileHandler::_write_file()
 	}
 	else
 	{
-		throw (WritingFileException(_file.path + " appears to be a a non-existing file!"));
+		LOG_ERROR(_file.path + " appears to be a a non-existing file!");
+		throw HttpException(409, "Conflict");
 	}
 	_file.streamcount += buffer_size;
 	_file.finished = bytes_left <= 0;

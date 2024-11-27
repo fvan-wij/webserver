@@ -138,29 +138,6 @@ std::optional<std::string> RequestHandler::retrieve_error_path(int error_code, C
 	return std::nullopt;
 }
 
-// /**
-//  * @brief Generate or retrieve the error body.
-//  * If the error code has a corresponding error page, we retrieve the body file.
-//  * Else we construct a html string based on the code and the given message.
-//  *
-//  * @param error_code
-//  * @param message
-//  * @param config
-//  * @return std::string with the body html
-//  */
-// std::string RequestHandler::generate_error_body(int error_code, std::string_view message, Config &config, HttpRequest& request)
-// {
-// 	std::optional<std::string> error_path = retrieve_error_path(error_code, config);
-//
-// 	if (error_path)
-// 	{
-// 		std::optional<std::string> error_html = retrieve_index_html(error_path.value());
-// 		if (error_html)
-// 			return (error_html.value());
-// 	}
-// 	return ("\r\n<h1>" + std::to_string(error_code) + " " + message.data() + "</h1>\r\n");
-// }
-
 HttpResponse	RequestHandler::generate_error_response(int error_code, std::string_view message, Config &config, HttpRequest& request)
 {
 	HttpResponse	response;

@@ -2,6 +2,8 @@
 
 #include <Socket.hpp>
 #include <ConnectionManager.hpp>
+#include <HttpResponse.hpp>
+#include <meta.hpp>
 
 class ClientHandler;
 
@@ -18,54 +20,6 @@ class FileHandler {
 		bool	is_finished();
 		int		get_fd() {return _file.fd;};
 		File&	get_file();
-
-        // 		Exceptions
-		class FileHandlerException : public std::exception
-		{
-			protected:
-				std::string     message;
-			public:
-				FileHandlerException(const std::string& msg) : message(msg){};
-				const char* what() const noexcept override
-				{
-					return message.c_str();
-				}
-		};
-
-		class OpeningFileException : public FileHandlerException
-		{
-			public:
-				OpeningFileException(const std::string& msg)
-					: FileHandlerException("OpeningFileException: " + msg) {}
-		};
-
-		class CreatingFileException : public FileHandlerException
-		{
-			public:
-				CreatingFileException(const std::string& msg)
-					: FileHandlerException("CreatingFileException: " + msg) {}
-		};
-
-		class ReadingFileException : public FileHandlerException
-		{
-			public:
-				ReadingFileException(const std::string& msg)
-					: FileHandlerException("Reading exception: " + msg) {}
-		};
-
-		class WritingFileException : public FileHandlerException
-		{
-			public:
-				WritingFileException(const std::string& msg)
-					: FileHandlerException("WritingException: " + msg) {}
-		};
-
-		class PermissionException : public FileHandlerException
-		{
-			public:
-				PermissionException(const std::string& msg)
-					: FileHandlerException("PermissionException: " + msg) {}
-		};
 
 	private:
 		File			&_file;

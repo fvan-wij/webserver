@@ -3,9 +3,8 @@
 #include <cstdint>
 #include <vector>
 #include <sys/poll.h>
-#include <memory>
-#include <ConnectionInfo.hpp>
 #include <Action.hpp>
+#include <Config.hpp>
 
 /**
  * @brief Enum class to differentiate between different fd types.
@@ -41,18 +40,14 @@ class ConnectionManager {
 
 		void	add(int fd, short events, ActionBase* action);
 		void 	remove(int fd);
-		void 	remove_pipe(int client_fd);
 
 		void	add_listeners(std::vector<Config> &configs);
 		void	add_listener(Config config, uint16_t port);
-		void	add_pipe(int client_fd, int read_pipe);
 
 		std::vector<pollfd>&		get_pfds();
-		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> get_connection_info();
 		void 						handle_pfd_events(char *envp[]);
 
 	private:
 		std::vector<pollfd>	_pfds;
-		std::unordered_map<int, std::shared_ptr<ConnectionInfo>> _connection_info;
 		std::unordered_map<int, ActionBase *>	_actions;
 };

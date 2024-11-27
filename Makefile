@@ -12,7 +12,6 @@ IFLAGS		:=	-Iinclude
 SRC_DIR		:=	src
 SRC_ENTRY	:=	main.cpp
 SRCS		:=	Socket.cpp \
-				HttpProtocol.cpp \
 				CGI.cpp			\
 				HttpObjects/HttpRequest.cpp \
 				HttpObjects/HttpResponse.cpp \
@@ -27,7 +26,6 @@ SRCS		:=	Socket.cpp \
 				Config/print_config.cpp				\
 				Utility.cpp							\
 				ConnectionManager.cpp				\
-				ConnectionInfo.cpp					\
 				ClientHandler.cpp				\
 				HttpListener.cpp					\
 				FileHandler.cpp						\
@@ -37,7 +35,6 @@ SRCS		:=	Socket.cpp \
 HEADER_DIR	:=	include
 HEADERS 	:=  Socket.hpp \
 				meta.hpp \
-				HttpProtocol.hpp \
 				CGI.hpp			\
 				HttpRequest.hpp \
 				HttpResponse.hpp \
@@ -54,6 +51,7 @@ HEADERS 	:=  Socket.hpp \
 				HttpListener.hpp	\
 				FileHandler.hpp		\
 				Timer.hpp			\
+				HttpExceptions.hpp	\
 
 OBJ_DIR		:=	obj
 

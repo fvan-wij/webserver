@@ -1,5 +1,5 @@
 #include <ClientHandler.hpp>
-#include "HandlerFactory.hpp"
+#include <HandlerFactory.hpp>
 #include <iostream>
 
 /**
@@ -12,7 +12,7 @@
  * @param configs: vector of configs
  */
 ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs) 
-	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders)
+	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false)
 {
 
 }
@@ -24,17 +24,21 @@ ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<C
  */
 void ClientHandler::handle_request(short events)
 {
-	if (_is_timeout())
+	try 
 	{
-		_process_request();
+		if (not _timed_out)
+		{
+			_poll_timeout_timer();
+			if (events & POLLIN)
+				_handle_incoming_data();
+		}
+		if (events & POLLOUT)
+			_handle_outgoing_data();
 	}
-	if (events & POLLIN)
+	catch (const HttpException& e)
 	{
-		_handle_incoming_data();
-	}
-	else if (events & POLLOUT)
-	{
-		_handle_outgoing_data();
+		LOG_ERROR(std::to_string(e.status()) << " " << e.what());
+		_build_error_response(e.status(), e.what());
 	}
 }
 
@@ -47,21 +51,12 @@ void	ClientHandler::_handle_incoming_data()
 	if (not incoming_data)
 	{
 		LOG_ERROR("Failed to read request from client (fd " << _socket.get_fd() << ")");
-		_close_connection();
+		throw (HttpException(400, "Bad Request"));
 	}
 	else
 	{
 		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on server: " << _configs[0].server_name[0] << " on port: " << _socket.get_port());
-		try 
-		{
-			_parse(incoming_data.value());
-		}
-		catch (HttpRequest::RequestBuilderException& e)
-		{
-			LOG_ERROR(e.what());
-			response.set_error_response(400, "Bad Request");
-			_state = State::Ready;
-		}
+		_parse(incoming_data.value());
 	}
 }
 
@@ -75,10 +70,7 @@ void	ClientHandler::_handle_outgoing_data()
 		case State::Ready:
 			_send_response(response.get_type());
 			break;
-		case State::FetchingFile:
-			_poll_file_handler();
-			break;
-		case State::UploadingFile:
+		case State::ProcessingFileIO:
 			_poll_file_handler();
 			break;
 		case State::ProcessingRequest:
@@ -90,32 +82,53 @@ void	ClientHandler::_handle_outgoing_data()
 }
 
 /**
+ * @brief Searches the list of error pages and returns the correct one.
+ *
+ * @param error_code
+ * @param config
+ * @return std::optional<std::string>
+ */
+std::optional<std::string> ClientHandler::_retrieve_error_path(int error_code, Config &config)
+{
+	std::string error = config.error_page[error_code];
+	if (!error.empty())
+		return ("." + config.root + error);
+	return std::nullopt;
+}
+
+void	ClientHandler::_build_error_response(int status_code, const std::string& message)
+{
+	std::optional<std::string> error_path = _retrieve_error_path(status_code, _configs[0]);
+	if (error_path)
+	{
+		request.set_file_path(error_path.value());
+		_add_file_handler(ResponseType::Error);
+		_state = State::ProcessingFileIO;
+	}
+	else
+	{
+		response.set_status_code(status_code);
+		response.set_status_mssg(message);
+		response.set_body("\r\n<h1>" + std::to_string(status_code) + " " + message + "</h1>\r\n");
+		_state = State::Ready;
+	}
+	response.set_type(ResponseType::Error);
+}
+
+/**
  * @brief Processes and validates the request. 
  * Creates a new event handler based on the ResponseType (Fetch, Upload, Delete, CGI)
  */
 void	ClientHandler::_process_request()
 {
 	LOG_NOTICE("Processing request...");
-
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
 	response 			= handler->build_response(request, _configs[0]);
 	ResponseType type 	= response.get_type();
 
-	if (type == ResponseType::Fetch || type == ResponseType::Upload
-			|| (type == ResponseType::Error && not request.get_file().path.empty()))
+	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
-		if (type == ResponseType::Error)
-			LOG_DEBUG("Hoovin");
-		try
-		{
-			_add_file_handler(type);
-		}
-		catch (FileHandler::FileHandlerException &e)
-		{
-			LOG_ERROR(e.what());
-			response.set_error_response(409, "Conflict");
-			_state = State::Ready;
-		}
+		_add_file_handler(type);
 	}
 	else
 		_state = State::Ready;
@@ -135,16 +148,10 @@ void	ClientHandler::_parse(std::vector<char>& data)
 		switch (_state)
 		{
 				case State::ParsingHeaders:
-				{
-					LOG_NOTICE("Parsing header...");
 					_state = request.parse_header(data);
-				}
 					break;
 				case State::ParsingBody:
-				{
-					LOG_NOTICE("Parsing body...");
 					_state = request.parse_body(data);
-				}
 					break;
 				default:
 					break;
@@ -180,6 +187,29 @@ void	ClientHandler::_send_response(ResponseType type)
 }
 
 /**
+ * @brief Creates a file_handler, which is responsible for reading/writing from/to files
+ */
+void	ClientHandler::_add_file_handler(ResponseType type)
+{
+	short mask = 0;
+
+	if (type == ResponseType::Fetch || type == ResponseType::Error)
+	{
+		mask = POLLIN;
+		LOG_NOTICE("Creating Fetch FileHandler with file " << request.get_file().path);
+	}
+	else if (type == ResponseType::Upload)
+	{
+		mask = POLLOUT;
+		LOG_NOTICE("Creating Upload FileHandler with file " << request.get_file().path << "/" << request.get_file().name);
+	}
+	_state = State::ProcessingFileIO;
+	_file_handler = new FileHandler(request.get_file(), type);
+	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
+	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
+}
+
+/**
  * @brief Polls the _file_handler and sets the finite-state machine to ready when the _file_handler is done
  */
 void ClientHandler::_poll_file_handler()
@@ -193,42 +223,18 @@ void ClientHandler::_poll_file_handler()
 	}
 }
 
-/**
- * @brief Creates a file_handler, which is responsible for reading/writing from/to files
- */
-void	ClientHandler::_add_file_handler(ResponseType type)
-{
-	short mask = 0;
-
-	if (type == ResponseType::Fetch || type == ResponseType::Error)
-	{
-		mask = POLLIN;
-		_state = State::FetchingFile;
-		LOG_NOTICE("Creating Fetch FileHandler with file " << request.get_file().path);
-	}
-	else if (type == ResponseType::Upload)
-	{
-		mask = POLLOUT;
-		_state = State::UploadingFile;
-		LOG_NOTICE("Creating Upload FileHandler with file " << request.get_file().path << "/" << request.get_file().name);
-	}
-	_file_handler = new FileHandler(request.get_file(), type);
-	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
-	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
-}
 
 /**
  * @brief Returns true if elapsed time is bigger than TIME_OUT
  */
-bool	ClientHandler::_is_timeout()
+void	ClientHandler::_poll_timeout_timer()
 {
 	if (_timer.elapsed_time().count() > TIME_OUT)
 	{
 		LOG_ERROR("Client on fd " << _socket.get_fd() << " timed out");
-		request.set_type(RequestType::Timeout);
-		return true;
+		_timed_out = true;
+		throw HttpException(408, "Request Timeout");
 	}
-	return false;
 }
 
 /**

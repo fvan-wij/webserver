@@ -7,6 +7,7 @@
 #include <exception>
 #include <optional>
 #include <filesystem>
+#include <HttpExceptions.hpp>
 
 #include "meta.hpp"
 

@@ -27,5 +27,5 @@ def send_upload_request_wrong_content_length(port: int, file_path: str, expected
 def test_webserv_instance_pid_check(webserv_instance: WebservInstance) -> None:
     assert webserv_instance.proc.pid is not 0
     for port in webserv_instance.config.ports:
-        send_put_request(port, "/", 400)
+        send_put_request(port, "/", 405)
         send_upload_request_wrong_content_length(port, "", 400)

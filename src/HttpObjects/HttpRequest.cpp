@@ -59,6 +59,7 @@ void HttpRequest::set_file_path(std::string_view path)
 
 State	HttpRequest::parse_header(std::vector<char>& buffer)
 {
+	LOG_NOTICE("Parsing header...");
 	std::string_view data_sv(buffer.data(), buffer.size());
 
 	if (not _b_header_parsed)
@@ -68,7 +69,6 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 		{
 			_header_buffer += data_sv.substr(0, header_end);
 			_extract_header_fields(_header_buffer);
-			_b_header_parsed = true;
 			buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
 		}
 		else
@@ -95,8 +95,9 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 
 State HttpRequest::parse_body(std::vector<char>& buffer)
 {
+	LOG_NOTICE("Parsing body...");
 	if (buffer.size() > Utility::svtoi(get_value("Content-Length").value_or("0")))
-		throw InvalidBody("size of body does not match Content-Length");
+		throw HttpException(400, "Bad Request");
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
@@ -171,9 +172,9 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 	std::getline(stream, line);
 	tokens = Utility::tokenize_string(line, " ");
 	if (tokens.size() != 3)
-		throw InvalidRequestLine("Missing method, location or protocol!");
+		throw HttpException(400, "Bad Request");
 	if (tokens[0] != "GET" && tokens[0] != "POST" && tokens[0] != "DELETE")
-		throw InvalidMethod("Method must be GET, POST or DELETE");
+		throw HttpException(405, "Method Not ALlowed");
 
 	//Extract method
 	_method = tokens[0];
@@ -201,7 +202,7 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 
 	//Extract protocol
 	if (tokens[2] != "HTTP/1.1\r")
-		throw InvalidProtocol("version not supported or present!");
+		throw HttpException(505, "HTTP Version Not Supported");
 	_protocol = tokens[2];
 }
 

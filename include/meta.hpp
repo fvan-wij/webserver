@@ -46,10 +46,8 @@ enum class State {
 	ParsingHeaders,
 	ParsingBody,
 	ProcessingRequest,
-	BuildingResponse,
 	ProcessingCGI,
-	UploadingFile,
-	FetchingFile,
+	ProcessingFileIO,
 	Ready,
 };
 
