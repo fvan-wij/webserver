@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
 enum {
 	NOT_READY = false,
@@ -46,6 +47,7 @@ class HttpResponse
 
 		std::string		to_string() const;
 		void 			set_error_response(const int status, const std::string &status_mssg);
+		void 			insert_header(std::pair<std::string, std::string> key_value_pair){_header.insert(key_value_pair);};
 
 	private:
 		int				_status_code;
@@ -55,6 +57,7 @@ class HttpResponse
 		std::string		_server;
 		std::string		_body;
 		std::string		_path;
+		std::unordered_map<std::string, std::string> _header;
 		bool			_ready;
 		ResponseType	_type;
 };

@@ -14,3 +14,17 @@ class HttpException : public std::exception
 		int			_status_code;
 		std::string _message;
 };
+
+class HttpRedirection: public std::exception 
+{
+	public:
+
+		HttpRedirection(int status, const std::string& redirection) : _status_code(status), _redirection(redirection){};
+
+		int				status()	const noexcept {return _status_code;};
+		const char* 	what() 		const noexcept override {return _redirection.c_str();};
+
+	private:
+		int			_status_code;
+		std::string _redirection;
+};

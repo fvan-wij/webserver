@@ -42,6 +42,12 @@ void ClientHandler::handle_request(short events)
 		LOG_ERROR(std::to_string(e.status()) << " " << e.what());
 		_build_error_response(e.status(), e.what());
 	}
+	catch (const HttpRedirection& e)
+	{
+		LOG_ERROR(std::to_string(e.status()) << " " << e.what());
+		// _build_redirection_response(e.status(), e.what());
+		_build_redirection_response(e.status(), "Moved Permanently");
+	}
 }
 
 /**
@@ -111,10 +117,17 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 	{
 		response.set_status_code(status_code);
 		response.set_status_mssg(message);
-		response.set_body("\r\n<h1>" + std::to_string(status_code) + " " + message + "</h1>\r\n");
 		_state = State::Ready;
 	}
 	response.set_type(ResponseType::Error);
+}
+
+void	ClientHandler::_build_redirection_response(int status_code, const std::string& message)
+{
+	response.set_status_code(status_code);
+	response.set_status_mssg(message);
+	response.insert_header({"Location", "/"}); //Must be set dynamically!
+	_state = State::Ready;
 }
 
 /**
@@ -125,7 +138,7 @@ void	ClientHandler::_process_request()
 {
 	LOG_NOTICE("Processing request...");
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
-  _config 			= _resolve_config(request.get_value("Host"));
+  	_config 			= _resolve_config(request.get_value("Host"));
 	response 			= handler->build_response(request, _config);
 
 	ResponseType type 	= response.get_type();
@@ -177,8 +190,8 @@ void	ClientHandler::_send_response(ResponseType type)
 		{
 			data.push_back('\0');
 			response.set_body(data.data());
-			response.set_server("webserv");
-			response.set_virtual_host(_config.server_name[0]);
+			response.insert_header({"Server", "webserv"});
+			response.insert_header({"Virtual-Host", _config.server_name[0]});
 			_socket.write(response.to_string());
 			LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << response.to_string());
 			_close_connection();

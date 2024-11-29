@@ -85,6 +85,17 @@ std::vector<std::string>	parse_allow_methods(std::vector<std::string> tokens, un
 	return (methods);
 }
 
+std::pair<int, std::string> parse_redirection(std::vector<std::string>& tokens, unsigned long &i)
+{
+	std::pair<int, std::string> redirection;
+	i++;
+	redirection.first = std::stoi(tokens[i]);
+	i++;
+	redirection.second = tokens[i].substr(0, tokens[i].size() - 1);
+	i++;
+	return (redirection);
+}
+
 std::pair<std::string, Location> parse_location(std::vector<std::string> tokens, unsigned long &i)
 {
 	Location	location;
@@ -108,6 +119,10 @@ std::pair<std::string, Location> parse_location(std::vector<std::string> tokens,
 		{
 			location.allowed_methods = parse_allow_methods(tokens, i);
 			continue;
+		}
+		if (tokens[i] == "return")
+		{
+			location.redirection = parse_redirection(tokens, i);
 		}
 		i++;
 	}
@@ -204,7 +219,7 @@ Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 		}
 		i++;
 	}
-	// print_config(server_config);
+	print_config(server_config);
 	return (server_config);
 }
 std::vector<Config>	parse_config(std::string_view config_path)

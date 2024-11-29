@@ -43,11 +43,10 @@ std::string		HttpResponse::to_string() const
 {
 	std::string response;
 	response += "HTTP/1.1 " + std::to_string(_status_code) + " " + _status_message + "\r\n";
-	response += "Content-Length: " + std::to_string(_body.length()) + "\r\n";
-	response += "Server: " + _server + "\r\n";
-	response += "Virtual-Host: " + _virtual_host + "\r\n";
-	response += "Content-Type: text/html\r\n";
-	response += "Connection: close\r\n";
+	for (auto [key, value]: _header)
+	{
+		response += key + ": " + value + "\r\n";
+	}
 	response += "\r\n" + _body + "\r\n";
 	return response;
 }

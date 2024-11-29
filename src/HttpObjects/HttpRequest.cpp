@@ -184,8 +184,9 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 
 	//Extract uri
 	if (tokens[1][0] != '/')
-		throw InvalidUri("URI not present!");
+		throw HttpException(400, "URI not present!");
 	_uri = tokens[1];
+	LOG_ERROR("_uri: " << _uri);
 
 	//Extract filename, location and is_file_boolean
 	std::filesystem::path p(_uri);
