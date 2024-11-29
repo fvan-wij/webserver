@@ -11,3 +11,4 @@ set -xe
 git tag archive/$branch $branch
 git push origin archive/$branch
 git branch -D $branch
+git push origin --delete $branch
