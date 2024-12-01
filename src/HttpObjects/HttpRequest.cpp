@@ -62,6 +62,8 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 	LOG_NOTICE("Parsing header...");
 	std::string_view data_sv(buffer.data(), buffer.size());
 
+	LOG_INFO("header: " << data_sv);
+
 	if (not _b_header_parsed)
 	{
 		size_t	header_end = data_sv.find("\r\n\r\n");
@@ -101,6 +103,8 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
+
+	LOG_INFO("body: " << sv_buffer);
 
 	//extract filename if not yet extracted -> set file extracted true
 	if (not _b_file_extracted)

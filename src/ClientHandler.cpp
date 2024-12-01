@@ -72,6 +72,7 @@ void	ClientHandler::_handle_outgoing_data()
 		case State::Ready:
 			_send_response(_response.get_type());
 			break;
+		// TODO This should also poll the CGI
 		case State::ProcessingFileIO:
 			_poll_file_handler();
 			break;
@@ -125,11 +126,12 @@ void	ClientHandler::_process_request()
 {
 	LOG_NOTICE("Processing request...");
 	auto handler 		= HandlerFactory::create_handler(_request.get_type());
-  _config 			= _resolve_config(_request.get_value("Host"));
+	_config 			= _resolve_config(_request.get_value("Host"));
 	_response 			= handler->build_response(_request, _config);
 
 	ResponseType type 	= _response.get_type();
 
+	// TODO Try to use a filehandler for reading a CGIs output.
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
 		_add_file_handler(type);
@@ -151,14 +153,14 @@ void	ClientHandler::_parse(std::vector<char>& data)
 	{
 		switch (_state)
 		{
-				case State::ParsingHeaders:
-					_state = _request.parse_header(data);
-					break;
-				case State::ParsingBody:
-					_state = _request.parse_body(data);
-					break;
-				default:
-					break;
+			case State::ParsingHeaders:
+				_state = _request.parse_header(data);
+				break;
+			case State::ParsingBody:
+				_state = _request.parse_body(data);
+				break;
+			default:
+				break;
 		}
 	}
 }

@@ -9,8 +9,9 @@
 #include "DeleteRequestHandler.hpp"
 #include "BadRequestHandler.hpp"
 
-class HandlerFactory {
+class HandlerFactory
+{
 	public:
-	static std::unique_ptr<RequestHandler> create_handler(RequestType type);
+		static std::unique_ptr<RequestHandler> create_handler(RequestType type);
 };
 

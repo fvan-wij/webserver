@@ -5,3 +5,4 @@ app
 obj/
 *__pycache__*
 .vscode/*
+var/www/uploads/
