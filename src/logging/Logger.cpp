@@ -46,9 +46,8 @@ Logger &Logger::Debug()
 
 
 
-void Logger::operator()(std::string const& message, char const* function, char const* file, int line)
+void Logger::operator()(std::string const& message, char const* file, int line)
 {
-	UNUSED(function);
 
 	const char *PREFIX[] = {
 		"ERROR",

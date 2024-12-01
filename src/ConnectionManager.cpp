@@ -17,7 +17,7 @@ void ConnectionManager::add_listeners(std::vector<Config> &configs)
 	{
 		for (const auto& [name, port] : config.listen)
 		{
-			this->add_listener(config, port);
+			this->_add_listener(config, port);
 		}
 	}
 }
@@ -31,6 +31,7 @@ void ConnectionManager::add_listeners(std::vector<Config> &configs)
  */
 void ConnectionManager::add(int fd, short events, ActionBase *action)
 {
+	// TODO Do we need to check wether FDs are already in the ConnectionManager?
 	_pfds.push_back({fd, events, 0});
 	_actions[fd] = action;
 }
@@ -50,7 +51,7 @@ void ConnectionManager::add(int fd, short events, ActionBase *action)
  * @param config
  * @param port
  */
-void ConnectionManager::add_listener(Config config, int port)
+void ConnectionManager::_add_listener(Config config, int port)
 {
 	HttpListener *listener;
 	if (_listeners.find(port) != _listeners.end())
@@ -61,6 +62,7 @@ void ConnectionManager::add_listener(Config config, int port)
 	else
 	{
 		listener = new HttpListener(port, *this);
+		// NOTE: Arent we allocating new memory here?
 		_listeners[port] = std::shared_ptr<HttpListener>(listener);
 		LOG_NOTICE("Adding listener socket for " << config.server_name[0] << " on port: " << port);
 	}
@@ -95,9 +97,9 @@ std::vector<pollfd>&	ConnectionManager::get_pfds()
  */
 void ConnectionManager::handle_pfd_events(char *envp[])
 {
-	(void) envp;
-
 	std::vector<pollfd> &pfds = get_pfds();
+
+	(void) envp;
 	for (size_t i = 0; i < pfds.size(); i++)
 	{
 		if (pfds[i].revents)

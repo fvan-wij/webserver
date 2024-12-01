@@ -70,7 +70,7 @@ void	ClientHandler::_handle_outgoing_data()
 	switch(_state)
 	{
 		case State::Ready:
-			_send_response(response.get_type());
+			_send_response(_response.get_type());
 			break;
 		case State::ProcessingFileIO:
 			_poll_file_handler();
@@ -103,18 +103,18 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 	std::optional<std::string> error_path = _retrieve_error_path(status_code, _configs[0]);
 	if (error_path)
 	{
-		request.set_file_path(error_path.value());
+		_request.set_file_path(error_path.value());
 		_add_file_handler(ResponseType::Error);
 		_state = State::ProcessingFileIO;
 	}
 	else
 	{
-		response.set_status_code(status_code);
-		response.set_status_mssg(message);
-		response.set_body("\r\n<h1>" + std::to_string(status_code) + " " + message + "</h1>\r\n");
+		_response.set_status_code(status_code);
+		_response.set_status_mssg(message);
+		_response.set_body("\r\n<h1>" + std::to_string(status_code) + " " + message + "</h1>\r\n");
 		_state = State::Ready;
 	}
-	response.set_type(ResponseType::Error);
+	_response.set_type(ResponseType::Error);
 }
 
 /**
@@ -124,11 +124,11 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 void	ClientHandler::_process_request()
 {
 	LOG_NOTICE("Processing request...");
-	auto handler 		= HandlerFactory::create_handler(request.get_type());
-  _config 			= _resolve_config(request.get_value("Host"));
-	response 			= handler->build_response(request, _config);
+	auto handler 		= HandlerFactory::create_handler(_request.get_type());
+  _config 			= _resolve_config(_request.get_value("Host"));
+	_response 			= handler->build_response(_request, _config);
 
-	ResponseType type 	= response.get_type();
+	ResponseType type 	= _response.get_type();
 
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
@@ -152,10 +152,10 @@ void	ClientHandler::_parse(std::vector<char>& data)
 		switch (_state)
 		{
 				case State::ParsingHeaders:
-					_state = request.parse_header(data);
+					_state = _request.parse_header(data);
 					break;
 				case State::ParsingBody:
-					_state = request.parse_body(data);
+					_state = _request.parse_body(data);
 					break;
 				default:
 					break;
@@ -176,18 +176,18 @@ void	ClientHandler::_send_response(ResponseType type)
 		if (not data.empty())
 		{
 			data.push_back('\0');
-			response.set_body(data.data());
-			response.set_server("webserv");
-			response.set_virtual_host(_config.server_name[0]);
-			_socket.write(response.to_string());
-			LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << response.to_string());
+			_response.set_body(data.data());
+			_response.set_server("webserv");
+			_response.set_virtual_host(_config.server_name[0]);
+			_socket.write(_response.to_string());
+			LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << _response.to_string());
 			_close_connection();
 		}
 	}
 	else
 	{
-		_socket.write(response.to_string());
-		LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << response.to_string());
+		_socket.write(_response.to_string());
+		LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << _response.to_string());
 		_close_connection();
 	}
 }
@@ -215,15 +215,15 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 	if (type == ResponseType::Fetch || type == ResponseType::Error)
 	{
 		mask = POLLIN;
-		LOG_NOTICE("Creating Fetch FileHandler with file " << request.get_file().path);
+		LOG_NOTICE("Creating Fetch FileHandler with file " << _request.get_file().path);
 	}
 	else if (type == ResponseType::Upload)
 	{
 		mask = POLLOUT;
-		LOG_NOTICE("Creating Upload FileHandler with file " << request.get_file().path << "/" << request.get_file().name);
+		LOG_NOTICE("Creating Upload FileHandler with file " << _request.get_file().path << "/" << _request.get_file().name);
 	}
 	_state = State::ProcessingFileIO;
-	_file_handler = new FileHandler(request.get_file(), type);
+	_file_handler = new FileHandler(_request.get_file(), type);
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
 	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }

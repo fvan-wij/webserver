@@ -11,7 +11,8 @@ class ClientHandler {
 	public:
 		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs);
 		ClientHandler(const ClientHandler &) = default;
-		ClientHandler &operator=(const ClientHandler &) = default;
+		// TODO implement this one because we need to conform to the orthodox norm?
+		ClientHandler &operator=(const ClientHandler &) = delete;
 		~ClientHandler() = default;
 
 											// Methods
@@ -22,16 +23,17 @@ class ClientHandler {
 		Socket&								get_socket(){return _socket;};
 		ConnectionManager&					get_connection_manager(){return _connection_manager;};
 
-		HttpRequest							request;
-		HttpResponse						response;
 
 	private:
+		HttpRequest							_request;
+		HttpResponse						_response;
+
 		std::string							_response_data;
 		std::vector<Config>					_configs;
 		Config								_config;
 		Socket								_socket;
-		ConnectionManager					&_connection_manager;
-		FileHandler					 		*_file_handler;
+		ConnectionManager& 					_connection_manager;
+		FileHandler*				 		_file_handler;
 		State								_state;
 		Timer								_timer;
 		bool								_timed_out;
@@ -45,7 +47,7 @@ class ClientHandler {
 		void								_send_response();
 		void								_send_response(ResponseType type);
 		void 								_poll_file_handler();
-  	Config					    _resolve_config(std::optional<std::string_view> host);
+  		Config					    		_resolve_config(std::optional<std::string_view> host);
 		void								_add_file_handler(ResponseType type);
 		void								_poll_timeout_timer();
 		void								_close_connection();

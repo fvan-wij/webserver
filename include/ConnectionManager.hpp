@@ -45,7 +45,6 @@ class ConnectionManager {
 		void 	remove(int fd);
 
 		void	add_listeners(std::vector<Config> &configs);
-		void	add_listener(Config config, int port);
 
 
 		std::vector<pollfd>&		get_pfds();
@@ -53,6 +52,9 @@ class ConnectionManager {
 
 	private:
 		std::vector<pollfd>	_pfds;
+		// NOTE: Maybe this should also be a shared_ptr or something thats not a raw pointer?
 		std::unordered_map<int, ActionBase *>	_actions;
 		std::unordered_map<int, std::shared_ptr<HttpListener>> _listeners;
+
+		void	_add_listener(Config config, int port);
 };

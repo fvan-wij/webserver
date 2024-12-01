@@ -8,7 +8,7 @@
 #include <sys/poll.h>
 #include <vector>
 
-void poll_loop(ConnectionManager &cm, char *envp[])
+static void poll_loop(ConnectionManager &cm, char *envp[])
 {
 	while (1)
 	{
@@ -40,4 +40,5 @@ int main(int argc, char *argv[], char *envp[])
 	}
 	cm.add_listeners(configs);
 	poll_loop(cm, envp);
+	return 0;
 }

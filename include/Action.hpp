@@ -1,6 +1,7 @@
 #pragma once
 
-class ActionBase {
+class ActionBase
+{
 	public:
 		virtual void execute(short events) = 0;
 		virtual ~ActionBase() = default;
@@ -9,12 +10,17 @@ class ActionBase {
 template <typename T>
 class Action : public ActionBase {
 	public:
-		Action(T* obj, void (T::*method)(short)) : obj_(obj), method_(method) {}
-		void execute(short events) override {
-			(obj_->*method_)(events);
+		Action(T* obj, void (T::*cb_method)(short)) : _obj(obj), _cb_method(cb_method)
+		{
+
+		}
+
+		void execute(short events) override
+		{
+			(_obj->*_cb_method)(events);
 		}
 
 	private:
-		T* obj_;
-		void (T::*method_)(short);
+		T* _obj;
+		void (T::*_cb_method)(short);
 };

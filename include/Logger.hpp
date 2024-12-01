@@ -12,7 +12,6 @@
     static_cast<std::ostringstream&>(           \
       std::ostringstream().flush() << Message_  \
     ).str(),                                    \
-    __FUNCTION__,                               \
     __FILE__,                                   \
     __LINE__                                    \
   )
@@ -45,7 +44,6 @@ public:
 	~Logger();
 
 	void operator()(std::string const& message,
-					char const* function,
 					char const* file,
                	    int line);
 
