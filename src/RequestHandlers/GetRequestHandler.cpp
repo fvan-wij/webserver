@@ -1,6 +1,15 @@
 #include "GetRequestHandler.hpp"
 #include "Logger.hpp"
+#include "meta.hpp"
 
+bool contains_redirection(std::string_view loc, Config& config)
+{
+	auto it = config.location.find(loc.data());
+	if (it != config.location.end() && config.location[loc.data()].redirection.first != 0)
+		return true;
+	LOG_DEBUG("Redirection status: " << config.location[loc.data()].redirection.first << ", ->: " << config.location[loc.data()].redirection.second);
+	return false;
+}
 
 HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &config)
 
@@ -11,7 +20,15 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 	if (!location_exists(config, request.get_location()))
 		throw HttpException(404, "Not Found - The server cannot find the requested resource");
 	if (!method_is_valid(request.get_uri(), request.get_method(), config))
+	{
 		throw HttpException(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
+	}
+	if (contains_redirection(request.get_location(), config))
+	{
+		std::pair<int, std::string> redirection = config.location[request.get_location().data()].redirection;
+		//  throw HttpRedirection(redirection.first, REDIRECTION.at(redirection.first));
+		throw HttpRedirection(redirection.first, redirection.second);
+	}
 	std::filesystem::path path = build_path(config.root, request.get_uri(), std::nullopt);
 	if (std::filesystem::is_regular_file(path))
 	{

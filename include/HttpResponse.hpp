@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 enum {
 	NOT_READY = false,
@@ -18,6 +20,19 @@ enum class ResponseType:int {
 	Unknown,
 };
 
+const static std::unordered_map<int, std::string> HTTP_REDIRECTION =
+{
+	{300, "Multiple Choices"},
+	{301, "Moved Permanently"},
+	{302, "Found"},
+	{303, "See Other"},
+	{304, "Not Modified"},
+	{305, "Use Proxy"},
+	{306, "Switch Proxy"},
+	{307, "Temporary Redirect"},
+	{308, "Permanent Redirect"},
+};
+
 class HttpResponse
 {
 	public:
@@ -25,7 +40,7 @@ class HttpResponse
 		~HttpResponse();
 		void			set_status_code(const int status);
 		void			set_status_mssg(const std::string &mssg);
-		void			set_body(const std::string &body);
+		void			set_body(const std::string& body);
 		void			set_state(bool state){_ready = state;};
 		void			set_type(ResponseType type){_type = type;};
 		void			set_path(std::string path){_path = path;};
@@ -46,6 +61,8 @@ class HttpResponse
 
 		std::string		to_string() const;
 		void 			set_error_response(const int status, const std::string &status_mssg);
+		void			set_redirection(const int redirection_code, const std::string& message){_redirection = {redirection_code, message};};
+		void 			insert_header(std::pair<std::string, std::string> key_value_pair){_header.insert(key_value_pair);};
 
 	private:
 		int				_status_code;
@@ -55,6 +72,8 @@ class HttpResponse
 		std::string		_server;
 		std::string		_body;
 		std::string		_path;
+		std::pair<int, std::string>	_redirection;
+		std::unordered_map<std::string, std::string> _header;
 		bool			_ready;
 		ResponseType	_type;
 };

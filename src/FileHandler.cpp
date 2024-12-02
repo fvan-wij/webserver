@@ -110,6 +110,7 @@ void	FileHandler::_read_file()
 			{
 				_file.finished = true;
 				_file.is_open = false;
+				_file.data.push_back('\0'); //Hmm've
 				close(_file.fd);
 				LOG_DEBUG("FileHandler is done...");
 			}

@@ -159,6 +159,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	response.set_status_code(status_code);
 	response.set_status_mssg("OK");
 	response.set_type(type);
+	response.insert_header({"Connection", "close"});
 	switch (type)
 	{
 		case ResponseType::Fetch:
@@ -170,6 +171,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 		case ResponseType::Upload:
 			{
 				response.set_body("\r\n<h1>File "+ std::string(path.data()) + " uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
+				response.insert_header({"Content-Length", std::to_string(response.get_body().length())});
 			}
 			break;
 		case ResponseType::Delete:

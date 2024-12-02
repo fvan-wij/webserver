@@ -31,16 +31,26 @@ void ClientHandler::handle_request(short events)
 		if (not _timed_out)
 		{
 			_poll_timeout_timer();
+
 			if (events & POLLIN)
+			{
 				_handle_incoming_data();
+			}
 		}
 		if (events & POLLOUT)
+		{
 			_handle_outgoing_data();
+		}
 	}
 	catch (const HttpException& e)
 	{
 		LOG_ERROR(std::to_string(e.status()) << " " << e.what());
 		_build_error_response(e.status(), e.what());
+	}
+	catch (const HttpRedirection& e)
+	{
+		LOG_ERROR(std::to_string(e.status()) << " " << HTTP_REDIRECTION.at(e.status()));
+		_build_redirection_response(e.status(), e.what());
 	}
 }
 
@@ -50,16 +60,16 @@ void ClientHandler::handle_request(short events)
 void	ClientHandler::_handle_incoming_data()
 {
 	std::optional<std::vector<char>> incoming_data = _socket.read();
+
 	if (not incoming_data)
 	{
 		LOG_ERROR("Failed to read request from client (fd " << _socket.get_fd() << ")");
 		throw (HttpException(400, "Bad Request"));
 	}
-	else
-	{
-		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on port: " << _socket.get_port());
-		_parse(incoming_data.value());
-	}
+
+	LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on port: " << _socket.get_port());
+
+	_parse(incoming_data.value());
 }
 
 /**
@@ -98,23 +108,52 @@ std::optional<std::string> ClientHandler::_retrieve_error_path(int error_code, C
 	return std::nullopt;
 }
 
+// void	ClientHandler::_build_error_response(int status_code, const std::string& message)
+// {
+// 	std::optional<std::string> error_path = _retrieve_error_path(status_code, _configs[0]);
+
+// 	if (error_path)
+// 	{
+// 		request.set_file_path(error_path.value());
+// 		_add_file_handler(ResponseType::Error);
+// 		_state = State::ProcessingFileIO;
+// 	}
+// 	else
+// 	{
+// 		response.set_status_code(status_code);
+// 		response.set_status_mssg(message);
+// 		_state = State::Ready;
+// 	}
+// 	response.set_type(ResponseType::Error);
+// }
+
 void	ClientHandler::_build_error_response(int status_code, const std::string& message)
 {
 	std::optional<std::string> error_path = _retrieve_error_path(status_code, _configs[0]);
+
+	response.set_type(ResponseType::Error);
+
 	if (error_path)
 	{
 		request.set_file_path(error_path.value());
 		_add_file_handler(ResponseType::Error);
 		_state = State::ProcessingFileIO;
+		return;
 	}
 	else
 	{
 		response.set_status_code(status_code);
 		response.set_status_mssg(message);
-		response.set_body("\r\n<h1>" + std::to_string(status_code) + " " + message + "</h1>\r\n");
 		_state = State::Ready;
 	}
-	response.set_type(ResponseType::Error);
+}
+
+void	ClientHandler::_build_redirection_response(int status_code, const std::string& message)
+{
+	response.set_status_code(status_code);
+	response.set_status_mssg(HTTP_REDIRECTION.at(status_code));
+	response.insert_header({"Location", message}); //Must be set dynamically!
+	_state = State::Ready;
 }
 
 /**
@@ -125,7 +164,7 @@ void	ClientHandler::_process_request()
 {
 	LOG_NOTICE("Processing request...");
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
-  _config 			= _resolve_config(request.get_value("Host"));
+  	_config 			= _resolve_config(request.get_value("Host"));
 	response 			= handler->build_response(request, _config);
 
 	ResponseType type 	= response.get_type();
@@ -175,10 +214,10 @@ void	ClientHandler::_send_response(ResponseType type)
 		std::vector<char>& data = _file_handler->get_file().data;
 		if (not data.empty())
 		{
-			data.push_back('\0');
-			response.set_body(data.data());
-			response.set_server("webserv");
-			response.set_virtual_host(_config.server_name[0]);
+			response.set_body(std::string(data.begin(), data.end()));
+			response.insert_header({"Server", "webserv"});
+			response.insert_header({"Virtual-Host", _config.server_name[0]});
+			response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
 			_socket.write(response.to_string());
 			LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << response.to_string());
 			_close_connection();
