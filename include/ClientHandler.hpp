@@ -5,6 +5,7 @@
 #include <ConnectionManager.hpp>
 #include <FileHandler.hpp>
 #include <HttpRequest.hpp>
+#include <HttpResponse.hpp>
 #include <Timer.hpp>
 
 class ClientHandler {

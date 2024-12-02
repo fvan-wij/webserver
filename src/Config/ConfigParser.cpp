@@ -123,6 +123,7 @@ std::pair<std::string, Location> parse_location(std::vector<std::string> tokens,
 		if (tokens[i] == "return")
 		{
 			location.redirection = parse_redirection(tokens, i);
+			continue;
 		}
 		i++;
 	}

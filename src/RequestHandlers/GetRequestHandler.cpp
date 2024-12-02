@@ -1,5 +1,6 @@
 #include "GetRequestHandler.hpp"
 #include "Logger.hpp"
+#include "meta.hpp"
 
 bool contains_redirection(std::string_view loc, Config& config)
 {
@@ -25,6 +26,7 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 	if (contains_redirection(request.get_location(), config))
 	{
 		std::pair<int, std::string> redirection = config.location[request.get_location().data()].redirection;
+		//  throw HttpRedirection(redirection.first, REDIRECTION.at(redirection.first));
 		throw HttpRedirection(redirection.first, redirection.second);
 	}
 	std::filesystem::path path = build_path(config.root, request.get_uri(), std::nullopt);

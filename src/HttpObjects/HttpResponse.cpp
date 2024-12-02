@@ -1,4 +1,5 @@
 #include "HttpResponse.hpp"
+#include "Logger.hpp"
 
 HttpResponse::HttpResponse() : _status_code(0), _streamcount(0), _ready(NOT_READY), _type(ResponseType::Unknown)
 {
@@ -29,6 +30,7 @@ void		HttpResponse::set_status_mssg(const std::string &mssg)
 	_status_message = mssg;
 
 }
+
 void		HttpResponse::set_body(const std::string &body)
 {
 	_body = body;

@@ -70,5 +70,3 @@ typedef struct File
 	bool				finished;
 	bool				is_open;
 } File;
-
-
