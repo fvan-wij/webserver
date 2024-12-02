@@ -44,7 +44,7 @@ class ConnectionManager {
 		void	add(int fd, short events, ActionBase* action);
 		void 	remove(int fd);
 
-		void	add_listeners(std::vector<Config> &configs);
+		void	add_listeners(std::vector<Config> &configs, char **envp);
 
 
 		std::vector<pollfd>&		get_pfds();
@@ -56,5 +56,5 @@ class ConnectionManager {
 		std::unordered_map<int, ActionBase *>	_actions;
 		std::unordered_map<int, std::shared_ptr<HttpListener>> _listeners;
 
-		void	_add_listener(Config config, int port);
+		void _add_listener(Config config, int port, char **envp);
 };

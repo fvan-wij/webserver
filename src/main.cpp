@@ -38,7 +38,7 @@ int main(int argc, char *argv[], char *envp[])
 		LOG_ERROR("Config is invalid or not present, using DEFAULT_CONFIG");
 		configs.push_back(DEFAULT_CONFIG);
 	}
-	cm.add_listeners(configs);
+	cm.add_listeners(configs, envp);
 	poll_loop(cm, envp);
 	return 0;
 }

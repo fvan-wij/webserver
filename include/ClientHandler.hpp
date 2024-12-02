@@ -1,4 +1,5 @@
 #pragma once
+#include "CGI.hpp"
 #include <string>
 #include <vector>
 #include <Socket.hpp>
@@ -9,7 +10,7 @@
 
 class ClientHandler {
 	public:
-		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs);
+		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, char *envp[]);
 		ClientHandler(const ClientHandler &) = default;
 		// TODO implement this one because we need to conform to the orthodox norm?
 		ClientHandler &operator=(const ClientHandler &) = delete;
@@ -28,6 +29,7 @@ class ClientHandler {
 		HttpRequest							_request;
 		HttpResponse						_response;
 
+		CGI 								_cgi;
 		std::string							_response_data;
 		std::vector<Config>					_configs;
 		Config								_config;
@@ -37,6 +39,8 @@ class ClientHandler {
 		State								_state;
 		Timer								_timer;
 		bool								_timed_out;
+
+		char**_envp;
 
 		void								_handle_incoming_data();
 		void								_handle_outgoing_data();
@@ -51,5 +55,8 @@ class ClientHandler {
 		void								_add_file_handler(ResponseType type);
 		void								_poll_timeout_timer();
 		void								_close_connection();
+
+		// TODO Tmp
+		void _poll_cgi();
 
 };

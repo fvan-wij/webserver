@@ -2,6 +2,7 @@
 #include "ConnectionManager.hpp"
 #include <HttpListener.hpp>
 #include <FileHandler.hpp>
+#include <unistd.h>
 
 ConnectionManager::ConnectionManager()
 {
@@ -11,13 +12,13 @@ ConnectionManager::ConnectionManager()
 /**
  * @brief Using the config(s) as reference add new listener sockets. (I feel like this needs an update at some point)
  */
-void ConnectionManager::add_listeners(std::vector<Config> &configs)
+void ConnectionManager::add_listeners(std::vector<Config> &configs, char **envp)
 {
 	for (const auto& config : configs)
 	{
 		for (const auto& [name, port] : config.listen)
 		{
-			this->_add_listener(config, port);
+			this->_add_listener(config, port, envp);
 		}
 	}
 }
@@ -51,7 +52,7 @@ void ConnectionManager::add(int fd, short events, ActionBase *action)
  * @param config
  * @param port
  */
-void ConnectionManager::_add_listener(Config config, int port)
+void ConnectionManager::_add_listener(Config config, int port, char **envp)
 {
 	HttpListener *listener;
 	if (_listeners.find(port) != _listeners.end())
@@ -61,7 +62,7 @@ void ConnectionManager::_add_listener(Config config, int port)
 	}
 	else
 	{
-		listener = new HttpListener(port, *this);
+		listener = new HttpListener(port, *this, envp);
 		// NOTE: Arent we allocating new memory here?
 		_listeners[port] = std::shared_ptr<HttpListener>(listener);
 		LOG_NOTICE("Adding listener socket for " << config.server_name[0] << " on port: " << port);

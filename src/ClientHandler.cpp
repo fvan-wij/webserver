@@ -1,3 +1,5 @@
+#include "HttpResponse.hpp"
+#include "Logger.hpp"
 #include <ClientHandler.hpp>
 #include <HandlerFactory.hpp>
 #include <iostream>
@@ -12,11 +14,11 @@
  * @param configs: vector of configs
  */
 
-ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs) 
+ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs, char *envp[]) 
 	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false)
 
 {
-
+	_envp = envp;
 }
 
 /**
@@ -50,6 +52,7 @@ void ClientHandler::handle_request(short events)
 void	ClientHandler::_handle_incoming_data()
 {
 	std::optional<std::vector<char>> incoming_data = _socket.read();
+
 	if (not incoming_data)
 	{
 		LOG_ERROR("Failed to read request from client (fd " << _socket.get_fd() << ")");
@@ -59,6 +62,17 @@ void	ClientHandler::_handle_incoming_data()
 	{
 		LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on port: " << _socket.get_port());
 		_parse(incoming_data.value());
+	}
+}
+
+void ClientHandler::_poll_cgi()
+{
+
+	if (_cgi.is_running() && _cgi.poll())
+	{
+		LOG_NOTICE("CGI is finished");
+		_state = State::Ready;
+		LOG_NOTICE("CGI OUTPUT: " << _cgi.get_buffer());
 	}
 }
 
@@ -75,6 +89,9 @@ void	ClientHandler::_handle_outgoing_data()
 		// TODO This should also poll the CGI
 		case State::ProcessingFileIO:
 			_poll_file_handler();
+			break;
+		case State::ProcessingCGI:
+			_poll_cgi();
 			break;
 		case State::ProcessingRequest:
 			_process_request();
@@ -131,10 +148,22 @@ void	ClientHandler::_process_request()
 
 	ResponseType type 	= _response.get_type();
 
+	std::vector<const char *> args = { "/usr/bin/ls" };
+	_cgi.start(args, _envp);
+	_state = State::ProcessingCGI;
+
+return ;
+
 	// TODO Try to use a filehandler for reading a CGIs output.
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
 		_add_file_handler(type);
+	}
+	else if (type == ResponseType::CGI)
+	{
+		std::vector<const char *> args = { "/usr/bin/ls" };
+		_cgi.start(args, _envp);
+		_state = State::ProcessingCGI;
 	}
 	else
 		_state = State::Ready;
@@ -237,7 +266,8 @@ void ClientHandler::_poll_file_handler()
 {
 	LOG_NOTICE("Waiting on FileHandler...");
 
-	if (_file_handler->is_finished())
+	// TODO Refactor this so it also polls CGI.
+	 if (_file_handler->is_finished())
 	{
 		LOG_NOTICE("FileHandler is finished");
 		_state = State::Ready;

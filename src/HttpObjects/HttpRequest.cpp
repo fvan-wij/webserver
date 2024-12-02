@@ -3,6 +3,7 @@
 #include "Utility.hpp"
 
 #include <algorithm>
+#include <string>
 
 HttpRequest::HttpRequest()
 	: _b_header_parsed(false), _b_body_parsed(false), _b_file(false),
@@ -95,6 +96,13 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 	}
 }
 
+static bool str_endswith(const std::string& s, const std::string end)
+{
+	if (end.size() > s.size())
+		return false;
+	return s.compare(s.size() - end.size(), end.size(), end) == 0;
+}
+
 State HttpRequest::parse_body(std::vector<char>& buffer)
 {
 	LOG_NOTICE("Parsing body...");
@@ -105,6 +113,12 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
 
 	LOG_INFO("body: " << sv_buffer);
+
+	// TODO Check if `_uri` is a cgi
+	if (get_uri_as_path().extension() == ".py")
+	{
+		LOG_DEBUG("URI: " << _uri << "  endswith : .py");
+	}
 
 	//extract filename if not yet extracted -> set file extracted true
 	if (not _b_file_extracted)
