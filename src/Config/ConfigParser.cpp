@@ -96,6 +96,18 @@ std::pair<int, std::string> parse_redirection(std::vector<std::string>& tokens, 
 	return (redirection);
 }
 
+bool parse_autoindex(std::vector<std::string> tokens, unsigned long &i)
+{
+	bool autoindex;
+	i++;
+	if (tokens[i] == "on")
+		autoindex = true;
+	else
+		autoindex = false;
+	i++;
+	return (autoindex);
+}
+
 std::pair<std::string, Location> parse_location(std::vector<std::string> tokens, unsigned long &i)
 {
 	Location	location;
@@ -123,6 +135,11 @@ std::pair<std::string, Location> parse_location(std::vector<std::string> tokens,
 		if (tokens[i] == "return")
 		{
 			location.redirection = parse_redirection(tokens, i);
+			continue;
+		}
+		if (tokens[i] == "autoindex")
+		{
+			location.autoindex = parse_autoindex(tokens, i);
 			continue;
 		}
 		i++;
