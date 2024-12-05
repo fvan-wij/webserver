@@ -15,17 +15,17 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 
 {
 	LOG_NOTICE("Handling GET request:\n" << static_cast<const HttpRequest>(request));
-	// LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
 
 	if (!location_exists(config, request.get_location()))
 		throw HttpException(404, "Not Found - The server cannot find the requested resource");
+	Location& location_block = config.location[request.get_location().data()];
 	if (!method_is_valid(request.get_uri(), request.get_method(), config))
 	{
 		throw HttpException(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
 	}
 	if (contains_redirection(request.get_location(), config))
 	{
-		std::pair<int, std::string> redirection = config.location[request.get_location().data()].redirection;
+		std::pair<int, std::string> redirection = location_block.redirection;
 		//  throw HttpRedirection(redirection.first, REDIRECTION.at(redirection.first));
 		throw HttpRedirection(redirection.first, redirection.second);
 	}
@@ -43,14 +43,13 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 	else if (std::filesystem::is_directory(path))
 	{
 
-		std::string index = config.location[request.get_location().data()].index;
+		std::string index = location_block.index;
 		path /= index;
 		request.set_file_path(path.string());
 		if (not index.empty() && std::filesystem::exists(path))
 			return generate_successful_response(200, path.string(), ResponseType::Fetch);
-		else
+		else if (location_block.autoindex)
 			return generate_successful_response(200, path.string(), ResponseType::Autoindex);
 	}
-	else
-		throw HttpException(404, "Not Found - The server cannot find the requested resource");
+	throw HttpException(404, "Not Found - The server cannot find the requested resource");
 }
