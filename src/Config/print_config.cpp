@@ -47,6 +47,10 @@ void	print_location(Config config)
 		std::cout << "    ";
 		print_methods(location.allowed_methods);
 		std::cout << "     - root: " << location.root << std::endl;
+		if (location.autoindex)	
+			std::cout << "	- autoindex: on;" << std::endl;
+		else
+			std::cout << "	- autoindex: off;" << std::endl;
 		std::cout << "	- redirection(s):" << std::endl;
 		auto [status, redirection] =  location.redirection;
 		std::cout << std::to_string(status) << " -> " << redirection << std::endl;

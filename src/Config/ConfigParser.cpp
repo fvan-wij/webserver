@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
+#include <cstring>
 #include "Logger.hpp"
 
 static std::vector<std::string> tokenize_string(std::string string, std::string delimiter)
@@ -100,8 +101,10 @@ bool parse_autoindex(std::vector<std::string> tokens, unsigned long &i)
 {
 	bool autoindex;
 	i++;
-	if (tokens[i] == "on")
+	if (tokens[i] == "on;")
+	{
 		autoindex = true;
+	}
 	else
 		autoindex = false;
 	i++;
@@ -111,6 +114,7 @@ bool parse_autoindex(std::vector<std::string> tokens, unsigned long &i)
 std::pair<std::string, Location> parse_location(std::vector<std::string> tokens, unsigned long &i)
 {
 	Location	location;
+	location.autoindex = false;
 	std::pair<std::string, Location> entry;
 	i++;
 	location.path = tokens[i];
@@ -240,6 +244,7 @@ Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 	print_config(server_config);
 	return (server_config);
 }
+
 std::vector<Config>	parse_config(std::string_view config_path)
 {
 	std::vector<Config>			configs;
