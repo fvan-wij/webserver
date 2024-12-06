@@ -4,17 +4,21 @@ class ActionBase {
 	public:
 		virtual void execute(short events) = 0;
 		virtual ~ActionBase() = default;
+		virtual void cleanup() = 0;
 };
 
 template <typename T>
 class Action : public ActionBase {
 	public:
-		Action(T* obj, void (T::*method)(short)) : obj_(obj), method_(method) {}
+		Action(T* obj, void (T::*method)(short)) : _obj(obj), _method(method) {}
 		void execute(short events) override {
-			(obj_->*method_)(events);
+			(_obj->*_method)(events);
+		}
+		void cleanup() {
+			delete _obj;
 		}
 
 	private:
-		T* obj_;
-		void (T::*method_)(short);
+		T* _obj;
+		void (T::*_method)(short);
 };

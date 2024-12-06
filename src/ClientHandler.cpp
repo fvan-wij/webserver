@@ -12,7 +12,7 @@
  * @param configs: vector of configs
  */
 
-ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs) 
+ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs)
 	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false)
 
 {
@@ -26,7 +26,7 @@ ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<C
  */
 void ClientHandler::handle_request(short events)
 {
-	try 
+	try
 	{
 		if (not _timed_out)
 		{
@@ -157,7 +157,7 @@ void	ClientHandler::_build_redirection_response(int status_code, const std::stri
 }
 
 /**
- * @brief Processes and validates the request. 
+ * @brief Processes and validates the request.
  * Creates a new event handler based on the ResponseType (Fetch, Upload, Delete, CGI)
  */
 void	ClientHandler::_process_request()

@@ -75,7 +75,10 @@ void ConnectionManager::remove(int fd)
 			_pfds.erase(_pfds.begin() + i);
 	}
 	close(fd);
+	ActionBase *act = _actions[fd];
 	_actions.erase(fd);
+	act->cleanup();
+	delete act;
 	LOG_INFO("Client (fd " << fd << ") disconnected");
 }
 
