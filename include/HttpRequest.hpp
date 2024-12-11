@@ -44,7 +44,7 @@ class HttpRequest
 		std::vector<char>& 								get_body_buffer() {return _body_buffer;};
 		std::optional<std::string_view>					get_value(const std::string &key) const;
 		std::unordered_map<std::string, std::string>	get_headers() const {return _header;};
-		File&											get_file() {return _file;};
+		File											get_file() {return _file;};
 
 		//												Bools
 		bool											is_header_parsed() {return _b_header_parsed;};

@@ -10,7 +10,7 @@ class ClientHandler;
 class FileHandler {
 	public:
         // 		Constructors
-		FileHandler(File& file, ResponseType type);
+		FileHandler(File file, ResponseType type);
 		FileHandler(const FileHandler &) = default;
 		FileHandler &operator=(const FileHandler &) = default;
 		~FileHandler() = default;
@@ -22,7 +22,7 @@ class FileHandler {
 		File&	get_file();
 
 	private:
-		File			&_file;
+		File			_file;
 		ResponseType	_type;
 
 		void	_open_file();

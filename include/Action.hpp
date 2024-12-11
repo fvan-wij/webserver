@@ -15,7 +15,8 @@ class Action : public ActionBase {
 			(_obj->*_method)(events);
 		}
 		void cleanup() {
-			delete _obj;
+			if (_obj)
+				delete _obj;
 		}
 
 	private:

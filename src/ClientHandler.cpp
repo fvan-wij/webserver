@@ -34,11 +34,13 @@ void ClientHandler::handle_request(short events)
 
 			if (events & POLLIN)
 			{
+				LOG_DEBUG("Client" << _socket.get_fd() << " POLLIN");
 				_handle_incoming_data();
 			}
 		}
 		if (events & POLLOUT)
 		{
+			LOG_DEBUG("Client" << _socket.get_fd() << " POLLOUT");
 			_handle_outgoing_data();
 		}
 	}
@@ -209,10 +211,10 @@ void	ClientHandler::_parse(std::vector<char>& data)
  */
 void	ClientHandler::_send_response(ResponseType type)
 {
-	if (type == ResponseType::Fetch || (type == ResponseType::Error && _file_handler))
+	if ((type == ResponseType::Fetch || type == ResponseType::Error) && _file_handler)
 	{
-		std::vector<char>& data = _file_handler->get_file().data;
-		if (not data.empty())
+		std::vector<char> data = _file_handler->get_file().data;
+		if (!data.empty())
 		{
 			response.set_body(std::string(data.begin(), data.end()));
 			response.insert_header({"Server", "webserv"});
@@ -272,9 +274,9 @@ void	ClientHandler::_add_file_handler(ResponseType type)
  */
 void ClientHandler::_poll_file_handler()
 {
-	LOG_NOTICE("Waiting on FileHandler...");
+	LOG_NOTICE("Client (" << _socket.get_fd() << ") Waiting on FileHandler...");
 
-	if (_file_handler->is_finished())
+	if (_file_handler && _file_handler->is_finished())
 	{
 		LOG_NOTICE("FileHandler is finished");
 		_state = State::Ready;
@@ -301,6 +303,10 @@ void	ClientHandler::_poll_timeout_timer()
 void	ClientHandler::_close_connection()
 {
 	if (_file_handler != nullptr)
+	{
 		_connection_manager.remove(_file_handler->get_fd());
+		// delete _file_handler;
+		_file_handler = nullptr;
+	}
 	_connection_manager.remove(_socket.get_fd());
 }

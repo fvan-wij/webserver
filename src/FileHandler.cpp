@@ -7,7 +7,7 @@
 
 class ClientHandler;
 
-FileHandler::FileHandler(File& file, ResponseType type) : _file(file), _type(type)
+FileHandler::FileHandler(File file, ResponseType type) : _file(file), _type(type)
 {
 	switch (type)
 	{
@@ -157,4 +157,3 @@ void	FileHandler::_write_file()
 	_file.streamcount += buffer_size;
 	_file.finished = bytes_left <= 0;
 }
-
