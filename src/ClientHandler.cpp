@@ -52,6 +52,11 @@ void ClientHandler::handle_request(short events)
 		LOG_ERROR(std::to_string(e.status()) << " " << HTTP_REDIRECTION.at(e.status()));
 		_build_redirection_response(e.status(), e.what());
 	}
+	catch (const ClosedConnectionException& e)
+	{
+		LOG_ERROR(e.what());
+		_close_connection();
+	}
 }
 
 /**
@@ -107,25 +112,6 @@ std::optional<std::string> ClientHandler::_retrieve_error_path(int error_code, C
 		return ("." + config.root + error);
 	return std::nullopt;
 }
-
-// void	ClientHandler::_build_error_response(int status_code, const std::string& message)
-// {
-// 	std::optional<std::string> error_path = _retrieve_error_path(status_code, _configs[0]);
-
-// 	if (error_path)
-// 	{
-// 		request.set_file_path(error_path.value());
-// 		_add_file_handler(ResponseType::Error);
-// 		_state = State::ProcessingFileIO;
-// 	}
-// 	else
-// 	{
-// 		response.set_status_code(status_code);
-// 		response.set_status_mssg(message);
-// 		_state = State::Ready;
-// 	}
-// 	response.set_type(ResponseType::Error);
-// }
 
 void	ClientHandler::_build_error_response(int status_code, const std::string& message)
 {
@@ -233,7 +219,7 @@ void	ClientHandler::_send_response(ResponseType type)
 
 Config	ClientHandler::_resolve_config(std::optional<std::string_view> host)
 {
-	LOG_DEBUG(host.value_or("No host"));
+	// LOG_DEBUG(host.value_or("No host"));
 	if (not host)
 		return _configs[0];
 	for (auto conf : _configs)

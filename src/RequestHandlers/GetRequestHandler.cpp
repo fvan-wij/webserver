@@ -7,14 +7,15 @@ bool contains_redirection(std::string_view loc, Config& config)
 	auto it = config.location.find(loc.data());
 	if (it != config.location.end() && config.location[loc.data()].redirection.first != 0)
 		return true;
-	LOG_DEBUG("Redirection status: " << config.location[loc.data()].redirection.first << ", ->: " << config.location[loc.data()].redirection.second);
+	// LOG_DEBUG("Redirection status: " << config.location[loc.data()].redirection.first << ", ->: " << config.location[loc.data()].redirection.second);
 	return false;
 }
 
 HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &config)
 
 {
-	LOG_NOTICE("Handling GET request:\n" << static_cast<const HttpRequest>(request));
+	// LOG_NOTICE("Handling GET request:\n" << static_cast<const HttpRequest>(request));
+	LOG_NOTICE("Handling GET request:\n");
 
 	if (!location_exists(config, request.get_location()))
 		throw HttpException(404, "Not Found - The server cannot find the requested resource");

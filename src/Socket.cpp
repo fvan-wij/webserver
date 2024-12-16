@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <iostream>
+#include "HttpExceptions.hpp"
 
 //
 // #ifndef DEBUG_SOCKET
@@ -73,8 +74,7 @@ std::optional<std::vector<char>> Socket::read()
 	}
 	else if (n == 0)
 	{
-		LOG_ERROR("CLOSE CONNECTION");
-		return std::nullopt;
+		throw ClosedConnectionException("Client closed connection!");
 	}
 	LOG_DEBUG("n of bytes read: " << n);
 	if (n != 0)
