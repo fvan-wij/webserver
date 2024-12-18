@@ -16,12 +16,13 @@ class ClientHandler {
 		~ClientHandler() = default;
 
 											// Methods
-		void								handle_request(short events);
+		void								handle_request(short revents);
 
 											// Getters
 		std::vector<Config>&				get_configs(){return _configs;};
 		Socket&								get_socket(){return _socket;};
 		ConnectionManager&					get_connection_manager(){return _connection_manager;};
+		void								init_timer(){_timer.reset();};
 
 		HttpRequest							request;
 		HttpResponse						response;
@@ -33,6 +34,7 @@ class ClientHandler {
 		Socket								_socket;
 		ConnectionManager					&_connection_manager;
 		FileHandler					 		*_file_handler;
+		File								_file;
 		State								_state;
 		Timer								_timer;
 		bool								_timed_out;

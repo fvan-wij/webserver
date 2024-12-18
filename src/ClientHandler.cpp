@@ -14,7 +14,6 @@
 
 ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs)
 	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false)
-
 {
 
 }
@@ -24,20 +23,21 @@ ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<C
  *
  * @param events: POLLIN and/or POLLOUT
  */
-void ClientHandler::handle_request(short events)
+void ClientHandler::handle_request(short revents)
 {
+
 	try
 	{
 		if (not _timed_out)
 		{
 			_poll_timeout_timer();
-
-			if (events & POLLIN)
-			{
-				_handle_incoming_data();
-			}
+			_poll_file_handler();
 		}
-		if (events & POLLOUT)
+		if (revents & POLLIN)
+		{
+			_handle_incoming_data();
+		}
+		if (revents & POLLOUT)
 		{
 			_handle_outgoing_data();
 		}
@@ -148,7 +148,6 @@ void	ClientHandler::_build_redirection_response(int status_code, const std::stri
  */
 void	ClientHandler::_process_request()
 {
-	LOG_NOTICE("Processing request...");
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
   	_config 			= _resolve_config(request.get_value("Host"));
 	response 			= handler->build_response(request, _config);
@@ -157,7 +156,14 @@ void	ClientHandler::_process_request()
 
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
-		_add_file_handler(type);
+		try
+		{
+			_add_file_handler(type);
+		}
+		catch (HttpException& e)
+		{
+			_build_error_response(e.status(), e.what());
+		}
 	}
 	else
 		_state = State::Ready;
@@ -195,9 +201,9 @@ void	ClientHandler::_parse(std::vector<char>& data)
  */
 void	ClientHandler::_send_response(ResponseType type)
 {
-	if (type == ResponseType::Fetch || (type == ResponseType::Error && _file_handler))
+	if (type == ResponseType::Fetch || type == ResponseType::Error)
 	{
-		std::vector<char>& data = _file_handler->get_file().data;
+		std::vector<char>& data = _file.data;
 		if (not data.empty())
 		{
 			response.set_body(std::string(data.begin(), data.end()));
@@ -205,14 +211,14 @@ void	ClientHandler::_send_response(ResponseType type)
 			response.insert_header({"Virtual-Host", _config.server_name[0]});
 			response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
 			_socket.write(response.to_string());
-			LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << response.to_string());
+			LOG_NOTICE("Response sent (fd " << _socket.get_fd() << ")\n");
 			_close_connection();
 		}
 	}
 	else
 	{
 		_socket.write(response.to_string());
-		LOG_NOTICE("Response sent to fd " << _socket.get_fd() << ":\n" << response.to_string());
+		LOG_NOTICE("Response sent (fd " << _socket.get_fd() << ")\n");
 		_close_connection();
 	}
 }
@@ -258,11 +264,23 @@ void	ClientHandler::_add_file_handler(ResponseType type)
  */
 void ClientHandler::_poll_file_handler()
 {
-	LOG_NOTICE("Waiting on FileHandler...");
-
-	if (_file_handler->is_finished())
+	if (not _file_handler)
 	{
-		LOG_NOTICE("FileHandler is finished");
+		return;
+	}
+	if (_file_handler->error())
+	{
+		_connection_manager.remove(_file_handler->get_fd());
+		_file_handler = nullptr;
+		_build_error_response(400, "Bad Request");
+	}
+	else if (_file_handler->is_finished())
+	{
+		LOG_NOTICE("(fd " << _socket.get_fd() << ") FileHandler is finished (fd " << _file_handler->get_fd() << ")");
+		LOG_INFO("File handler (fd " << _file_handler->get_fd() << ") disconnected");
+		_file = _file_handler->get_file();
+		_connection_manager.remove(_file_handler->get_fd());
+		_file_handler = nullptr;
 		_state = State::Ready;
 	}
 }
@@ -286,7 +304,6 @@ void	ClientHandler::_poll_timeout_timer()
  */
 void	ClientHandler::_close_connection()
 {
-	if (_file_handler != nullptr)
-		_connection_manager.remove(_file_handler->get_fd());
+	LOG_INFO("Client (fd " << _socket.get_fd() << ") disconnected");
 	_connection_manager.remove(_socket.get_fd());
 }

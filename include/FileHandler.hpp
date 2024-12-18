@@ -16,14 +16,16 @@ class FileHandler {
 		~FileHandler() = default;
 
         // 		Methods
-		void	handle_file(short events);
+		void	handle_file(short revents);
 		bool	is_finished();
+		bool	error();
 		int		get_fd() {return _file.fd;};
 		File&	get_file();
 
 	private:
 		File			&_file;
 		ResponseType	_type;
+		bool			_error;
 
 		void	_open_file();
 		void	_create_file();

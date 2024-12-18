@@ -159,7 +159,7 @@ void 				Socket::_init_listener(int port)
 		LOG_ERROR("Error occurred: " << strerror(errno));
 		return;
 	}
-	if (listen(_fd, 5) < 0)
+	if (listen(_fd, 400) < 0)
 	{
 		LOG_ERROR("Error occurred: " << strerror(errno));
 		return;
