@@ -17,7 +17,7 @@
 
 
 //Socket can be client or listener
-Socket::Socket(SocketType connection_type, int data) : _type(connection_type)	
+Socket::Socket(SocketType connection_type, int data) : _type(connection_type)
 {
 	if (_type == SocketType::LISTENER)
 		_init_listener(data);
@@ -67,16 +67,18 @@ std::optional<std::vector<char>> Socket::read()
 
 	bzero(&buffer, sizeof(buffer));
 	int n;
-	if ((n = recv(_fd, buffer, SOCKET_READ_SIZE - 1, 0)) == -1)
+	n = recv(_fd, buffer, SOCKET_READ_SIZE - 1, 0);
+	if (n == -1)
 	{
-		LOG_DEBUG("n of bytes received " << n);
+		LOG_DEBUG("num of bytes received " << n << " fd: " << _fd);
 		UNIMPLEMENTED("recv failed");
 	}
 	else if (n == 0)
 	{
-		throw ClosedConnectionException("Client closed connection!");
+		LOG_DEBUG("Remote on fd " << _fd << " closed connection");
+		return std::nullopt;
 	}
-	LOG_DEBUG("n of bytes read: " << n);
+	LOG_DEBUG("num of bytes received " << n << " fd: " << _fd);
 	if (n != 0)
 	{
 		std::vector<char> data(buffer, buffer + n);

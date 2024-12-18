@@ -5,18 +5,18 @@
 #include <ConnectionManager.hpp>
 #include <FileHandler.hpp>
 #include <HttpRequest.hpp>
-// #include <HttpResponse.hpp>
-// #include <Timer.hpp>
+#include <HttpResponse.hpp>
+#include <Timer.hpp>
 
-class ClientHandler {
+class ClientHandler_old {
 	public:
-		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs);
-		ClientHandler(const ClientHandler &) = default;
-		ClientHandler &operator=(const ClientHandler &) = default;
-		~ClientHandler() = default;
+		ClientHandler_old(ConnectionManager& cm, Socket socket, std::vector<Config>& configs);
+		ClientHandler_old(const ClientHandler_old &) = default;
+		ClientHandler_old &operator=(const ClientHandler_old &) = default;
+		~ClientHandler_old() = default;
 
 											// Methods
-		void								handle_event(short events);
+		void								handle_request(short events);
 
 											// Getters
 		std::vector<Config>&				get_configs(){return _configs;};
@@ -24,7 +24,7 @@ class ClientHandler {
 		ConnectionManager&					get_connection_manager(){return _connection_manager;};
 
 		HttpRequest							request;
-		// HttpResponse						response;
+		HttpResponse						response;
 
 	private:
 		std::string							_response_data;
@@ -34,13 +34,9 @@ class ClientHandler {
 		ConnectionManager					&_connection_manager;
 		FileHandler					 		*_file_handler;
 		State								_state;
-		// Timer								_timer;
+		Timer								_timer;
 		bool								_timed_out;
-		std::vector<char>					request_buffer_;
 
-		// bool 								_read_request();
-		void								_event_pollin();
-		void								_event_pollout();
 		void								_handle_incoming_data();
 		void								_handle_outgoing_data();
 		std::optional<std::string> 			_retrieve_error_path(int error_code, Config &config);

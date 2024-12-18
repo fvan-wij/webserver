@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-enum {
+enum class ResponseState:bool {
 	NOT_READY = false,
 	READY = true,
 };

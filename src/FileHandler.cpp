@@ -112,7 +112,7 @@ void	FileHandler::_read_file()
 				_file.is_open = false;
 				_file.data.push_back('\0'); //Hmm've
 				close(_file.fd);
-				LOG_DEBUG("FileHandler is done...");
+				LOG_DEBUG("FileHandler is (" << _file.fd << ") done...");
 			}
 		}
 		else
@@ -157,4 +157,3 @@ void	FileHandler::_write_file()
 	_file.streamcount += buffer_size;
 	_file.finished = bytes_left <= 0;
 }
-

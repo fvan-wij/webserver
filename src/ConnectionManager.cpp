@@ -75,10 +75,10 @@ void ConnectionManager::remove(int fd)
 			_pfds.erase(_pfds.begin() + i);
 	}
 	close(fd);
-	// ActionBase *act = _actions[fd];
+	ActionBase *act = _actions[fd];
 	_actions.erase(fd);
-	// act->cleanup();
-	// delete act;
+	act->cleanup();
+	delete act;
 	LOG_INFO("Client (fd " << fd << ") disconnected");
 }
 
@@ -107,6 +107,7 @@ void ConnectionManager::handle_pfd_events(char *envp[])
 		{
 			auto action = _actions[pfds[i].fd];
 			action->execute(pfds[i].revents);
+			// LOG_DEBUG("Event handled for fd " << pfds[i].fd);
 		}
 	}
 }

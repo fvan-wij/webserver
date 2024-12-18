@@ -66,7 +66,7 @@ void Logger::operator()(std::string const& message, char const* function, char c
 		COLOR_WHITE,
 	};
 
-    const time_t t = time(0);  
+    const time_t t = time(0);
     const struct tm ct = *localtime(&t);
 
 

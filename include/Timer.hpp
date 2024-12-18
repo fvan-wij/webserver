@@ -1,6 +1,7 @@
+#pragma once
 #include <chrono>
 
-class Timer 
+class Timer
 {
 	public:
 		using Clock = std::chrono::steady_clock;
@@ -16,4 +17,3 @@ class Timer
 
 		std::chrono::time_point<Clock> _start_time;
 };
-
