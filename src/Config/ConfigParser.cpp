@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <unordered_map>
+#include <cstring>
 #include "Logger.hpp"
 
 static std::vector<std::string> tokenize_string(std::string string, std::string delimiter)
@@ -85,9 +86,35 @@ std::vector<std::string>	parse_allow_methods(std::vector<std::string> tokens, un
 	return (methods);
 }
 
+std::pair<int, std::string> parse_redirection(std::vector<std::string>& tokens, unsigned long &i)
+{
+	std::pair<int, std::string> redirection;
+	i++;
+	redirection.first = std::stoi(tokens[i]);
+	i++;
+	redirection.second = tokens[i].substr(0, tokens[i].size() - 1);
+	i++;
+	return (redirection);
+}
+
+bool parse_autoindex(std::vector<std::string> tokens, unsigned long &i)
+{
+	bool autoindex;
+	i++;
+	if (tokens[i] == "on;")
+	{
+		autoindex = true;
+	}
+	else
+		autoindex = false;
+	i++;
+	return (autoindex);
+}
+
 std::pair<std::string, Location> parse_location(std::vector<std::string> tokens, unsigned long &i)
 {
 	Location	location;
+	location.autoindex = false;
 	std::pair<std::string, Location> entry;
 	i++;
 	location.path = tokens[i];
@@ -107,6 +134,16 @@ std::pair<std::string, Location> parse_location(std::vector<std::string> tokens,
 		if (tokens[i] == "allow_methods")
 		{
 			location.allowed_methods = parse_allow_methods(tokens, i);
+			continue;
+		}
+		if (tokens[i] == "return")
+		{
+			location.redirection = parse_redirection(tokens, i);
+			continue;
+		}
+		if (tokens[i] == "autoindex")
+		{
+			location.autoindex = parse_autoindex(tokens, i);
 			continue;
 		}
 		i++;
@@ -204,9 +241,10 @@ Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 		}
 		i++;
 	}
-	// print_config(server_config);
+	print_config(server_config);
 	return (server_config);
 }
+
 std::vector<Config>	parse_config(std::string_view config_path)
 {
 	std::vector<Config>			configs;

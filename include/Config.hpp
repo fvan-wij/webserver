@@ -5,17 +5,22 @@
 #include <unordered_map>
 
 struct Location {
-	std::string					path;
-	std::vector<std::string>	allowed_methods;
-	std::string 				root;
-	std::string 				index;
+	std::string								path;
+	std::vector<std::string>				allowed_methods;
+	std::string 							root;
+	std::string 							index;
+	std::pair<int, std::string>				redirection;
+	bool									autoindex;
 };
 
 const Location DEFAULT_LOCATION = {
-    "/",                           // path
-    {"GET", "POST"},               // allowed_methods
-    "/var/www/html",               // root
-    "index.html"                   // index
+    "/",                            // path
+    {"GET", "POST"},                // allowed_methods
+    "/var/www/html",                // root
+    "index.html",                   // index
+	{},// {301, "http://localhost:9090"}, // redirection
+	false                           // autoindex
+
 };
 
 struct Config {

@@ -5,14 +5,12 @@
 #include <algorithm>
 
 HttpRequest::HttpRequest()
+	: _b_header_parsed(false), _b_body_parsed(false), _b_file(false),
+	_b_file_extracted(false), _b_file_path_extracted(false),
+	_b_boundary_extracted(false), _b_file_data_extracted(false),
+	_file({})
 {
-	_b_header_parsed = false;
-	_b_body_parsed = false;
-	_b_file = false;
-	_b_file_extracted = false;
-	_b_file_path_extracted = false;
-	_b_boundary_extracted = false;
-	_b_file_data_extracted = false;
+
 }
 
 HttpRequest::~HttpRequest()
@@ -54,75 +52,70 @@ void	HttpRequest::set_type(RequestType type)
 	_type = type;
 }
 
-void HttpRequest::set_file_upload_path(std::string_view root)
+void HttpRequest::set_file_path(std::string_view path)
 {
-	_file.filename.insert(0, "/");
-	_file.path = root.data() + _file.filename;
+	_file.path = path.data();
 }
 
 State	HttpRequest::parse_header(std::vector<char>& buffer)
 {
 	std::string_view data_sv(buffer.data(), buffer.size());
-	static int x;
 
-	x++;
-	LOG_DEBUG("Incoming datachunk on iteration " << x << " = " << buffer.size());
 	if (not _b_header_parsed)
 	{
-		size_t	header_end = data_sv.find("\r\n\r\n", 0); //0 can be removed, right. Right???
+		size_t	header_end = data_sv.find("\r\n\r\n");
 		if (header_end != std::string::npos)
 		{
 			_header_buffer += data_sv.substr(0, header_end);
-			_extract_header_fields(data_sv);
-			_b_header_parsed = true;
-			LOG_DEBUG("Iteration #" << x << "_b_header_parsed = true");
-			if (buffer.size() < (SOCKET_READ_SIZE - 1)) // THIS IS A CRUCIAL STEP IN THE SOLUTION, WHLY DOES IT READ BELOW 1024 ON THE FIRST READ CALL WHEN UPLOADING BIG ASS FILE??? WTF?
-			{
-				buffer.clear();
-				return State::BuildingResponse;
-			}
-			else
-				buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
+			_extract_header_fields(_header_buffer);
+			buffer.erase(buffer.begin(), buffer.begin() + header_end + 4);
 		}
 		else
 		{
 			_header_buffer.append(buffer.data(), buffer.size());
 			buffer.clear();
-			LOG_DEBUG("Iteration #" << x << "returning State::ReadingHeaders");
 			return State::ParsingHeaders;
 		}
 	}
 	if (not buffer.empty() && _b_header_parsed)
 	{
-		LOG_DEBUG("Iteration #" << x << "returning State::ReadingBody");
 		return State::ParsingBody;
 	}
 	else
 	{
-		LOG_DEBUG("Iteration #" << x << "returning State::GeneratingResponse");
-		return State::BuildingResponse;
+		std::string_view cont_len = get_value("Content-Length").value_or("0");
+		if (Utility::svtoi(cont_len) != 0 && not _b_body_parsed)
+		{
+			return State::ParsingBody;
+		}
+		return State::ProcessingRequest;
 	}
 }
 
 State HttpRequest::parse_body(std::vector<char>& buffer)
 {
+	LOG_NOTICE("Parsing body...");
+	if (buffer.size() > Utility::svtoi(get_value("Content-Length").value_or("0")))
+		throw HttpException(400, "Bad Request");
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
+
 	//extract filename if not yet extracted -> set file extracted true
 	if (not _b_file_extracted)
 	{
-		_file.filename = _extract_filename(sv_buffer);
-		if (_file.filename.empty())
+		_file.name = _extract_filename(sv_buffer);
+		if (_file.name.empty())
 		{
 			LOG_ERROR("No filename extracted...");
 		}
 		else
 		{
 			_b_file_extracted = true;
-			LOG_NOTICE("Filename extracted: " << _file.filename);
+			LOG_NOTICE("Filename extracted: " << _file.name);
 		}
 	}
+
 	//extract boundary if not yet extracted -> set boundary extracted true
 	if (not _b_boundary_extracted)
 	{
@@ -138,8 +131,9 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 			_b_boundary_extracted = true;
 		}
 	}
+
 	//extract filedata if boundary is extracted
-		//finish if end boundary found -> return State::GeneratingResponse
+	//finish if end boundary found -> return State::GeneratingResponse
 	if (_b_boundary_extracted)
 	{
 		size_t crln_pos = sv_buffer.find("\r\n\r\n");
@@ -160,9 +154,9 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 		{
 			_file.data.assign(body_data_start, body_data_end - 2);
 			_file.finished = false;
-			_file.bytes_uploaded = 0;
+			_file.streamcount = 0;
 			LOG_NOTICE("Ending boundary extracted: " << _boundary_end);
-			return State::BuildingResponse;
+			return State::ProcessingRequest;
 		}
 	}
 	return State::ParsingBody;
@@ -177,9 +171,9 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 	std::getline(stream, line);
 	tokens = Utility::tokenize_string(line, " ");
 	if (tokens.size() != 3)
-		throw HttpException("HttpRequest: Missing method, location or protocol!");
+		throw HttpException(400, "Bad Request");
 	if (tokens[0] != "GET" && tokens[0] != "POST" && tokens[0] != "DELETE")
-		throw HttpException("HttpRequest: Missing or incorrect request method!");
+		throw HttpException(405, "Method Not ALlowed");
 
 	//Extract method
 	_method = tokens[0];
@@ -189,8 +183,9 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 
 	//Extract uri
 	if (tokens[1][0] != '/')
-		throw HttpException("HttpRequest: URI not present!");
+		throw HttpException(400, "URI not present!");
 	_uri = tokens[1];
+	// LOG_ERROR("_uri: " << _uri);
 
 	//Extract filename, location and is_file_boolean
 	std::filesystem::path p(_uri);
@@ -207,7 +202,7 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 
 	//Extract protocol
 	if (tokens[2] != "HTTP/1.1\r")
-		throw HttpException("HttpRequest: Protocol not present!");
+		throw HttpException(505, "HTTP Version Not Supported");
 	_protocol = tokens[2];
 }
 
@@ -234,11 +229,6 @@ void	HttpRequest::_extract_header_fields(std::string_view data_sv)
 			}
 	}
 	_b_header_parsed = true;
-}
-
-std::filesystem::path HttpRequest::_extract_file_path(std::string_view filename)
-{
-	return std::filesystem::path(std::string(get_uri()) +  "/" +  std::string(filename));
 }
 
 std::string HttpRequest::_extract_filename(std::string_view body_buffer)

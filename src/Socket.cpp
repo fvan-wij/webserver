@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <iostream>
+#include "HttpExceptions.hpp"
 
 //
 // #ifndef DEBUG_SOCKET
@@ -62,20 +63,18 @@ Socket Socket::accept()
 
 std::optional<std::vector<char>> Socket::read()
 {
-	// std::vector<char> buffer(SOCKET_READ_SIZE);
 	char buffer[SOCKET_READ_SIZE];
 
 	bzero(&buffer, sizeof(buffer));
 	int n;
 	if ((n = recv(_fd, buffer, SOCKET_READ_SIZE - 1, 0)) == -1)
 	{
-		LOG_DEBUG("n of bytes received" << n);
+		LOG_DEBUG("n of bytes received " << n);
 		UNIMPLEMENTED("recv failed");
 	}
 	else if (n == 0)
 	{
-		LOG_ERROR("CLOSE CONNECTION");
-		return std::nullopt;
+		throw ClosedConnectionException("Client closed connection!");
 	}
 	LOG_DEBUG("n of bytes read: " << n);
 	if (n != 0)
@@ -160,7 +159,7 @@ void 				Socket::_init_listener(int port)
 		LOG_ERROR("Error occurred: " << strerror(errno));
 		return;
 	}
-	if (listen(_fd, 5) < 0)
+	if (listen(_fd, 400) < 0)
 	{
 		LOG_ERROR("Error occurred: " << strerror(errno));
 		return;

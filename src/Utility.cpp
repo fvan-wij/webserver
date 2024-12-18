@@ -1,4 +1,7 @@
 #include "Utility.hpp"
+#include <fstream>
+#include <charconv>
+#include "Logger.hpp"
 
 std::optional<int>	Utility::svtoi(std::string_view str)
 {
@@ -59,4 +62,10 @@ std::vector<std::string>	Utility::tokenize_string(std::string string, std::strin
 	}
 	tokens.push_back(string);
 	return tokens;
+}
+
+bool Utility::file_exists(std::string_view file_name)
+{
+	std::ifstream in_file(file_name.data());
+	return in_file.good();
 }

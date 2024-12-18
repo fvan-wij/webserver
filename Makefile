@@ -1,10 +1,10 @@
 NAME		:= app
-RUN_CMD		:= ./$(NAME) conf/test.conf
+RUN_CMD		:= ./$(NAME) conf/test2.conf
 
 ifdef DEBUG
 	CFLAGS		:= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
 else
-	CFLAGS		:= -Wall -Wextra -std=c++17 -g -pedantic
+	CFLAGS		:= -Wall -Wextra -std=c++17 -pedantic
 endif
 
 IFLAGS		:=	-Iinclude
@@ -12,7 +12,6 @@ IFLAGS		:=	-Iinclude
 SRC_DIR		:=	src
 SRC_ENTRY	:=	main.cpp
 SRCS		:=	Socket.cpp \
-				HttpProtocol.cpp \
 				CGI.cpp			\
 				HttpObjects/HttpRequest.cpp \
 				HttpObjects/HttpResponse.cpp \
@@ -27,13 +26,15 @@ SRCS		:=	Socket.cpp \
 				Config/print_config.cpp				\
 				Utility.cpp							\
 				ConnectionManager.cpp				\
-				ConnectionInfo.cpp					\
+				ClientHandler.cpp				\
+				HttpListener.cpp					\
+				FileHandler.cpp						\
+				Timer.cpp							\
 
 
 HEADER_DIR	:=	include
 HEADERS 	:=  Socket.hpp \
 				meta.hpp \
-				HttpProtocol.hpp \
 				CGI.hpp			\
 				HttpRequest.hpp \
 				HttpResponse.hpp \
@@ -41,10 +42,16 @@ HEADERS 	:=  Socket.hpp \
 				PostRequestHandler.hpp \
 				DeleteRequestHandler.hpp \
 				RequestHandler.hpp	\
-				HandlerFactory.hpp \
-				Utility.hpp				\
-				Config.hpp				\
-				ConfigParser.hpp		\
+				HandlerFactory.hpp	\
+				Utility.hpp			\
+				Config.hpp			\
+				ConfigParser.hpp	\
+				Action.hpp			\
+				ClientHandler.hpp \
+				HttpListener.hpp	\
+				FileHandler.hpp		\
+				Timer.hpp			\
+				HttpExceptions.hpp	\
 
 OBJ_DIR		:=	obj
 

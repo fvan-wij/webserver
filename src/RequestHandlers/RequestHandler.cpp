@@ -135,40 +135,20 @@ std::optional<std::string> RequestHandler::retrieve_error_path(int error_code, C
 	std::string error = config.error_page[error_code];
 	if (!error.empty())
 		return ("." + config.root + error);
-	return ("");
+	return std::nullopt;
 }
 
-/**
- * @brief Generate or retrieve the error body.
- * If the error code has a corresponding error page, we retrieve the body file.
- * Else we construct a html string based on the code and the given message.
- *
- * @param error_code
- * @param message
- * @param config
- * @return std::string with the body html
- */
-std::string RequestHandler::generate_error_body(int error_code, std::string_view message, Config &config)
-{
-	std::optional<std::string> error_path = retrieve_error_path(error_code, config);
-
-	if (!error_path.value().empty())
-	{
-		std::optional<std::string> error_html = retrieve_index_html(error_path.value());
-		if (error_html)
-			return (error_html.value());
-	}
-	return ("\r\n<h1>" + std::to_string(error_code) + " " + message.data() + "</h1>\r\n");
-}
-
-HttpResponse	RequestHandler::generate_error_response(int error_code, std::string_view message, Config &config)
+HttpResponse	RequestHandler::generate_error_response(int error_code, std::string_view message, Config &config, HttpRequest& request)
 {
 	HttpResponse	response;
 
 	response.set_status_code(error_code);
 	response.set_status_mssg(message.data());
-	response.set_body(generate_error_body(error_code, message, config));
-	response.set_state(READY);
+	std::optional<std::string> error_path = retrieve_error_path(error_code, config);
+	if (error_path)
+		request.set_file_path(error_path.value());
+	else
+		response.set_body("\r\n<h1>" + std::to_string(error_code) + " " + message.data() + "</h1>\r\n");
 	response.set_type(ResponseType::Error);
 	return response;
 }
@@ -179,42 +159,19 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 	response.set_status_code(status_code);
 	response.set_status_mssg("OK");
 	response.set_type(type);
+	response.insert_header({"Connection", "close"});
 	switch (type)
 	{
-		case ResponseType::Regular:
-			{
-				response.set_state(READY);
-				LOG_DEBUG(path);
-				std::optional<std::string> html = retrieve_index_html(path);
-				bool autoindexing = true;
-				if (html)
-				{
-					response.set_body("\r\n" + html.value() + "\r\n");
-				}
-				else if (autoindexing) // Temp flag, but should be retrieved from config
-				{
-					if (path.rfind(".html") != std::string::npos) // Strips off index.html path if cannot be retrieved
-					{
-						LOG_DEBUG("path .html found, path is: " << path);
-						path = path.substr(0, path.find_last_of("/"));
-						LOG_DEBUG("path substr is: " << path);
-					}
-					std::string directory_list = generate_directory_listing(path);
-					response.set_body("\r\n" + directory_list + "\r\n");
-				}
-			}
-			break;
 		case ResponseType::Fetch:
 			{
-				response.set_state(NOT_READY);
 				response.set_streamcount(0);
 				response.set_path(path.data());
 			}
 			break;
 		case ResponseType::Upload:
 			{
-				response.set_state(NOT_READY);
 				response.set_body("\r\n<h1>File "+ std::string(path.data()) + " uploaded</h1><a href=\"/\" role=\"button\">Go back</a>\r\n");
+				response.insert_header({"Content-Length", std::to_string(response.get_body().length())});
 			}
 			break;
 		case ResponseType::Delete:
@@ -225,18 +182,16 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 			break;
 		case ResponseType::CGI:
 			{
-				response.set_state(NOT_READY);
 				response.set_body("\r\n<h1>CGI data</h1>\r\n");
 				response.set_path(path.data());
 			}
 			break;
-		case ResponseType::Error:
+		case ResponseType::Autoindex:
 			{
+				std::string directory_list = generate_directory_listing(path);
+				response.set_body("\r\n" + directory_list + "\r\n");
 				response.set_state(READY);
-				response.set_status_mssg("ERROR");
-				response.set_body("\r\n<h1>ERROR</h1>\r\n");
 			}
-			break;
 		default:
 			break;
 	}

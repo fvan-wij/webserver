@@ -16,6 +16,8 @@
 #define FETCH_READ_SIZE 	CHUNK_SIZE
 #define PIPE_READ_SIZE 		PIPE_BUF
 
+#define TIME_OUT			2500 // ms
+
 
 #define UNUSED(x) (void)(x)
 #define WARNING(message) \
@@ -43,10 +45,9 @@
 enum class State {
 	ParsingHeaders,
 	ParsingBody,
-	BuildingResponse,
+	ProcessingRequest,
 	ProcessingCGI,
-	UploadingFile,
-	FetchingFile,
+	ProcessingFileIO,
 	Ready,
 };
 
@@ -59,3 +60,13 @@ typedef struct FileUpload
 	bool				finished;
 } FileUpload;
 
+typedef struct File
+{
+	int					fd;
+	std::string			name;
+	std::string			path;
+	std::vector<char> 	data;
+	size_t				streamcount;
+	bool				finished;
+	bool				is_open;
+} File;
