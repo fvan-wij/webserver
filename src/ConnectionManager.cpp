@@ -77,9 +77,8 @@ void ConnectionManager::remove(int fd)
 	close(fd);
 	ActionBase *act = _actions[fd];
 	_actions.erase(fd);
-	/*act->cleanup();*/
+	act->cleanup();
 	delete act;
-	/*LOG_INFO("Client (fd " << fd << ") disconnected");*/
 }
 
 /**

@@ -36,16 +36,8 @@ void ClientHandler::handle_request(short revents)
 		if (revents & POLLIN)
 		{
 			_handle_incoming_data();
-			auto& pfds = _connection_manager.get_pfds();
-			for (auto& pfd : pfds)
-			{
-				if (pfd.fd == _socket.get_fd())
-				{
-					pfd.events = POLLOUT;
-				}
-			}
 		}
-		else if (revents & POLLOUT)
+		if (revents & POLLOUT)
 		{
 			_handle_outgoing_data();
 		}
@@ -184,11 +176,9 @@ void	ClientHandler::_parse(std::vector<char>& data)
 		switch (_state)
 		{
 				case State::ParsingHeaders:
-					LOG_NOTICE("Parsing header... (fd " << _socket.get_fd() << ")");
 					_state = request.parse_header(data);
 					break;
 				case State::ParsingBody:
-					LOG_NOTICE("Parsing body... (fd " << _socket.get_fd() << ")");
 					_state = request.parse_body(data);
 					break;
 				default:
@@ -214,7 +204,6 @@ void	ClientHandler::_send_response(ResponseType type)
 			response.insert_header({"Virtual-Host", _config.server_name[0]});
 			response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
 			_socket.write(response.to_string());
-			/*LOG_NOTICE("Response sent (fd " << _socket.get_fd() << ":\n" << response.to_string() << ")");*/
 			LOG_NOTICE("Response sent (fd " << _socket.get_fd() << ")\n");
 			_close_connection();
 		}
@@ -222,7 +211,6 @@ void	ClientHandler::_send_response(ResponseType type)
 	else
 	{
 		_socket.write(response.to_string());
-		/*LOG_NOTICE("Response sent (fd " << _socket.get_fd() << ":\n" << response.to_string() << ")");*/
 		LOG_NOTICE("Response sent (fd " << _socket.get_fd() << ")\n");
 		_close_connection();
 	}
@@ -251,7 +239,7 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 	if (type == ResponseType::Fetch || type == ResponseType::Error)
 	{
 		mask = POLLIN;
-		/*LOG_NOTICE("Creating Fetch FileHandler with file " << request.get_file().path);*/
+		LOG_NOTICE("Creating Fetch FileHandler with file " << request.get_file().path);
 	}
 	else if (type == ResponseType::Upload)
 	{
@@ -261,7 +249,6 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 	_state = State::ProcessingFileIO;
 	_file_handler = new FileHandler(request.get_file(), type);
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
-	LOG_NOTICE("(fd " << _socket.get_fd() << ") Creating Fetch FileHandler with file " << request.get_file().path << "(fd " << request.get_file().fd << ")");
 	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }
 
@@ -270,14 +257,10 @@ void	ClientHandler::_add_file_handler(ResponseType type)
  */
 void ClientHandler::_poll_file_handler()
 {
-	static int x;
 	if (not _file_handler)
 	{
 		return;
 	}
-	if (x < 8)
-		LOG_NOTICE("(fd " << _socket.get_fd() << ") Waiting on FileHandler... (fd " << _file_handler->get_fd() << ")");
-
 	if (_file_handler->is_finished())
 	{
 		LOG_NOTICE("(fd " << _socket.get_fd() << ") FileHandler is finished (fd " << _file_handler->get_fd() << ")");
@@ -287,7 +270,6 @@ void ClientHandler::_poll_file_handler()
 		_file_handler = nullptr;
 		_state = State::Ready;
 	}
-	x++;
 }
 
 
