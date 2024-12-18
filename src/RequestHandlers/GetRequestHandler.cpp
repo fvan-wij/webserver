@@ -15,7 +15,7 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 
 {
 	// LOG_NOTICE("Handling GET request:\n" << static_cast<const HttpRequest>(request));
-	LOG_NOTICE("Handling GET request:\n");
+	/*LOG_NOTICE("Handling GET request:\n");*/
 
 	if (!location_exists(config, request.get_location()))
 		throw HttpException(404, "Not Found - The server cannot find the requested resource");

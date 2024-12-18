@@ -16,7 +16,7 @@ class FileHandler {
 		~FileHandler() = default;
 
         // 		Methods
-		void	handle_file(short events);
+		void	handle_file(short revents);
 		bool	is_finished();
 		int		get_fd() {return _file.fd;};
 		File&	get_file();

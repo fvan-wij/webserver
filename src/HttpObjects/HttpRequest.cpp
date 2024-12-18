@@ -59,7 +59,6 @@ void HttpRequest::set_file_path(std::string_view path)
 
 State	HttpRequest::parse_header(std::vector<char>& buffer)
 {
-	LOG_NOTICE("Parsing header...");
 	std::string_view data_sv(buffer.data(), buffer.size());
 
 	if (not _b_header_parsed)

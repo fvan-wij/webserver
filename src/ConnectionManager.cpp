@@ -79,7 +79,7 @@ void ConnectionManager::remove(int fd)
 	_actions.erase(fd);
 	// act->cleanup();
 	// delete act;
-	LOG_INFO("Client (fd " << fd << ") disconnected");
+	/*LOG_INFO("Client (fd " << fd << ") disconnected");*/
 }
 
 /**
@@ -100,13 +100,12 @@ void ConnectionManager::handle_pfd_events(char *envp[])
 {
 	(void) envp;
 
-	std::vector<pollfd> &pfds = get_pfds();
-	for (size_t i = 0; i < pfds.size(); i++)
+	for (size_t i = 0; i < _pfds.size(); i++)
 	{
-		if (pfds[i].revents)
+		if (_pfds[i].revents)
 		{
-			auto action = _actions[pfds[i].fd];
-			action->execute(pfds[i].revents);
+			auto action = _actions[_pfds[i].fd];
+			action->execute(_pfds[i].revents);
 		}
 	}
 }

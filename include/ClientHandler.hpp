@@ -16,7 +16,7 @@ class ClientHandler {
 		~ClientHandler() = default;
 
 											// Methods
-		void								handle_request(short events);
+		void								handle_request(short revents);
 
 											// Getters
 		std::vector<Config>&				get_configs(){return _configs;};

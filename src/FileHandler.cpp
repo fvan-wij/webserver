@@ -25,13 +25,14 @@ FileHandler::FileHandler(File& file, ResponseType type) : _file(file), _type(typ
 	}
 }
 
-void FileHandler::handle_file(short events)
+void FileHandler::handle_file(short revents)
 {
-	if (events & POLLIN)
+	if (revents & POLLIN)
 	{
-		_read_file();
+		if (not _file.finished)
+			_read_file();
 	}
-	if (events & POLLOUT)
+	if (revents & POLLOUT)
 	{
 		_write_file();
 	}
@@ -49,6 +50,8 @@ File&	FileHandler::get_file()
 
 void FileHandler::_open_file()
 {
+	if (_file.is_open)
+		return;
 	if (access(_file.path.c_str(), F_OK) == -1)
 	{
 		LOG_ERROR(_file.path + " doesn't exist");
@@ -99,6 +102,7 @@ void	FileHandler::_read_file()
 			if (bytes_read < 0)
 			{
 				LOG_ERROR("Error reading " << _file.path);
+				close(_file.fd);
 				throw HttpException(409, "Conflict");
 			}
 			if (bytes_read > 0)
@@ -106,7 +110,7 @@ void	FileHandler::_read_file()
 				_file.streamcount += bytes_read;
 				_file.data.insert(_file.data.end(), buffer, buffer + bytes_read);
 			}
-			if (bytes_read == 0)
+			if (bytes_read == 0 || bytes_read < FETCH_READ_SIZE - 1)
 			{
 				_file.finished = true;
 				_file.is_open = false;
@@ -120,6 +124,7 @@ void	FileHandler::_read_file()
 			LOG_ERROR(_file.path + "'s filedescriptor is not opened!");
 			throw HttpException(409, "Conflict");
 		}
+		LOG_DEBUG("Reading file...(fd " << _file.fd << "), (bytes read: " << _file.streamcount << ")");
 }
 
 
