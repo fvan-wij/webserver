@@ -19,6 +19,6 @@ check_request() {
   fi
 }
 
-export -f check_request 
+export -f check_request
 
 seq $CONCURRENT_REQUESTS | xargs -n 1 -P $CONCURRENT_REQUESTS bash -c "check_request $URL"
