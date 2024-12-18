@@ -204,9 +204,9 @@ void	ClientHandler::_parse(std::vector<char>& data)
  */
 void	ClientHandler::_send_response(ResponseType type)
 {
-	if (type == ResponseType::Fetch || (type == ResponseType::Error && _file_handler))
+	if (type == ResponseType::Fetch || type == ResponseType::Error)
 	{
-		std::vector<char>& data = _file_handler->get_file().data;
+		std::vector<char>& data = _file.data;
 		if (not data.empty())
 		{
 			response.set_body(std::string(data.begin(), data.end()));
@@ -271,15 +271,20 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 void ClientHandler::_poll_file_handler()
 {
 	static int x;
-	if (not _file_handler || x > 10)
+	if (not _file_handler)
 	{
 		return;
 	}
-	LOG_NOTICE("(fd " << _socket.get_fd() << ") Waiting on FileHandler... (fd " << _file_handler->get_fd() << ")");
+	if (x < 8)
+		LOG_NOTICE("(fd " << _socket.get_fd() << ") Waiting on FileHandler... (fd " << _file_handler->get_fd() << ")");
 
 	if (_file_handler->is_finished())
 	{
 		LOG_NOTICE("(fd " << _socket.get_fd() << ") FileHandler is finished (fd " << _file_handler->get_fd() << ")");
+		LOG_INFO("File handler (fd " << _file_handler->get_fd() << ") disconnected");
+		_file = _file_handler->get_file();
+		_connection_manager.remove(_file_handler->get_fd());
+		_file_handler = nullptr;
 		_state = State::Ready;
 	}
 	x++;
@@ -304,12 +309,6 @@ void	ClientHandler::_poll_timeout_timer()
  */
 void	ClientHandler::_close_connection()
 {
-	if (_file_handler != nullptr)
-	{
-		_connection_manager.remove(_file_handler->get_fd());
-		LOG_INFO("File handler (fd " << _file_handler->get_fd() << ") disconnected");
-	}
-	
 	LOG_INFO("Client (fd " << _socket.get_fd() << ") disconnected");
 	_connection_manager.remove(_socket.get_fd());
 }

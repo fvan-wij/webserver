@@ -18,7 +18,7 @@ const Location DEFAULT_LOCATION = {
     {"GET", "POST"},                // allowed_methods
     "/var/www/html",                // root
     "index.html",                   // index
-	{301, "http://localhost:9090"}, // redirection
+	{},// {301, "http://localhost:9090"}, // redirection
 	false                           // autoindex
 
 };

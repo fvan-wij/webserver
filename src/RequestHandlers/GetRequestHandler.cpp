@@ -28,6 +28,7 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 	{
 		std::pair<int, std::string> redirection = location_block.redirection;
 		//  throw HttpRedirection(redirection.first, REDIRECTION.at(redirection.first));
+		LOG_DEBUG("NKAAKNEKNAEKNKER");
 		throw HttpRedirection(redirection.first, redirection.second);
 	}
 	std::filesystem::path path = build_path(config.root, request.get_uri(), std::nullopt);

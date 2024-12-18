@@ -40,6 +40,7 @@ void				HttpListener::listen_handle(short revents)
 		ClientHandler *client_handler = new ClientHandler(_connection_manager, socket, _configs);
 		auto client_action = new Action<ClientHandler>(client_handler, &ClientHandler::handle_request);
 		_connection_manager.add(socket.get_fd(), mask, client_action);
+		client_handler->init_timer();
 		LOG_INFO("Client (fd " << socket.get_fd() << ") connected to: " << " on port: " << socket.get_port());
 	}
 }
