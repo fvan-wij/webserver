@@ -2,6 +2,7 @@
 #include "ConnectionManager.hpp"
 #include <HttpListener.hpp>
 #include <FileHandler.hpp>
+#include <HttpExceptions.hpp>
 
 ConnectionManager::ConnectionManager()
 {
@@ -104,8 +105,7 @@ void ConnectionManager::handle_pfd_events(char *envp[])
 		if (_pfds[i].revents)
 		{
 			const auto& action = _actions[_pfds[i].fd];
-			if (action)
-				action->execute(_pfds[i].revents);
+			action->execute(_pfds[i].revents);
 		}
 	}
 }

@@ -156,7 +156,14 @@ void	ClientHandler::_process_request()
 
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
-		_add_file_handler(type);
+		try
+		{
+			_add_file_handler(type);
+		}
+		catch (HttpException& e)
+		{
+			_build_error_response(e.status(), e.what());
+		}
 	}
 	else
 		_state = State::Ready;
@@ -261,7 +268,13 @@ void ClientHandler::_poll_file_handler()
 	{
 		return;
 	}
-	if (_file_handler->is_finished())
+	if (_file_handler->error())
+	{
+		_connection_manager.remove(_file_handler->get_fd());
+		_file_handler = nullptr;
+		_build_error_response(400, "Bad Request");
+	}
+	else if (_file_handler->is_finished())
 	{
 		LOG_NOTICE("(fd " << _socket.get_fd() << ") FileHandler is finished (fd " << _file_handler->get_fd() << ")");
 		LOG_INFO("File handler (fd " << _file_handler->get_fd() << ") disconnected");

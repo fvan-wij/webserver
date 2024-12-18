@@ -1,7 +1,7 @@
 #!/bin/bash
 
 URL="http://localhost:9090"
-DURATION="30s"
+DURATION="10s"
 
 echo "Testing Siege for $DURATION"
 siege -c 200 -t $DURATION $URL &
@@ -13,9 +13,6 @@ monitor_memory_usage() {
         # Print memory usage for the Siege process
 		MEMORY_USAGE=$(ps -o rss= -p $(pidof app))
         echo "Memory usage: ${MEMORY_USAGE} KB"
-		OPEN_FDS=$(lsof -p $(pidof app))
-		echo "FDs open: ${OPEN_FDS}"
-        
         # Wait 2 seconds before the next check
         sleep 2
     done

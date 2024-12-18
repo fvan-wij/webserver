@@ -7,7 +7,7 @@
 
 class ClientHandler;
 
-FileHandler::FileHandler(File& file, ResponseType type) : _file(file), _type(type)
+FileHandler::FileHandler(File& file, ResponseType type) : _file(file), _type(type), _error(false)
 {
 	switch (type)
 	{
@@ -27,20 +27,35 @@ FileHandler::FileHandler(File& file, ResponseType type) : _file(file), _type(typ
 
 void FileHandler::handle_file(short revents)
 {
-	if (revents & POLLIN)
+	if (_error)
+		return;
+
+	try 
 	{
-		if (not _file.finished)
+		if (revents & POLLIN)
+		{
 			_read_file();
+		}
+		if (revents & POLLOUT)
+		{
+			_write_file();
+		}
 	}
-	if (revents & POLLOUT)
+	catch (HttpException& e)
 	{
-		_write_file();
+		_error = true;
+		LOG_ERROR(e.status() << " " << e.what());
 	}
 }
 
 bool	FileHandler::is_finished()
 {
 	return _file.finished;
+}
+
+bool	FileHandler::error()
+{
+	return _error;
 }
 
 File&	FileHandler::get_file()
