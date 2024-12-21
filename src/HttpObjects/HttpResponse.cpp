@@ -44,6 +44,7 @@ void			HttpResponse::append_body(std::string &buffer)
 std::string		HttpResponse::to_string() const
 {
 	std::string response;
+
 	response += "HTTP/1.1 " + std::to_string(_status_code) + " " + _status_message + "\r\n";
 	for (auto [key, value]: _header)
 	{

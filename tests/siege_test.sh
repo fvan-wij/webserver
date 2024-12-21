@@ -1,10 +1,10 @@
 #!/bin/bash
 
 URL="http://localhost:9090"
-DURATION="10s"
+DURATION="15s"
 
 echo "Testing Siege for $DURATION"
-siege -c 200 -t $DURATION $URL &
+siege -b -t $DURATION $URL &
 SIEGE_PID=$!
 
 # Function to monitor memory usage

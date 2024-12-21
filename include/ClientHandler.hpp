@@ -42,7 +42,8 @@ class ClientHandler {
 		void								_handle_incoming_data();
 		void								_handle_outgoing_data();
 		std::optional<std::string> 			_retrieve_error_path(int error_code, Config &config);
-		void								_build_error_response(int status_code, const std::string& message);
+		// void								_build_error_response(int status_code, const std::string& message);
+		void								_build_error_response(int status_code, const std::string& message, std::optional<std::string> error_path);
 		void								_build_redirection_response(int status_code, const std::string& message);
 		void								_process_request();
 		void								_parse(std::vector<char>& data);

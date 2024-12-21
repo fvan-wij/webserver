@@ -85,7 +85,6 @@ void FileHandler::_open_file()
 		throw HttpException(409, "Conflict");
 	}
 	_file.is_open = true;
-	// LOG_DEBUG("Opened file successfully");
 }
 
 void FileHandler::_create_file()

@@ -97,9 +97,20 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 	LOG_NOTICE("Parsing body...");
 	if (buffer.size() > Utility::svtoi(get_value("Content-Length").value_or("0")))
 		throw HttpException(400, "Bad Request");
+
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
+
+	if (get_value("Content-Type") == "plain/text")
+	{
+		size_t crln_pos = sv_buffer.find("\r\n\r\n");
+		if (crln_pos == std::string::npos)
+		{
+			LOG_ERROR("End CRLF found... ");
+			return State::ProcessingRequest;
+		}
+	}
 
 	//extract filename if not yet extracted -> set file extracted true
 	if (not _b_file_extracted)
