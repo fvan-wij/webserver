@@ -1,6 +1,7 @@
 #include <ClientHandler.hpp>
 #include <HandlerFactory.hpp>
 #include <iostream>
+#include <Utility.hpp>
 
 /**
  * @brief ClientHandler; responsible for reading and sending data from and to the client.
@@ -45,7 +46,7 @@ void ClientHandler::handle_request(short revents)
 	catch (const HttpException& e)
 	{
 		LOG_ERROR(std::to_string(e.status()) << " " << e.what());
-		_build_error_response(e.status(), e.what());
+		_build_error_response(e.status(), e.what(), _retrieve_error_path(e.status(), _configs[0]));
 	}
 	catch (const HttpRedirection& e)
 	{
@@ -109,19 +110,25 @@ std::optional<std::string> ClientHandler::_retrieve_error_path(int error_code, C
 {
 	std::string error = config.error_page[error_code];
 	if (!error.empty())
-		return ("." + config.root + error);
+	{
+		std::string path("." + config.root + error);
+		if (Utility::file_exists(path))
+		{
+			return ("." + config.root + error);
+		}
+	}
 	return std::nullopt;
 }
 
-void	ClientHandler::_build_error_response(int status_code, const std::string& message)
+void	ClientHandler::_build_error_response(int status_code, const std::string& message, std::optional<std::string> error_path)
 {
-	std::optional<std::string> error_path = _retrieve_error_path(status_code, _configs[0]);
 
 	response.set_type(ResponseType::Error);
 
 	if (error_path)
 	{
 		request.set_file_path(error_path.value());
+		LOG_DEBUG("DEZE?");
 		_add_file_handler(ResponseType::Error);
 		_state = State::ProcessingFileIO;
 		return;
@@ -130,6 +137,7 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 	{
 		response.set_status_code(status_code);
 		response.set_status_mssg(message);
+		response.set_body("<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n");
 		_state = State::Ready;
 	}
 }
@@ -162,7 +170,7 @@ void	ClientHandler::_process_request()
 		}
 		catch (HttpException& e)
 		{
-			_build_error_response(e.status(), e.what());
+			_build_error_response(e.status(), e.what(), _retrieve_error_path(400, _configs[0]));
 		}
 	}
 	else
@@ -207,20 +215,15 @@ void	ClientHandler::_send_response(ResponseType type)
 		if (not data.empty())
 		{
 			response.set_body(std::string(data.begin(), data.end()));
-			response.insert_header({"Server", "webserv"});
-			response.insert_header({"Virtual-Host", _config.server_name[0]});
-			response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
-			_socket.write(response.to_string());
-			LOG_NOTICE("Response sent (fd " << _socket.get_fd() << ")\n");
-			_close_connection();
 		}
 	}
-	else
-	{
-		_socket.write(response.to_string());
-		LOG_NOTICE("Response sent (fd " << _socket.get_fd() << ")\n");
-		_close_connection();
-	}
+
+	response.insert_header({"Server", "webserv"});
+	response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
+	response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
+	_socket.write(response.to_string());
+	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): " << response.get_body());
+	_close_connection();
 }
 
 Config	ClientHandler::_resolve_config(std::optional<std::string_view> host)
@@ -230,7 +233,7 @@ Config	ClientHandler::_resolve_config(std::optional<std::string_view> host)
 		return _configs[0];
 	for (auto conf : _configs)
 	{
-		if (conf.server_name[0] == host)
+		if (conf.get_server_name(0).value_or("") == host)
 			return conf;
 	}
 	return _configs[0];
@@ -272,7 +275,7 @@ void ClientHandler::_poll_file_handler()
 	{
 		_connection_manager.remove(_file_handler->get_fd());
 		_file_handler = nullptr;
-		_build_error_response(400, "Bad Request");
+		_build_error_response(400, "Bad Request", _retrieve_error_path(400, _configs[0]));
 	}
 	else if (_file_handler->is_finished())
 	{

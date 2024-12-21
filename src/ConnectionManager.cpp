@@ -57,13 +57,13 @@ void ConnectionManager::add_listener(Config config, int port)
 	if (_listeners.find(port) != _listeners.end())
 	{
 		listener = _listeners[port].get();
-		LOG_NOTICE("Adding config to socket for " << config.server_name[0] << " on port: " << port);
+		LOG_NOTICE("Adding config to socket for " << config.get_server_name(0).value_or("") << " on port: " << port);
 	}
 	else
 	{
 		listener = new HttpListener(port, *this);
 		_listeners[port] = std::shared_ptr<HttpListener>(listener);
-		LOG_NOTICE("Adding listener socket for " << config.server_name[0] << " on port: " << port);
+		LOG_NOTICE("Adding listener socket for " << config.get_server_name(0).value_or("") << " on port: " << port);
 	}
 	listener->add_config(config);
 }

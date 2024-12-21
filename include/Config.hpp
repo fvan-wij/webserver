@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <optional>
 
 struct Location {
 	std::string								path;
@@ -29,10 +30,17 @@ struct Config {
 	std::vector<std::string>					methods;
 	std::unordered_map<std::string, Location>	location;
 	std::string									root;
-	int											client_max_body_size;
+	int											client_max_body_size = 0;
 	std::unordered_map<int, std::string>		error_page;
 	std::vector<std::string>					paths;
 	std::string									index;
+
+	std::optional<std::string>	get_server_name(int index)
+	{
+		if (server_name.empty() || server_name[index].empty())
+			return std::nullopt;
+		return server_name[index];
+	}
 };
 
 const Config DEFAULT_CONFIG = {
