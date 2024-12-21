@@ -1,3 +1,5 @@
+#include "HttpResponse.hpp"
+#include "Logger.hpp"
 #include <ClientHandler.hpp>
 #include <HandlerFactory.hpp>
 #include <iostream>
@@ -178,6 +180,23 @@ void	ClientHandler::_process_request()
 
 	ResponseType type 	= response.get_type();
 
+
+
+	const char *arr[] =
+	{
+		"Regular",
+		"Upload",
+		"Delete",
+		"CGI",
+		"Fetch",
+		"Error",
+		"Autoindex",
+		"Unknown",
+	};
+
+	type = ResponseType::CGI;
+	LOG_DEBUG("ResponseType: " << arr[int(type)]);
+
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
 		try
@@ -189,11 +208,12 @@ void	ClientHandler::_process_request()
 			_build_error_response(e.status(), e.what(), _retrieve_error_path(400, _configs[0]));
 		}
 	}
-// NOTE: leftoff check if this bit is being ran
+	// NOTE: leftoff 
+	// TODO: `type` is not being set to `ResponseType::CGI`
 	else if (type == ResponseType::CGI)
 	{
 		// TODO Put this bit somewhere else
-		std::vector<const char *> args = { "/usr/bin/ls" };
+		std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", "1" };
 		_cgi.start(args, _envp);
 		_state = State::ProcessingCGI;
 	}

@@ -3,6 +3,7 @@
 #include "meta.hpp"
 #include <bits/pthread_stack_min-dynamic.h>
 #include <cerrno>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <sys/wait.h>
@@ -22,10 +23,18 @@ void CGI::start(std::vector<const char*> args, char *const envp[])
 {
 	args.push_back(nullptr);
 	_is_running = true;
-	for (auto it : args)
+
+
+	std::string arguments_printable = "";
+
+	// NOTE: Why does it segfault?
+	for (const char* var : args)
 	{
-		LOG_DEBUG("starting CGI with arguments: " << it);
+		arguments_printable += var;
 	}
+
+	LOG_DEBUG("starting CGI with arguments: " + arguments_printable);
+
 	if (pipe(_pipes) == -1)
 	{
 		UNIMPLEMENTED("pipe failed" << strerror(errno));

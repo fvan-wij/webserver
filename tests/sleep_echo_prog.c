@@ -7,6 +7,11 @@
 
 int main(int argc, char **argv)
 {
+	if (argc < 2)
+	{
+		printf("error no argument given\n");
+		return 1;
+	}
 	(void) argc;
 	const int32_t sleep_time = atoi(argv[1]);
 	printf("sleeping for [%i]\n", sleep_time);
