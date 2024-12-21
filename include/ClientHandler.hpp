@@ -1,4 +1,5 @@
 #pragma once
+#include "CGI.hpp"
 #include <string>
 #include <vector>
 #include <Socket.hpp>
@@ -10,7 +11,7 @@
 
 class ClientHandler {
 	public:
-		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs);
+		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, char *envp[]);
 		ClientHandler(const ClientHandler &) = default;
 		ClientHandler &operator=(const ClientHandler &) = default;
 		~ClientHandler() = default;
@@ -30,6 +31,7 @@ class ClientHandler {
 	private:
 		std::string							_response_data;
 		std::vector<Config>					_configs;
+		CGI 								_cgi;
 		Config								_config;
 		Socket								_socket;
 		ConnectionManager					&_connection_manager;
@@ -39,8 +41,11 @@ class ClientHandler {
 		Timer								_timer;
 		bool								_timed_out;
 
+		char**_envp;
+
 		void								_handle_incoming_data();
 		void								_handle_outgoing_data();
+		void								_poll_cgi();
 		std::optional<std::string> 			_retrieve_error_path(int error_code, Config &config);
 		// void								_build_error_response(int status_code, const std::string& message);
 		void								_build_error_response(int status_code, const std::string& message, std::optional<std::string> error_path);

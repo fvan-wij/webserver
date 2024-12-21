@@ -27,7 +27,7 @@ static bool	check_extension(const std::string &file, const std::string &ext)
 int main(int argc, char *argv[], char *envp[])
 {
 	std::vector<Config>	configs;
-	ConnectionManager		cm;
+	ConnectionManager		cm(envp);
 
 	if (argc == 2 && argv[1] && check_extension(argv[1], ".conf"))
 	{

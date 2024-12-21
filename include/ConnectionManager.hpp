@@ -36,7 +36,8 @@ class HttpListener;
  */
 class ConnectionManager {
 	public:
-		ConnectionManager();
+		ConnectionManager() = delete;
+		ConnectionManager(char** envp);
 		ConnectionManager(const ConnectionManager &) = default;
 		ConnectionManager &operator=(const ConnectionManager &) = default;
 		~ConnectionManager() = default;
@@ -55,4 +56,5 @@ class ConnectionManager {
 		std::vector<pollfd>	_pfds;
 		std::unordered_map<int, ActionBase *>	_actions;
 		std::unordered_map<int, std::shared_ptr<HttpListener>> _listeners;
+		char**			_envp;
 };

@@ -104,6 +104,3 @@ test: all
 
 debug:
 	$(MAKE) DEBUG=1
-
-test: all
-	pytest pytests/

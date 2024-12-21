@@ -13,8 +13,8 @@
  * @param configs: vector of configs
  */
 
-ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs)
-	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false)
+ClientHandler::ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, char *envp[])
+	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false), _envp(envp)
 {
 
 }
@@ -94,8 +94,23 @@ void	ClientHandler::_handle_outgoing_data()
 		case State::ProcessingRequest:
 			_process_request();
 			break;
+		case State::ProcessingCGI:
+			_poll_cgi();
+			break;
 		default:
 			break;
+	}
+}
+
+
+void ClientHandler::_poll_cgi()
+{
+
+	if (_cgi.is_running() && _cgi.poll())
+	{
+		LOG_NOTICE("CGI is finished");
+		_state = State::Ready;
+		LOG_NOTICE("CGI OUTPUT: " << _cgi.get_buffer());
 	}
 }
 
@@ -128,6 +143,7 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 	if (error_path)
 	{
 		request.set_file_path(error_path.value());
+		// TODO Kan weg?
 		LOG_DEBUG("DEZE?");
 		_add_file_handler(ResponseType::Error);
 		_state = State::ProcessingFileIO;
@@ -173,6 +189,14 @@ void	ClientHandler::_process_request()
 			_build_error_response(e.status(), e.what(), _retrieve_error_path(400, _configs[0]));
 		}
 	}
+// NOTE: leftoff check if this bit is being ran
+	else if (type == ResponseType::CGI)
+	{
+		// TODO Put this bit somewhere else
+		std::vector<const char *> args = { "/usr/bin/ls" };
+		_cgi.start(args, _envp);
+		_state = State::ProcessingCGI;
+	}
 	else
 		_state = State::Ready;
 }
@@ -216,6 +240,10 @@ void	ClientHandler::_send_response(ResponseType type)
 		{
 			response.set_body(std::string(data.begin(), data.end()));
 		}
+	}
+	else if (type == ResponseType::CGI)
+	{
+		response.set_body(_cgi.get_buffer());
 	}
 
 	response.insert_header({"Server", "webserv"});
