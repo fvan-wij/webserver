@@ -213,7 +213,7 @@ void	ClientHandler::_process_request()
 	else if (type == ResponseType::CGI)
 	{
 		// TODO Put this bit somewhere else
-		std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", "1" };
+		std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", "1"};
 		_cgi.start(args, _envp);
 		_state = State::ProcessingCGI;
 	}

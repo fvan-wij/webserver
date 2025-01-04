@@ -21,16 +21,18 @@ CGI::CGI() : _is_running(false)
 
 void CGI::start(std::vector<const char*> args, char *const envp[])
 {
-	args.push_back(nullptr);
 	_is_running = true;
 
 
-	std::string arguments_printable = "";
+	std::string arguments_printable = "|";
+	std::string str = "arguments: ";
 
+	// LOG_DEBUG("starting CGI with arguments: ");
 	// NOTE: Why does it segfault?
-	for (const char* var : args)
+	for (auto& var : args)
 	{
 		arguments_printable += var;
+		LOG_DEBUG(var);
 	}
 
 	LOG_DEBUG("starting CGI with arguments: " + arguments_printable);
