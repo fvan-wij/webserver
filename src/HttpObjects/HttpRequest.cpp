@@ -199,28 +199,7 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 
 	//Extract location
 	std::filesystem::path p(_uri);
-
-	size_t	path_depth = 0;
-	for (const auto& part : p)
-	{
-		(void) part;
-		path_depth++;
-	}
-	if (path_depth <= 2) // I.e. /uploads
-	{
-		if (p.has_extension()) // I.e /index.html
-		{
-			_location = p.parent_path().string(); // extracts / as location if 
-		}
-		else
-		{
-			_location = p.string(); //
-		}
-	}
-	else
-	{
-		_location = p.parent_path().string();
-	}
+	_location = p.parent_path().string();
 
 	//Extract protocol
 	if (tokens[2] != "HTTP/1.1\r")
