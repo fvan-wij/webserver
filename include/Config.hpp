@@ -32,7 +32,6 @@ struct Config {
 	std::string									root;
 	int											client_max_body_size = 0;
 	std::unordered_map<int, std::string>		error_page;
-	std::vector<std::string>					paths;
 	std::string									index;
 
 	std::optional<std::string>	get_server_name(int index)
@@ -51,11 +50,7 @@ const Config DEFAULT_CONFIG = {
     "/var/www/html",                      // root
     1048576,                              // client_max_body_size (1MB)
     {{404, "/404.html"}},                 // error_page (404 -> /404.html)
-    {"/"},                                // paths
     "index.html",                         // index page
 };
 
-void	print_listen(Config config);
-void	print_server_name(Config config);
-void	print_methods(std::vector<std::string> methods);
-void	print_location(Config config);
+void	print_config(const Config& config);

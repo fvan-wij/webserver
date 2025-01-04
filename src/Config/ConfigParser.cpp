@@ -8,26 +8,25 @@
 #include <cstring>
 #include "Logger.hpp"
 
-static std::vector<std::string> tokenize_string(std::string string, std::string delimiter)
+static std::vector<std::string> tokenize_string(std::string string, std::string delimiters)
 {
-        std::vector<std::string>        tokens;
-        size_t                          pos = 0;
+		std::vector<std::string>	tokens;
+		size_t						pos = 0;
 
-        pos = string.find(delimiter);
-        while (pos != std::string::npos)
-        {
+		while (pos != std::string::npos)
+		{
+			pos = string.find_first_not_of(delimiters);
+			string.erase(0, pos);
+			pos = string.find_first_of(delimiters);
 			std::string token = string.substr(0, pos);
-			if (!token.empty() && token != "\n")
-			{
-				token.erase(0, token.find_first_not_of("\t\r\n "));
-                tokens.push_back(token);
-			}
-			string.erase(0, pos + delimiter.length());
-			pos = string.find(delimiter);
-        }
+			if (token.empty())
+				break;
+			tokens.push_back(token);
+			string.erase(0, pos);
+		}
 		if (!string.empty())
-    		tokens.push_back(string);
-        return tokens;
+			tokens.push_back(string);
+		return tokens;
 }
 
 std::string			 parse_root(std::vector<std::string> tokens, unsigned long &i)
@@ -174,19 +173,6 @@ std::pair<int, std::string> parse_error_page(std::vector<std::string> tokens, un
 
 }
 
-void	print_config(Config config)
-{
-	std::cout << "config {" << std::endl;
-	print_listen(config);
-	std::cout << " - root: " << config.root << std::endl;
-	std::cout << " - index: " << config.index << std::endl;
-	print_server_name(config);
-	print_methods(config.methods);
-	print_location(config);
-	std::cout << " - client_max_body_size: " << config.client_max_body_size << std::endl;
-	std::cout << "}" << std::endl;
-}
-
 Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 {
 	Config server_config;
@@ -216,7 +202,6 @@ Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 		{
 			std::pair<std::string, Location>	location;
 			location = parse_location(tokens, i);
-			server_config.paths.push_back(location.first);
 			server_config.location.insert(location);
 			continue;
 		}
@@ -255,7 +240,7 @@ std::vector<Config>	parse_config(std::string_view config_path)
 
 	while (getline(in, line))
 	{
-		tokenized_line = tokenize_string(line, " ");
+		tokenized_line = tokenize_string(line, "\t\r\n ");
 		if (tokenized_line.empty() || tokenized_line[0] == "#")
 			continue;
 		for (unsigned x = 0; x < tokenized_line.size(); x++)
