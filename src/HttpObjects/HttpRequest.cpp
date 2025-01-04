@@ -5,7 +5,7 @@
 #include <algorithm>
 
 HttpRequest::HttpRequest()
-	: _b_header_parsed(false), _b_body_parsed(false), 
+	: _b_header_parsed(false), _b_body_parsed(false),
 	_b_file_extracted(false), _b_file_path_extracted(false),
 	_b_boundary_extracted(false), _b_file_data_extracted(false),
 	_file({})

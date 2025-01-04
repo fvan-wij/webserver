@@ -22,6 +22,7 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 
 	Location& location_block = config.location[request.get_location().data()];
 	LOG_DEBUG("request.get_locatiion().data(): " << request.get_location().data());
+	LOG_DEBUG("location_block.index: " << location_block.index);
 
 	if (!method_is_valid(request.get_uri(), request.get_method(), config))
 	{
