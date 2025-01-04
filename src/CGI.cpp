@@ -12,7 +12,7 @@
 #include <string>
 #include <unistd.h>
 
-CGI::CGI() : _is_running(false)
+CGI::CGI() : _is_running(false), _is_killed(false)
 {
 
 }
@@ -83,42 +83,55 @@ bool CGI::poll()
 	if (!_is_running)
 		return false;
 
+	int options = WNOHANG;
+	// incase the process has been sent a kill signal we should wait for it to "finish" to prevent zombie procs.
+	if (_is_killed)
+		options = 0;
+
 	int32_t status;
-	if (::waitpid(_pid, &status, WNOHANG) == -1)
+	int32_t return_code = ::waitpid(_pid, &status, options);
+	if (return_code == -1)
 	{
 		UNIMPLEMENTED("waitpid failed" << strerror(errno));
 	}
-
-	// NOTE maybe we can just straight up attach the pipe from the CGI to the client's socket_fd.
-	if (WIFEXITED(status))
+	else if (return_code == _pid)
 	{
-		// TODO Check if it exited by a signal
-		LOG_DEBUG("CGI exited with code: " << WEXITSTATUS(status));
-
-		// read until the pipe is empty.
-		while (_read() == PIPE_READ_SIZE - 1)
+		if (WIFEXITED(status))
 		{
-			;
+			LOG_DEBUG("CGI exited with code: " << WEXITSTATUS(status));
+
+			// read until the pipe is empty.
+			while (_read() == PIPE_READ_SIZE - 1)
+			{
+				;
+			}
+			LOG_NOTICE("CGI is finished");
+		}
+		else if (WIFSIGNALED(status))
+		{
+			LOG_DEBUG("CGI received " << strsignal(WTERMSIG(status)) << " with code: " << WTERMSIG(status));
 		}
 		close(_pipes[PipeFD::READ]);
 		_is_running = false;
-		LOG_NOTICE("CGI is finished");
 		return true;
 	}
-	return false;	
+	return false;
 }
 
 
 void CGI::kill()
 {
+	if (!_is_running)
+		return;
 	if (::kill(_pid, SIGTERM) == -1)
 	{
 		LOG_ERROR("Failed" << strerror(errno));
 	}
 	else
 	{
-		LOG_NOTICE("Killed CGI");
-		this->poll();
+		_is_killed = true;
+		bool status = this->poll();
+		LOG_NOTICE("Killed CGI : " << status);
 	}
 }
 

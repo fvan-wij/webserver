@@ -29,6 +29,8 @@ int main(int argc, char **argv)
 	//do stuff
 	gettimeofday(&stop, NULL);
 	printf("took %lu us\n", (stop.tv_sec) * 1000000 + stop.tv_usec);
-	system("python3 -m http.server 9001");
+	// system("python3 -m http.server 9001");
+	execl("/home/joppe/.pyenv/shims/python3", "python3", "-m", "http.server", "8997", (char *) NULL);
+
 	return 0;
 }

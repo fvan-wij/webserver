@@ -1,12 +1,16 @@
 #include "ConnectionManager.hpp"
 #include "Logger.hpp"
 #include "ConfigParser.hpp"
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <meta.hpp>
 
 #include <cstring>
 #include <string>
 #include <sys/poll.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
 

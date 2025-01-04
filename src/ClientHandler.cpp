@@ -108,7 +108,7 @@ void	ClientHandler::_handle_outgoing_data()
 void ClientHandler::_poll_cgi()
 {
 
-	if (_cgi.is_running() && _cgi.poll())
+	if (_cgi.poll())
 	{
 		_state = State::Ready;
 		LOG_NOTICE("CGI OUTPUT: " << _cgi.get_buffer());
@@ -177,25 +177,8 @@ void	ClientHandler::_process_request()
   	_config 			= _resolve_config(_request.get_value("Host"));
 	_response 			= handler->build_response(_request, _config);
 
-	// TODO Set the request/response type where the request gets created.
 	ResponseType type 	= _response.get_type();
 
-
-	// TODO Remove this
-	const char *arr[] =
-	{
-		"Regular",
-		"Upload",
-		"Delete",
-		"CGI",
-		"Fetch",
-		"Error",
-		"Autoindex",
-		"Unknown",
-	};
-
-	// type = ResponseType::CGI;
-	LOG_DEBUG("RequestType: " << arr[int(type)]);
 
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{

@@ -29,6 +29,7 @@ public:
 
 private:
 	bool		_is_running;
+	bool 		_is_killed;
 	std::string _buffer;
 	int			_pid;
 	int			_pipes[PipeFD::COUNT];
