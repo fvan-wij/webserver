@@ -110,7 +110,6 @@ void ClientHandler::_poll_cgi()
 
 	if (_cgi.is_running() && _cgi.poll())
 	{
-		LOG_NOTICE("CGI is finished");
 		_state = State::Ready;
 		LOG_NOTICE("CGI OUTPUT: " << _cgi.get_buffer());
 	}

@@ -3,9 +3,9 @@
 #include "meta.hpp"
 #include <bits/pthread_stack_min-dynamic.h>
 #include <cerrno>
-#include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <iterator>
 #include <sys/wait.h>
 #include <cstdint>
 #include <cstdlib>
@@ -24,18 +24,16 @@ void CGI::start(std::vector<const char*> args, char *const envp[])
 	_is_running = true;
 
 
-	std::string arguments_printable = "|";
-	std::string str = "arguments: ";
+	std::string args_printable;
 
-	// LOG_DEBUG("starting CGI with arguments: ");
-	// NOTE: Why does it segfault?
+	// for (auto& var : args)
 	for (auto& var : args)
 	{
-		arguments_printable += var;
-		LOG_DEBUG(var);
+		args_printable += var;
+		if (var != *std::prev(args.end()))
+			args_printable += ", ";
 	}
-
-	LOG_DEBUG("starting CGI with arguments: " + arguments_printable);
+	LOG_NOTICE("starting CGI @: " + args_printable);
 
 	if (pipe(_pipes) == -1)
 	{
@@ -94,6 +92,7 @@ bool CGI::poll()
 		}
 		close(_pipes[PipeFD::READ]);
 		_is_running = false;
+		LOG_NOTICE("CGI is finished");
 		return true;
 	}
 	return false;	
