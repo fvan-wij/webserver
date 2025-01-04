@@ -37,7 +37,7 @@ void				HttpListener::listen_handle(short revents)
 		short mask = POLLIN | POLLOUT;
 		Socket socket = _socket.accept();
 
-		ClientHandler *client_handler = new ClientHandler(_connection_manager, socket, _configs);
+		ClientHandler *client_handler = new ClientHandler(_connection_manager, socket, _configs, _port);
 		auto client_action = new Action<ClientHandler>(client_handler, &ClientHandler::handle_request);
 		_connection_manager.add(socket.get_fd(), mask, client_action);
 		client_handler->init_timer();

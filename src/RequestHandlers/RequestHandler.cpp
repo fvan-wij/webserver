@@ -11,15 +11,19 @@ RequestHandler::~RequestHandler()
 	// LOG(RED << "Deleting requesthandler" << END);
 }
 
-static std::string generate_list(std::filesystem::path path)
+static std::string generate_list(std::filesystem::path path, uint16_t port)
 {
-	std::string list;
+	std::string list = "<h1>Directory listing</h1>\n<hr class='rounded'>\n";
 
+	path = path.parent_path();
+	LOG_DEBUG("path.string() : " << path.string());
+	
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
 		std::string file_name = entry.path().string().substr(entry.path().string().find_last_of('/'), entry.path().string().length());
 		std::string uri = path.string().substr(path.string().find_last_of('/')) + file_name;
-		std::string href_open = "<a href=\'" + uri + "\'>";
+		LOG_DEBUG("uri : " << uri);
+		std::string href_open = "<a href=\'http://localhost:" + std::to_string(port) + uri + "\'>";
 		std::string item = "<li>" + href_open + file_name  + "</a></li>";
 		list += item;
 	}
@@ -33,10 +37,10 @@ static std::string generate_list(std::filesystem::path path)
 	}
 }
 
-static std::string generate_directory_listing(std::string_view path)
+static std::string generate_directory_listing(std::string_view path, uint16_t port)
 {
 	std::string directory_list;
-	directory_list.append("<div class=\"fileBlock\">" + generate_list(path) + "</div>");
+	directory_list.append("<div class=\"fileBlock\">" + generate_list(path, port) + "</div>");
 	return directory_list;
 }
 
@@ -153,13 +157,12 @@ HttpResponse	RequestHandler::generate_error_response(int error_code, std::string
 	return response;
 }
 
-HttpResponse	RequestHandler::generate_successful_response(int status_code, std::string_view path, ResponseType type)
+HttpResponse	RequestHandler::generate_successful_response(uint16_t port, std::string_view path, ResponseType type)
 {
 	HttpResponse response;
-	response.set_status_code(status_code);
+	response.set_status_code(200);
 	response.set_status_mssg("OK");
 	response.set_type(type);
-	response.insert_header({"Connection", "close"});
 	switch (type)
 	{
 		case ResponseType::Fetch:
@@ -188,7 +191,7 @@ HttpResponse	RequestHandler::generate_successful_response(int status_code, std::
 			break;
 		case ResponseType::Autoindex:
 			{
-				std::string directory_list = generate_directory_listing(path);
+				std::string directory_list = generate_directory_listing(path, port);
 				response.set_body("\r\n" + directory_list + "\r\n");
 				response.set_state(READY);
 			}

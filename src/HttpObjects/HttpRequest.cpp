@@ -184,7 +184,7 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 	if (tokens.size() != 3)
 		throw HttpException(400, "Bad Request");
 	if (tokens[0] != "GET" && tokens[0] != "POST" && tokens[0] != "DELETE")
-		throw HttpException(405, "Method Not ALlowed");
+		throw HttpException(405, "Method Not Allowed");
 
 	//Extract method
 	_method = tokens[0];

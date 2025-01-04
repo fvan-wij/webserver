@@ -4,13 +4,10 @@
 #include <unordered_map>
 #include <vector>
 #include <sstream>
-#include <exception>
 #include <optional>
 #include <filesystem>
 #include <HttpExceptions.hpp>
-
 #include "meta.hpp"
-
 
 enum class RequestType:int
 {
@@ -59,62 +56,6 @@ class HttpRequest
 		//												Parsing methods
 		State											parse_header(std::vector<char>& buffer);
 		State 											parse_body(std::vector<char>& buffer);
-
-        //                                      Exceptions
-               class RequestBuilderException : public std::exception
-               {
-                       protected:
-                               std::string     message;
-                       public:
-                               RequestBuilderException(const std::string& msg) : message(msg){};
-                               const char* what() const noexcept override
-                               {
-                                       return message.c_str();
-                               }
-               };
-
-               class UnsupportedRequest : public RequestBuilderException
-               {
-                       public:
-                               UnsupportedRequest(const std::string& msg)
-                                       : RequestBuilderException("Unsupported Request: " + msg) {}
-
-               };
-
-               class InvalidRequestLine : public RequestBuilderException
-               {
-                       public:
-                               InvalidRequestLine(const std::string& msg)
-                                       : RequestBuilderException("Invalid Request Line: " + msg) {}
-               };
-
-               class InvalidMethod : public RequestBuilderException
-               {
-                       public:
-                               InvalidMethod(const std::string& msg)
-                                       : RequestBuilderException("Invalid Method: " + msg) {}
-               };
-
-               class InvalidProtocol : public RequestBuilderException
-               {
-                       public:
-                               InvalidProtocol(const std::string& msg)
-                                       : RequestBuilderException("Invalid Protocol: " + msg) {}
-               };
-
-               class InvalidUri : public RequestBuilderException
-               {
-                       public:
-                               InvalidUri(const std::string& msg)
-                                       : RequestBuilderException("Invalid Uri: " + msg) {}
-               };
-
-               class InvalidBody : public RequestBuilderException
-               {
-                       public:
-                               InvalidBody(const std::string& msg)
-                                       : RequestBuilderException("Invalid Body: " + msg) {}
-               };
 
 	private:
 		bool											_b_header_parsed;

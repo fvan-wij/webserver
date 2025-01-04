@@ -2,10 +2,11 @@
 #include "Logger.hpp"
 
 
-HttpResponse	BadRequestHandler::build_response(HttpRequest &request, Config &config)
+HttpResponse	BadRequestHandler::build_response(HttpRequest &request, Config &config, uint16_t port)
 {
 	HttpResponse response;
 	(void) config;
+	(void) port;
 	LOG_NOTICE("Handling BAD request:\n" << static_cast<const HttpRequest>(request));
 
 	if (request.get_type() == RequestType::Timeout)
