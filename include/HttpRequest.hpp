@@ -39,7 +39,6 @@ class HttpRequest
 		std::filesystem::path							get_uri_as_path() const;
 		std::string_view								get_protocol() const;
 		std::string_view								get_location() const {return _location;};
-		std::string_view								get_filename() const {return _filename;};
 		RequestType										get_type() const {return _type;};
 		std::vector<char>& 								get_body_buffer() {return _body_buffer;};
 		std::optional<std::string_view>					get_value(const std::string &key) const;
@@ -128,7 +127,6 @@ class HttpRequest
 		std::string 									_method;
 		std::string 									_protocol;
 		std::string 									_uri;
-		std::string 									_filename;
 		std::string 									_location;
 		std::string 									_boundary;
 		std::string 									_boundary_end;

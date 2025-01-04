@@ -50,7 +50,7 @@ void ClientHandler::handle_request(short revents)
 	}
 	catch (const HttpRedirection& e)
 	{
-		LOG_ERROR(std::to_string(e.status()) << " " << HTTP_REDIRECTION.at(e.status()));
+		LOG_ERROR(std::to_string(e.status()) << " " << HTTP_REDIRECTION.at(e.status()) << " redirecting to " << e.what());
 		_build_redirection_response(e.status(), e.what());
 	}
 	catch (const ClosedConnectionException& e)
@@ -147,7 +147,8 @@ void	ClientHandler::_build_redirection_response(int status_code, const std::stri
 {
 	response.set_status_code(status_code);
 	response.set_status_mssg(HTTP_REDIRECTION.at(status_code));
-	response.insert_header({"Location", message}); //Must be set dynamically!
+	response.insert_header({"Location", message});
+	LOG_DEBUG("message: " << message);
 	_state = State::Ready;
 }
 
