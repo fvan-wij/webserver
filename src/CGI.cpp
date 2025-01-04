@@ -92,6 +92,7 @@ bool CGI::poll()
 	// NOTE maybe we can just straight up attach the pipe from the CGI to the client's socket_fd.
 	if (WIFEXITED(status))
 	{
+		// TODO Check if it exited by a signal
 		LOG_DEBUG("CGI exited with code: " << WEXITSTATUS(status));
 
 		// read until the pipe is empty.
@@ -107,6 +108,19 @@ bool CGI::poll()
 	return false;	
 }
 
+
+void CGI::kill()
+{
+	if (::kill(_pid, SIGTERM) == -1)
+	{
+		LOG_ERROR("Failed" << strerror(errno));
+	}
+	else
+	{
+		LOG_NOTICE("Killed CGI");
+		this->poll();
+	}
+}
 
 const std::string& CGI::get_buffer() const
 {

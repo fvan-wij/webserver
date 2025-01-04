@@ -1,7 +1,5 @@
 #pragma once
 
-
-#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -15,6 +13,7 @@ public:
 
 	void start(std::vector<const char*> args, char *const envp[]);
 	bool poll();
+	void kill();
 
 	enum PipeFD
 	{

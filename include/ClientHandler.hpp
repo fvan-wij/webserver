@@ -42,7 +42,7 @@ class ClientHandler {
 		HttpRequest							_request;
 		HttpResponse						_response;
 
-		char**_envp;
+		char 								**_envp;
 
 		void								_handle_incoming_data();
 		void								_handle_outgoing_data();

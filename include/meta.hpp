@@ -16,7 +16,7 @@
 #define FETCH_READ_SIZE 	CHUNK_SIZE
 #define PIPE_READ_SIZE 		PIPE_BUF
 
-#define TIME_OUT			2500 // ms
+#define TIME_OUT			2500000 // ms
 
 
 #define UNUSED(x) (void)(x)

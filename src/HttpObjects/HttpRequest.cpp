@@ -1,5 +1,4 @@
 #include "HttpRequest.hpp"
-#include "Config.hpp"
 #include "Logger.hpp"
 #include "Utility.hpp"
 

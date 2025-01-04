@@ -181,7 +181,7 @@ void	ClientHandler::_process_request()
 	ResponseType type 	= _response.get_type();
 
 
-	// we're just forcing the type to be set to CGI
+	// TODO Remove this
 	const char *arr[] =
 	{
 		"Regular",
@@ -212,7 +212,7 @@ void	ClientHandler::_process_request()
 	else if (type == ResponseType::CGI)
 	{
 		// TODO Extract path from `URI`
-		std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", "3"};
+		std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", "2"};
 		_cgi.start(args, _envp);
 		_state = State::ProcessingCGI;
 	}
@@ -355,6 +355,7 @@ void	ClientHandler::_poll_timeout_timer()
  */
 void	ClientHandler::_close_connection()
 {
+	_cgi.kill();
 	LOG_INFO("Client (fd " << _socket.get_fd() << ") disconnected");
 	_connection_manager.remove(_socket.get_fd());
 }
