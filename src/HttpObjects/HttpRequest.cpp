@@ -206,7 +206,7 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 		(void) part;
 		path_depth++;
 	}
-	if (path_depth <= 2 && not p.has_extension()) // I.e. /uploads
+	if (path_depth <= 2) // I.e. /uploads
 	{
 		if (p.has_extension()) // I.e /index.html
 		{
