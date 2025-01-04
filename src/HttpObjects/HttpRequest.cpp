@@ -200,15 +200,27 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 
 	//Extract filename, location and is_file_boolean
 	std::filesystem::path p(_uri);
+
+	LOG_DEBUG("HttpRequest, P: " << p.string());
 	_filename = p.filename().string();
+	LOG_DEBUG("HttpRequest, _filename: " << _filename);
+
 	if (p.has_extension())
 	{
-		_b_file = true;
 		_location = p.parent_path().string();
+		LOG_DEBUG("has extension!, _location: " << _location);
 	}
 	else
 	{
-		_location = "/" + p.stem().string();
+		if (p.string().length() > 1 && p.string().back() == '/')
+		{
+			_location = p.parent_path().string();
+		}
+		else
+		{
+			_location = "/" + p.stem().string();
+		}
+		LOG_DEBUG("has NO extension!, _location: " << _location);
 	}
 
 	//Extract protocol

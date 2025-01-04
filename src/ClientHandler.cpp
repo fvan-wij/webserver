@@ -128,7 +128,8 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 	if (error_path)
 	{
 		request.set_file_path(error_path.value());
-		LOG_DEBUG("DEZE?");
+		response.set_status_code(status_code);
+		response.set_status_mssg(message);
 		_add_file_handler(ResponseType::Error);
 		_state = State::ProcessingFileIO;
 		return;

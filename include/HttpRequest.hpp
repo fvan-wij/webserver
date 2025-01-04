@@ -49,7 +49,6 @@ class HttpRequest
 		//												Bools
 		bool											is_header_parsed() {return _b_header_parsed;};
 		bool											is_body_parsed() {return _b_body_parsed;};
-		bool											is_file() const {return _b_file;};
 
 		//												Setters
 		void											set_type(RequestType type);
@@ -121,7 +120,6 @@ class HttpRequest
 	private:
 		bool											_b_header_parsed;
 		bool											_b_body_parsed;
-		bool											_b_file;
 		bool											_b_file_extracted;
 		bool											_b_file_path_extracted;
 		bool											_b_boundary_extracted;
