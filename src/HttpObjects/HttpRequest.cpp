@@ -5,7 +5,7 @@
 #include <algorithm>
 
 HttpRequest::HttpRequest()
-	: _b_header_parsed(false), _b_body_parsed(false), _b_file(false),
+	: _b_header_parsed(false), _b_body_parsed(false), 
 	_b_file_extracted(false), _b_file_path_extracted(false),
 	_b_boundary_extracted(false), _b_file_data_extracted(false),
 	_file({})
@@ -196,31 +196,30 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 	if (tokens[1][0] != '/')
 		throw HttpException(400, "URI not present!");
 	_uri = tokens[1];
-	// LOG_ERROR("_uri: " << _uri);
 
-	//Extract filename, location and is_file_boolean
+	//Extract location
 	std::filesystem::path p(_uri);
 
-	LOG_DEBUG("HttpRequest, P: " << p.string());
-	_filename = p.filename().string();
-	LOG_DEBUG("HttpRequest, _filename: " << _filename);
-
-	if (p.has_extension())
+	size_t	path_depth = 0;
+	for (const auto& part : p)
 	{
-		_location = p.parent_path().string();
-		LOG_DEBUG("has extension!, _location: " << _location);
+		(void) part;
+		path_depth++;
 	}
-	else
+	if (path_depth <= 2 && not p.has_extension()) // I.e. /uploads
 	{
-		if (p.string().length() > 1 && p.string().back() == '/')
+		if (p.has_extension()) // I.e /index.html
 		{
-			_location = p.parent_path().string();
+			_location = p.parent_path().string(); // extracts / as location if 
 		}
 		else
 		{
-			_location = "/" + p.stem().string();
+			_location = p.string(); //
 		}
-		LOG_DEBUG("has NO extension!, _location: " << _location);
+	}
+	else
+	{
+		_location = p.parent_path().string();
 	}
 
 	//Extract protocol
