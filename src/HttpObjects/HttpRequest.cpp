@@ -1,4 +1,5 @@
 #include "HttpRequest.hpp"
+#include "Config.hpp"
 #include "Logger.hpp"
 #include "Utility.hpp"
 
@@ -95,12 +96,23 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 State HttpRequest::parse_body(std::vector<char>& buffer)
 {
 	LOG_NOTICE("Parsing body...");
+
 	if (buffer.size() > Utility::svtoi(get_value("Content-Length").value_or("0")))
 		throw HttpException(400, "Bad Request");
 
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
+
+
+	int content_length = Utility::svtoi(get_value("Content-Length").value_or("0")).value_or(-1);
+	if (content_length == -1)
+	{
+		LOG_ERROR("content_length is -1");
+	}
+	if (_body_buffer.size() == (unsigned long) content_length)
+		return State::ProcessingRequest;
+
 
 	if (get_value("Content-Type") == "plain/text")
 	{
@@ -196,7 +208,6 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 	if (tokens[1][0] != '/')
 		throw HttpException(400, "URI not present!");
 	_uri = tokens[1];
-	// LOG_ERROR("_uri: " << _uri);
 
 	//Extract filename, location and is_file_boolean
 	std::filesystem::path p(_uri);

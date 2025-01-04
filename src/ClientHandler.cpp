@@ -88,7 +88,7 @@ void	ClientHandler::_handle_outgoing_data()
 	switch(_state)
 	{
 		case State::Ready:
-			_send_response(response.get_type());
+			_send_response(_response.get_type());
 			break;
 		case State::ProcessingFileIO:
 			_poll_file_handler();
@@ -139,11 +139,11 @@ std::optional<std::string> ClientHandler::_retrieve_error_path(int error_code, C
 void	ClientHandler::_build_error_response(int status_code, const std::string& message, std::optional<std::string> error_path)
 {
 
-	response.set_type(ResponseType::Error);
+	_response.set_type(ResponseType::Error);
 
 	if (error_path)
 	{
-		request.set_file_path(error_path.value());
+		_request.set_file_path(error_path.value());
 		// TODO Kan weg?
 		LOG_DEBUG("DEZE?");
 		_add_file_handler(ResponseType::Error);
@@ -152,18 +152,18 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 	}
 	else
 	{
-		response.set_status_code(status_code);
-		response.set_status_mssg(message);
-		response.set_body("<h1>" + std::to_string(response.get_status_code()) + " " + response.get_status_mssg() + "</h1>\r\n");
+		_response.set_status_code(status_code);
+		_response.set_status_mssg(message);
+		_response.set_body("<h1>" + std::to_string(_response.get_status_code()) + " " + _response.get_status_mssg() + "</h1>\r\n");
 		_state = State::Ready;
 	}
 }
 
 void	ClientHandler::_build_redirection_response(int status_code, const std::string& message)
 {
-	response.set_status_code(status_code);
-	response.set_status_mssg(HTTP_REDIRECTION.at(status_code));
-	response.insert_header({"Location", message}); //Must be set dynamically!
+	_response.set_status_code(status_code);
+	_response.set_status_mssg(HTTP_REDIRECTION.at(status_code));
+	_response.insert_header({"Location", message}); //Must be set dynamically!
 	_state = State::Ready;
 }
 
@@ -173,14 +173,15 @@ void	ClientHandler::_build_redirection_response(int status_code, const std::stri
  */
 void	ClientHandler::_process_request()
 {
-	auto handler 		= HandlerFactory::create_handler(request.get_type());
-  	_config 			= _resolve_config(request.get_value("Host"));
-	response 			= handler->build_response(request, _config);
+	auto handler 		= HandlerFactory::create_handler(_request.get_type());
+  	_config 			= _resolve_config(_request.get_value("Host"));
+	_response 			= handler->build_response(_request, _config);
 
-	ResponseType type 	= response.get_type();
+	// TODO Set the request/response type where the request gets created.
+	ResponseType type 	= _response.get_type();
 
 
-
+	// we're just forcing the type to be set to CGI
 	const char *arr[] =
 	{
 		"Regular",
@@ -193,8 +194,8 @@ void	ClientHandler::_process_request()
 		"Unknown",
 	};
 
-	type = ResponseType::CGI;
-	LOG_DEBUG("ResponseType: " << arr[int(type)]);
+	// type = ResponseType::CGI;
+	LOG_DEBUG("RequestType: " << arr[int(type)]);
 
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
 	{
@@ -208,11 +209,10 @@ void	ClientHandler::_process_request()
 		}
 	}
 	// NOTE: leftoff 
-	// TODO: `type` is not being set to `ResponseType::CGI`
 	else if (type == ResponseType::CGI)
 	{
-		// TODO Put this bit somewhere else
-		std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", "1"};
+		// TODO Extract path from `URI`
+		std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", "3"};
 		_cgi.start(args, _envp);
 		_state = State::ProcessingCGI;
 	}
@@ -234,10 +234,10 @@ void	ClientHandler::_parse(std::vector<char>& data)
 		switch (_state)
 		{
 				case State::ParsingHeaders:
-					_state = request.parse_header(data);
+					_state = _request.parse_header(data);
 					break;
 				case State::ParsingBody:
-					_state = request.parse_body(data);
+					_state = _request.parse_body(data);
 					break;
 				default:
 					break;
@@ -257,19 +257,19 @@ void	ClientHandler::_send_response(ResponseType type)
 		std::vector<char>& data = _file.data;
 		if (not data.empty())
 		{
-			response.set_body(std::string(data.begin(), data.end()));
+			_response.set_body(std::string(data.begin(), data.end()));
 		}
 	}
 	else if (type == ResponseType::CGI)
 	{
-		response.set_body(_cgi.get_buffer());
+		_response.set_body(_cgi.get_buffer());
 	}
 
-	response.insert_header({"Server", "webserv"});
-	response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
-	response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
-	_socket.write(response.to_string());
-	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): " << response.get_body());
+	_response.insert_header({"Server", "webserv"});
+	_response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
+	_response.insert_header({"Content-Length", std::to_string(_response.get_body().size())});
+	_socket.write(_response.to_string());
+	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): " << _response.get_body());
 	_close_connection();
 }
 
@@ -296,15 +296,16 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 	if (type == ResponseType::Fetch || type == ResponseType::Error)
 	{
 		mask = POLLIN;
-		LOG_NOTICE("Creating Fetch FileHandler with file " << request.get_file().path);
+		LOG_NOTICE("Creating Fetch FileHandler with file " << _request.get_file().path);
 	}
 	else if (type == ResponseType::Upload)
 	{
 		mask = POLLOUT;
-		LOG_NOTICE("Creating Upload FileHandler with file " << request.get_file().path << "/" << request.get_file().name);
+		LOG_NOTICE("Creating Upload FileHandler with file " << _request.get_file().path << "/" << _request.get_file().name);
 	}
 	_state = State::ProcessingFileIO;
-	_file_handler = new FileHandler(request.get_file(), type);
+	// NOTE if we're doing a `ResponseType::Upload` check if `_request.get_file()` is empty
+	_file_handler = new FileHandler(_request.get_file(), type);
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
 	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }

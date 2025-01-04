@@ -19,6 +19,7 @@ static std::string generate_list(std::filesystem::path path)
 	{
 		std::string file_name = entry.path().string().substr(entry.path().string().find_last_of('/'), entry.path().string().length());
 		std::string uri = path.string().substr(path.string().find_last_of('/')) + file_name;
+		// TODO Add relative path to `uri`
 		std::string href_open = "<a href=\'" + uri + "\'>";
 		std::string item = "<li>" + href_open + file_name  + "</a></li>";
 		list += item;

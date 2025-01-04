@@ -25,8 +25,6 @@ class ClientHandler {
 		ConnectionManager&					get_connection_manager(){return _connection_manager;};
 		void								init_timer(){_timer.reset();};
 
-		HttpRequest							request;
-		HttpResponse						response;
 
 	private:
 		std::string							_response_data;
@@ -40,6 +38,9 @@ class ClientHandler {
 		State								_state;
 		Timer								_timer;
 		bool								_timed_out;
+
+		HttpRequest							_request;
+		HttpResponse						_response;
 
 		char**_envp;
 

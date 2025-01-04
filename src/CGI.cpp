@@ -57,7 +57,16 @@ void CGI::start(std::vector<const char*> args, char *const envp[])
 
 		close(_pipes[PipeFD::WRITE]);
 
-		if (execve(args[0], const_cast<char* const*>(args.data()), envp) == -1)
+
+		const char **argv = new const char* [args.size() + 1];
+		for (size_t i = 0; i < args.size(); i++)
+		{
+			argv[i] = args.at(i);
+		}
+		argv[args.size()] = NULL;
+
+
+		if (execve(args[0], (char **) argv, envp) == -1)
 		{
 			UNIMPLEMENTED("execvp failed" << strerror(errno));
 		}
