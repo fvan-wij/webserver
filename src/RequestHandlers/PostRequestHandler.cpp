@@ -4,6 +4,7 @@
 HttpResponse	PostRequestHandler::build_response(HttpRequest &request, Config &config)
 {
 	LOG_NOTICE("Handling POST request\n" << static_cast<const HttpRequest>(request));
+
 	// LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
 
 	if (!location_exists(config, request.get_location()))

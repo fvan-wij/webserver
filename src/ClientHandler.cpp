@@ -4,6 +4,7 @@
 #include <HandlerFactory.hpp>
 #include <iostream>
 #include <Utility.hpp>
+#include <string>
 
 /**
  * @brief ClientHandler; responsible for reading and sending data from and to the client.
@@ -76,6 +77,13 @@ void	ClientHandler::_handle_incoming_data()
 	}
 
 	LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on port: " << _socket.get_port());
+
+	// NOTE: disable favicon.
+	std::string s(incoming_data->data());
+	if (s.find("favicon") != std::string::npos)
+	{
+		return ;
+	}
 
 	_parse(incoming_data.value());
 }

@@ -100,6 +100,9 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 		throw HttpException(400, "Bad Request");
 
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
+
+	std::string s(buffer.begin(), buffer.begin());
+	LOG_DEBUG("body_buffer: " + s);
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
 
@@ -290,5 +293,6 @@ std::ostream & operator << (std::ostream &out, const HttpRequest &request)
 	for (const auto& [key, value] : request.get_headers())
 		out << key <<  ":" << value << "\n";
 	out << END << std::endl;
+
 	return out;
 }

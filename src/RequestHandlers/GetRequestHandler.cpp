@@ -14,8 +14,7 @@ bool contains_redirection(std::string_view loc, Config& config)
 HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &config)
 
 {
-	// LOG_NOTICE("Handling GET request:\n" << static_cast<const HttpRequest>(request));
-	/*LOG_NOTICE("Handling GET request:\n");*/
+	LOG_NOTICE("Handling GET request:\n" << static_cast<const HttpRequest>(request));
 
 	if (!location_exists(config, request.get_location()))
 		throw HttpException(404, "Not Found - The server cannot find the requested resource");
@@ -28,7 +27,6 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 	{
 		std::pair<int, std::string> redirection = location_block.redirection;
 		//  throw HttpRedirection(redirection.first, REDIRECTION.at(redirection.first));
-		LOG_DEBUG("NKAAKNEKNAEKNKER");
 		throw HttpRedirection(redirection.first, redirection.second);
 	}
 	std::filesystem::path path = build_path(config.root, request.get_uri(), std::nullopt);
