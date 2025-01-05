@@ -9,7 +9,7 @@
 #define LISTEN_BACKLOG 8
 
 // Chunk sizes
-#define CHUNK_SIZE 			4096
+#define CHUNK_SIZE 			4096 * 4
 
 #define SOCKET_READ_SIZE 	CHUNK_SIZE
 #define UPLOAD_CHUNK_SIZE 	CHUNK_SIZE

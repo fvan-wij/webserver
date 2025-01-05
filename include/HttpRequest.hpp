@@ -65,6 +65,7 @@ class HttpRequest
 		bool											_b_file_path_extracted;
 		bool											_b_boundary_extracted;
 		bool											_b_file_data_extracted;
+		bool											_b_chunk_size_extracted;
 
 		std::string 									_method;
 		std::string 									_protocol;
@@ -76,6 +77,8 @@ class HttpRequest
 
 		std::string										_header_buffer;
 		std::vector<char> 								_body_buffer;
+		std::vector<char>								_current_chunk;
+		size_t											_current_chunk_size;
 		std::unordered_map<std::string, std::string>	_header;
 
 		RequestType										_type;
@@ -84,6 +87,7 @@ class HttpRequest
 		//												Data extraction methods
 		void											_extract_request_line(std::istringstream 	&stream);
 		void											_extract_header_fields(std::string_view data_sv);
+		void											_extract_chunk_size(std::vector<char>& buffer);
 		std::string										_extract_boundary(std::string_view content_type);
 		std::string 									_extract_filename(std::string_view body_buffer);
 
