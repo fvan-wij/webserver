@@ -77,6 +77,13 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 			return State::ParsingHeaders;
 		}
 	}
+
+	if (get_value("Transfer-Encoding") == "chunked")
+	{
+		LOG_DEBUG("It's a chunky boi!");
+		return State::ParsingChunkedBody;
+	}
+
 	if (not buffer.empty() && _b_header_parsed)
 	{
 		return State::ParsingBody;
@@ -90,6 +97,28 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 		}
 		return State::ProcessingRequest;
 	}
+}
+
+State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
+{
+	std::stringstream ss(buffer.data());
+	std::string line;
+	while (std::getline(ss, line, '\n'))
+	{
+		if (line == "\r")
+			continue;
+		size_t	chunk_size	= std::stoi(line, nullptr, 16);
+		if (chunk_size == 0)
+		{
+			return State::ProcessingRequest;
+		}
+		std::vector<char> ss_buffer(chunk_size);
+		ss.read(ss_buffer.data(), chunk_size);
+		_body_buffer.insert(_body_buffer.end(), ss_buffer.begin(), ss_buffer.end());
+	}
+	// LOG_DEBUG("_body_buffer: " << _body_buffer.data());
+	// exit(123);
+	return State::ParsingChunkedBody;
 }
 
 State HttpRequest::parse_body(std::vector<char>& buffer)

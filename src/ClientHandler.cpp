@@ -198,6 +198,9 @@ void	ClientHandler::_parse(std::vector<char>& data)
 				case State::ParsingBody:
 					_state = request.parse_body(data);
 					break;
+				case State::ParsingChunkedBody:
+					_state = request.parse_body_chunked(data);
+					break;
 				default:
 					break;
 		}

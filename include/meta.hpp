@@ -45,6 +45,7 @@
 enum class State {
 	ParsingHeaders,
 	ParsingBody,
+	ParsingChunkedBody,
 	ProcessingRequest,
 	ProcessingCGI,
 	ProcessingFileIO,

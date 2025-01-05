@@ -12,7 +12,7 @@ def send_chunked_post_request(port: int, uri: str, chunks: list, expected_status
 		chunks (list): The list of chunks to send in the request body.
 		expected_status_code (int): The expected HTTP status code of the response.
 	"""
-	print(f"\nSending chunked POST request to http://localhost:{str(port)}/{uri}")
+	# print(f"\nSending chunked POST request to http://localhost:{str(port)}/{uri}")
 
 	def generate_chunks():
 		for chunk in chunks:
@@ -21,8 +21,8 @@ def send_chunked_post_request(port: int, uri: str, chunks: list, expected_status
 	headers = {'Transfer-Encoding': 'chunked'}
 	r = requests.post(f"http://localhost:{str(port)}/{uri}", data=generate_chunks(), headers=headers)
 
-	print("Status code == ", r.status_code)
-	print("Expected code == ", expected_status_code)
+	# print("Status code == ", r.status_code)
+	# print("Expected code == ", expected_status_code)
 	assert r.status_code == expected_status_code
 
 def test_chunked_request(webserv_instance: WebservInstance) -> None:
@@ -34,7 +34,7 @@ def test_chunked_request(webserv_instance: WebservInstance) -> None:
 	"""
 	assert webserv_instance.proc.pid != 0
 
-	chunks = ["chunk1", "chunk2", "chunk3"]
+	chunks = ["chunk1", "chunk2j", "chunk3jk"]
 
 	for port in webserv_instance.config.ports:
 		send_chunked_post_request(port, "/upload", chunks, 200)
