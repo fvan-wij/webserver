@@ -13,8 +13,8 @@
  * @param configs: vector of configs
  */
 
-ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs)
-	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false)
+ClientHandler::ClientHandler(ConnectionManager &cm, Socket socket, std::vector<Config>& configs, uint16_t port)
+	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false), _port(port)
 {
 
 }
@@ -160,7 +160,7 @@ void	ClientHandler::_process_request()
 {
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
   	_config 			= _resolve_config(request.get_value("Host"));
-	response 			= handler->build_response(request, _config);
+	response 			= handler->build_response(request, _config, _port);
 
 	ResponseType type 	= response.get_type();
 
@@ -222,6 +222,7 @@ void	ClientHandler::_send_response(ResponseType type)
 
 	response.insert_header({"Server", "webserv"});
 	response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
+	response.insert_header({"Connection", "close"});
 	response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
 	_socket.write(response.to_string());
 	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): " << response.get_body());

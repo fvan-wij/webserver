@@ -1,6 +1,5 @@
 #include "GetRequestHandler.hpp"
 #include "Logger.hpp"
-#include "meta.hpp"
 
 bool contains_redirection(std::string_view loc, Config& config)
 {
@@ -10,10 +9,10 @@ bool contains_redirection(std::string_view loc, Config& config)
 	return false;
 }
 
-HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &config)
+HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &config, uint16_t port)
 
 {
-	// LOG_NOTICE("Handling GET request:\n" << static_cast<const HttpRequest>(request));
+	LOG_NOTICE("Handling GET request:\n" << static_cast<const HttpRequest>(request));
 
 	std::filesystem::path path = build_path(config.root, request.get_uri(), std::nullopt);
 	std::filesystem::path location(request.get_uri());
@@ -34,10 +33,10 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 	{
 		request.set_file_path(path.string());
 		if (path.extension().string() == ".py")
-			return generate_successful_response(200, path.string(), ResponseType::CGI);
+			return generate_successful_response(port, path.string(), ResponseType::CGI);
 		else
 		{
-			return generate_successful_response(200, path.string(), ResponseType::Fetch);
+			return generate_successful_response(port, path.string(), ResponseType::Fetch);
 		}
 	}
 	else if (std::filesystem::is_directory(path))
@@ -46,9 +45,9 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 		path /= index;
 		request.set_file_path(path.string());
 		if (not index.empty() && std::filesystem::exists(path))
-			return generate_successful_response(200, path.string(), ResponseType::Fetch);
+			return generate_successful_response(port, path.string(), ResponseType::Fetch);
 		else if (location_block.autoindex)
-			return generate_successful_response(200, path.string(), ResponseType::Autoindex);
+			return generate_successful_response(port, path.string(), ResponseType::Autoindex);
 	}
 	throw HttpException(404, "Not Found - The server cannot find the requested resource");
 }
