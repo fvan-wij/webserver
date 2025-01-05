@@ -77,6 +77,11 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 			return State::ParsingHeaders;
 		}
 	}
+	if (get_value("Transfer-Encoding") == "chunked")
+	{
+		LOG_DEBUG("chunked!");
+		return State::ParsingChunkedBody;
+	}
 	if (not buffer.empty() && _b_header_parsed)
 	{
 		return State::ParsingBody;
@@ -90,6 +95,38 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 		}
 		return State::ProcessingRequest;
 	}
+}
+
+#include <iostream>
+
+State HttpRequest::parse_chunked_body(std::vector<char>& buffer)
+{
+	std::string 	str_buffer(buffer.data(), buffer.size());
+	LOG_DEBUG("str_buffer: " << str_buffer << "< str_buffer.size(): " << str_buffer.size());
+	size_t hex_size_pos = str_buffer.find_first_of("0123456789ABCDE");
+	size_t hex_size_end = str_buffer[str_buffer.find_first_not_of("0123456789ABCDE")];
+
+	// LOG_DEBUG("hex_size_pos: " << hex_size_pos << ", hex_size_end: " << hex_size_end);
+	std::string	hex_size(str_buffer[hex_size_pos], str_buffer[hex_size_end]);
+	LOG_DEBUG("hex_size: " << hex_size);
+	exit(123);
+
+
+
+
+	// _body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
+	// buffer.clear(); // Is redundant, right?
+
+	//Format
+
+	//size of the chunk-data in hex-digits\r\n
+	//chunk\r\n
+	//\r\n
+	
+	//terminating chunk
+	//0\r\n
+	//\r\n
+
 }
 
 State HttpRequest::parse_body(std::vector<char>& buffer)

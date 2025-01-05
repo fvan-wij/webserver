@@ -56,6 +56,7 @@ class HttpRequest
 		//												Parsing methods
 		State											parse_header(std::vector<char>& buffer);
 		State 											parse_body(std::vector<char>& buffer);
+		State 											parse_chunked_body(std::vector<char>& buffer);
 
 	private:
 		bool											_b_header_parsed;

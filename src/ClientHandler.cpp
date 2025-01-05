@@ -198,6 +198,9 @@ void	ClientHandler::_parse(std::vector<char>& data)
 				case State::ParsingBody:
 					_state = request.parse_body(data);
 					break;
+				case State::ParsingChunkedBody:
+					_state = request.parse_chunked_body(data);
+					break;
 				default:
 					break;
 		}
@@ -233,9 +236,8 @@ void	ClientHandler::_send_response(ResponseType type)
 		std::cout << key << " : " << val << "\n";
 	}
 	std::cout << "Body\n";
-	std::cout << "Size: " << response.get_body().size();
-	std::cout << "File: " << request.get_file().name;
-	std::cout << std::endl;
+	std::cout << "Size: " << response.get_body().size() << "\n";
+	std::cout << "File: " << request.get_file().name << std::endl;
 	_close_connection();
 }
 
