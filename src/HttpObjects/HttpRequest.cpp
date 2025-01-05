@@ -196,32 +196,10 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 	if (tokens[1][0] != '/')
 		throw HttpException(400, "URI not present!");
 	_uri = tokens[1];
-	// LOG_ERROR("_uri: " << _uri);
 
-	//Extract filename, location and is_file_boolean
+	//Extract location
 	std::filesystem::path p(_uri);
-
-	LOG_DEBUG("HttpRequest, P: " << p.string());
-	_filename = p.filename().string();
-	LOG_DEBUG("HttpRequest, _filename: " << _filename);
-
-	if (p.has_extension())
-	{
-		_location = p.parent_path().string();
-		LOG_DEBUG("has extension!, _location: " << _location);
-	}
-	else
-	{
-		if (p.string().length() > 1 && p.string().back() == '/')
-		{
-			_location = p.parent_path().string();
-		}
-		else
-		{
-			_location = "/" + p.stem().string();
-		}
-		LOG_DEBUG("has NO extension!, _location: " << _location);
-	}
+	_location = p.parent_path().string();
 
 	//Extract protocol
 	if (tokens[2] != "HTTP/1.1\r")
