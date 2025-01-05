@@ -5,7 +5,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-int main(int argc, char **argv)
+int main1(int argc, char **argv)
 {
 	if (argc < 2)
 	{
@@ -44,3 +44,16 @@ int main(int argc, char **argv)
 	// execl("/home/joppe/.pyenv/shims/python3", "python3", "-m", "http.server", "8997", (char *) NULL);
 	return 0;
 }
+
+int main(int argc, char **argv)
+{
+	if (argc < 2)
+	{
+		printf("error no argument given\n");
+		return 1;
+	}
+	(void) argc;
+
+	printf("args: %s\n", argv[1]);
+}
+

@@ -1,6 +1,8 @@
 #include "CGI.hpp"
+#include "HttpRequest.hpp"
 #include "Logger.hpp"
 #include "meta.hpp"
+#include <algorithm>
 #include <bits/pthread_stack_min-dynamic.h>
 #include <cerrno>
 #include <cstdio>
@@ -11,10 +13,100 @@
 #include <cstdlib>
 #include <string>
 #include <unistd.h>
+#include <vector>
+
+
+
+static char	*find_path(char *const envp[])
+{
+	int		index;
+
+	index = 0;
+	while (envp[index])
+	{
+		if (::strncmp(envp[index], "PATH=", 5) == 0)
+			return (envp[index] + 5);
+		index++;
+	}
+	return (NULL);
+}
+
+static std::vector<std::string> split(const std::string& str, const char& ch) 
+{
+	std::string next;
+	std::vector<std::string> result;
+
+	// For each character in the string
+	for (std::string::const_iterator it = str.begin(); it != str.end(); it++)
+	{
+		// If we've hit the terminal character
+		if (*it == ch)
+		{
+			// If we have some characters accumulated
+			if (!next.empty())
+			{
+				// Add them to the result vector
+				result.push_back(next);
+				next.clear();
+			}
+		}
+		else
+		{
+			// Accumulate the next character into the sequence
+			next += *it;
+		}
+	}
+	if (!next.empty())
+		result.push_back(next);
+	return result;
+}
+
+static std::string find_cgi_binary(const std::string exec_name, char *const envp[])
+{
+	const char* path = find_path(envp);
+
+	if (!path)
+	{
+		LOG_ERROR("PATH not found in envp");
+		throw HttpException(500, "Internal Server Error");
+	}
+
+	std::vector<std::string> paths = split(path, ':');
+
+	for (std::string &s : paths)
+	{
+		std::string path = s + "/" + exec_name;
+		if (::access(path.c_str(), X_OK) == 0)
+			return path;
+	}
+	LOG_ERROR(exec_name << " not found in $PATH");
+	throw HttpException(500, "Internal Server Error");
+}
+
+
 
 CGI::CGI() : _is_running(false), _is_killed(false)
 {
 
+}
+
+
+
+void CGI::verify(std::string_view uri, char *const envp[])
+{
+	// 1. check if uri exension is valid
+	// 2. find the accessable executable.
+
+	// just hardcode python for now...
+	const std::string path = find_cgi_binary("python", envp);
+
+	// find_cgi_script();
+
+	if (uri.find("?") != std::string::npos)
+	{
+		return ;
+	}
+	// start(args, envp);
 }
 
 

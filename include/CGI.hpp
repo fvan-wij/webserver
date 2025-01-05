@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 
 class CGI
@@ -11,6 +12,7 @@ public:
 	CGI &operator=(const CGI &) = delete;
 	~CGI();
 
+	void verify(std::string_view uri, char *const envp[]);
 	void start(std::vector<const char*> args, char *const envp[]);
 	bool poll();
 	void kill();
@@ -33,6 +35,7 @@ private:
 	std::string _buffer;
 	int			_pid;
 	int			_pipes[PipeFD::COUNT];
+
 
 
 	int32_t _read();
