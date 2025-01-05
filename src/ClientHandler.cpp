@@ -225,7 +225,17 @@ void	ClientHandler::_send_response(ResponseType type)
 	response.insert_header({"Connection", "close"});
 	response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
 	_socket.write(response.to_string());
-	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): " << response.get_body());
+	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): ");
+	const auto& headers = response.get_header();
+	std::cout << std::to_string(response.get_status_code()) << " " << response.get_status_mssg() << "\n";
+	for (const auto& [key, val] : headers)
+	{
+		std::cout << key << " : " << val << "\n";
+	}
+	std::cout << "Body\n";
+	std::cout << "Size: " << response.get_body().size();
+	std::cout << "File: " << request.get_file().name;
+	std::cout << std::endl;
 	_close_connection();
 }
 
@@ -262,6 +272,7 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 	_state = State::ProcessingFileIO;
 	_file_handler = new FileHandler(request.get_file(), type);
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
+	LOG_NOTICE("FileHandler (fd " << request.get_file().fd << ")");
 	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }
 
@@ -274,7 +285,7 @@ void ClientHandler::_poll_file_handler()
 	{
 		return;
 	}
-	if (_file_handler->error())
+	else if (_file_handler->error())
 	{
 		_connection_manager.remove(_file_handler->get_fd());
 		_file_handler = nullptr;

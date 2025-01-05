@@ -84,6 +84,7 @@ void FileHandler::_open_file()
 		LOG_ERROR(_file.path + " couldn't open file");
 		throw HttpException(409, "Conflict");
 	}
+	LOG_DEBUG("_file (fd " << _file.fd << ") is open");
 	_file.is_open = true;
 }
 
@@ -104,6 +105,8 @@ void	FileHandler::_read_file()
 {
 		char 	buffer[FETCH_READ_SIZE];
 
+		if (_file.finished)
+			return;
 		if (access(_file.path.c_str(), R_OK) == -1)
 		{
 			LOG_ERROR(_file.path + " doesn't have read permissions!");
@@ -129,15 +132,15 @@ void	FileHandler::_read_file()
 				_file.finished = true;
 				_file.is_open = false;
 				_file.data.push_back('\0'); //Hmm've
-				LOG_DEBUG("FileHandler is done...");
+				LOG_DEBUG("FileHandler (fd " << _file.fd << ") is done...");
 			}
+			LOG_DEBUG("Reading file...(fd " << _file.fd << "), (bytes read: " << _file.streamcount << ")");
 		}
 		else
 		{
-			LOG_ERROR(_file.path + "'s filedescriptor is not opened!");
+			LOG_ERROR(_file.path + "'s filedescriptor (fd " << _file.fd << ") is not opened!");
 			throw HttpException(409, "Conflict");
 		}
-		LOG_DEBUG("Reading file...(fd " << _file.fd << "), (bytes read: " << _file.streamcount << ")");
 }
 
 

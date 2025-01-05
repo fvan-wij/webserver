@@ -57,6 +57,7 @@ class HttpResponse
 		size_t			get_streamcount() const {return _streamcount;};
 		std::string		get_status_mssg() const {return _status_message;};
 		std::string		get_path() const {return _path;};
+		std::unordered_map<std::string, std::string> get_header() const {return _header;};
 		std::string		get_body() const {return _body;};
 
 		std::string		to_string() const;

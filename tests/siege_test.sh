@@ -1,6 +1,6 @@
 #!/bin/bash
 
-URL="http://localhost:9090"
+URL="http://localhost:9090/"
 DURATION="15s"
 
 echo "Testing Siege for $DURATION"
