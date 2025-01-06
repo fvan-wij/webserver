@@ -78,7 +78,8 @@ class HttpRequest
 		std::string										_header_buffer;
 		std::vector<char> 								_body_buffer;
 		std::vector<char>								_current_chunk;
-		size_t											_current_chunk_size;
+		std::vector<char>								_left_over;
+		int												_current_chunk_size;
 		std::unordered_map<std::string, std::string>	_header;
 
 		RequestType										_type;

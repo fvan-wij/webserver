@@ -102,21 +102,27 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 void	HttpRequest::_extract_chunk_size(std::vector<char>& buffer)
 {
 	std::string	str_buffer(buffer.begin(), buffer.end());
-	size_t chunk_size_end = str_buffer.find("\r\n");
-	if (chunk_size_end == std::string::npos)
-		throw HttpException(400, "Bad Request");
-	std::string	chunk_size_str(str_buffer.begin(), str_buffer.begin() + chunk_size_end);
-
-	LOG_DEBUG("Found chunk string: " << chunk_size_str);
+	size_t chunk_size_pos = str_buffer.find("\r\n");
+	if (chunk_size_pos == std::string::npos)
+	{
+		_current_chunk_size = -1;
+		return;
+	}
+	std::string	chunk_size_str(str_buffer.begin(), str_buffer.begin() + chunk_size_pos);
+	LOG_DEBUG("Found chunk string: " << chunk_size_str << ", pos: " << chunk_size_pos);
 	_current_chunk_size = std::stoi(chunk_size_str, nullptr, 16);
-	LOG_DEBUG("extracted chunk_size: " << _current_chunk_size);
 	_b_chunk_size_extracted = true;
-	buffer.erase(buffer.begin(), buffer.begin() + chunk_size_end + 2);
+	buffer.erase(buffer.begin(), buffer.begin() + chunk_size_pos + 2);
 }
 
-#include <iostream>
 State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 {
+	if (not _left_over.empty())
+	{
+		buffer.insert(buffer.begin(), _left_over.begin(), _left_over.end());
+		_left_over.clear();
+	}
+	LOG_DEBUG("parsing body chunked... buffer.size(): "  << buffer.size());
 	// Extract hexadecimal chunk size
 	if (not _b_chunk_size_extracted)
 	{
@@ -127,6 +133,11 @@ State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 			exit(123);
 			return State::ProcessingRequest;
 		}
+		else if (_current_chunk_size == -1)
+		{
+			_left_over.insert(_left_over.end(), buffer.begin(), buffer.end());
+			return State::ParsingChunkedBody;
+		}
 	}
 
 	size_t	remaining = _current_chunk_size - _current_chunk.size();
@@ -136,13 +147,13 @@ State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 	buffer.erase(buffer.begin(), buffer.begin() + to_read);
 
 	// Reset chunk_extraction boolean in case there's another chunk
-	if (_current_chunk.size() == _current_chunk_size)
+	if (_current_chunk.size() == (size_t)_current_chunk_size)
 	{
 		_b_chunk_size_extracted = false;
-		_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(_current_chunk.begin()), std::make_move_iterator(_current_chunk.end()));
-		buffer.erase(buffer.begin(), buffer.begin() + 2);
+		_body_buffer.insert(_body_buffer.end(), _current_chunk.begin(), _current_chunk.end());
+		if (buffer.size() >= 2 && buffer[0] == '\r' && buffer[1] == '\n')
+			buffer.erase(buffer.begin(), buffer.begin() + 2);
 		_current_chunk.clear();
-		LOG_ERROR("Resetting bool\n");
 	}
 	return State::ParsingChunkedBody;
 }
