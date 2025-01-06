@@ -203,13 +203,12 @@ void	ClientHandler::_process_request()
 	else if (type == ResponseType::CGI)
 	{
 		std::string s(_request.get_body_buffer().begin(), _request.get_body_buffer().end());
-		LOG_DEBUG("uri: " << _request.get_uri());
 		LOG_DEBUG("body_buffer: " + s);
 
 		// TODO Check if we can run the CGI, if not throw error.
 		_cgi.verify(_request.get_uri(), _envp);
 		// std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", s.c_str()};
-		// _cgi.start(args, _envp);
+		_cgi.start(_envp);
 		_state = State::ProcessingCGI;
 	}
 	else

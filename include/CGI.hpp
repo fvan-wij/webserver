@@ -13,7 +13,7 @@ public:
 	~CGI();
 
 	void verify(std::string_view uri, char *const envp[]);
-	void start(std::vector<const char*> args, char *const envp[]);
+	void start(char *const envp[]);
 	bool poll();
 	void kill();
 
@@ -35,7 +35,7 @@ private:
 	std::string _buffer;
 	int			_pid;
 	int			_pipes[PipeFD::COUNT];
-
+	std::vector<const char*> _argv;
 
 
 	int32_t _read();

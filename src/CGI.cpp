@@ -7,7 +7,9 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <iterator>
+#include <string_view>
 #include <sys/wait.h>
 #include <cstdint>
 #include <cstdlib>
@@ -84,6 +86,19 @@ static std::string find_cgi_binary(const std::string exec_name, char *const envp
 }
 
 
+static bool validate_uri_extension(std::string_view uri, std::string ext)
+{
+	LOG_DEBUG("uri: " << uri);
+
+	std::filesystem::path p = uri;
+	if (p.extension() != ext)
+	{
+		LOG_ERROR(uri << " invalid file type");
+		return false;
+	}
+	return true;
+}
+
 
 CGI::CGI() : _is_running(false), _is_killed(false)
 {
@@ -94,35 +109,38 @@ CGI::CGI() : _is_running(false), _is_killed(false)
 
 void CGI::verify(std::string_view uri, char *const envp[])
 {
-	// 1. check if uri exension is valid
-	// 2. find the accessable executable.
-
 	// just hardcode python for now...
+	// TODO Check catch of 500 error
 	const std::string path = find_cgi_binary("python", envp);
 
-	// find_cgi_script();
+	if (!validate_uri_extension(uri, ".py"))
+		throw HttpException(500, "Internal Server Error");
 
-	if (uri.find("?") != std::string::npos)
-	{
-		return ;
-	}
-	// start(args, envp);
+	
+
+	// TODO Construct arguments
+	_argv.push_back(path.c_str());
+	
+	std::string tmp(uri);
+	_argv.push_back(tmp.c_str());
+
+	// start(_argv, envp);
 }
 
 
 
-void CGI::start(std::vector<const char*> args, char *const envp[])
+void CGI::start(char *const envp[])
 {
 	_is_running = true;
 
 
 	std::string args_printable;
 
-	// for (auto& var : args)
-	for (auto& var : args)
+	// for (auto& var : _argv)
+	for (auto& var : _argv)
 	{
 		args_printable += var;
-		if (var != *std::prev(args.end()))
+		if (var != *std::prev(_argv.end()))
 			args_printable += ", ";
 	}
 	LOG_NOTICE("starting CGI @: " + args_printable);
@@ -150,15 +168,15 @@ void CGI::start(std::vector<const char*> args, char *const envp[])
 		close(_pipes[PipeFD::WRITE]);
 
 
-		const char **argv = new const char* [args.size() + 1];
-		for (size_t i = 0; i < args.size(); i++)
+		const char **argv = new const char* [_argv.size() + 1];
+		for (size_t i = 0; i < _argv.size(); i++)
 		{
-			argv[i] = args.at(i);
+			argv[i] = _argv.at(i);
 		}
-		argv[args.size()] = NULL;
+		argv[_argv.size()] = NULL;
 
 
-		if (execve(args[0], (char **) argv, envp) == -1)
+		if (execve(_argv[0], (char **) argv, envp) == -1)
 		{
 			UNIMPLEMENTED("execvp failed" << strerror(errno));
 		}
