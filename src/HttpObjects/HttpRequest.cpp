@@ -117,60 +117,33 @@ void	HttpRequest::_extract_chunk_size(std::vector<char>& buffer)
 #include <iostream>
 State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 {
-	static int x;
-	if (x > 3)
-		exit(123);
 	// Extract hexadecimal chunk size
 	if (not _b_chunk_size_extracted)
 	{
 		_extract_chunk_size(buffer);
 		if (_current_chunk_size == 0)
 		{
-			// for (char c : _body_buffer)
-			// {
-			// 	std::cerr << c;
-			// }
-			// std::cerr << std::endl;
+			LOG_DEBUG("_body_buffer.size(): " << _body_buffer.size());
 			exit(123);
 			return State::ProcessingRequest;
 		}
 	}
 
-	// Move chunk of characters from buffer to _current_chunk OR entire buffer
-	if (_current_chunk_size < buffer.size())
-	{
-		_current_chunk.insert(_current_chunk.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.begin() + _current_chunk_size));
-		buffer.erase(buffer.begin(), buffer.begin() + _current_chunk_size + 2);
-		// LOG_DEBUG("(moving chunk size) _current_chunk: " << _current_chunk.data());
-		LOG_DEBUG("(moving chunk size)");
-	}
-	else
-	{
-		_current_chunk.insert(_current_chunk.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
-		buffer.clear();
-		// LOG_DEBUG("(moving entire buffer size) _current_chunk: " << _current_chunk.data());
-		LOG_DEBUG("(moving entire buffer size)");
-	}
+	size_t	remaining = _current_chunk_size - _current_chunk.size();
+	size_t	to_read = std::min(remaining, buffer.size());
 
-	LOG_DEBUG("_current_chunk.size(): " << _current_chunk.size());
+	_current_chunk.insert(_current_chunk.end(), buffer.begin(), buffer.begin() + to_read);
+	buffer.erase(buffer.begin(), buffer.begin() + to_read);
+
 	// Reset chunk_extraction boolean in case there's another chunk
 	if (_current_chunk.size() == _current_chunk_size)
 	{
 		_b_chunk_size_extracted = false;
 		_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(_current_chunk.begin()), std::make_move_iterator(_current_chunk.end()));
+		buffer.erase(buffer.begin(), buffer.begin() + 2);
 		_current_chunk.clear();
 		LOG_ERROR("Resetting bool\n");
 	}
-	if (_current_chunk.size() > _current_chunk_size)
-	{
-		_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(_current_chunk.begin()), std::make_move_iterator(_current_chunk.end()));
-		_current_chunk.erase(_current_chunk.begin(), _current_chunk.begin() + _current_chunk_size + 2);
-		// LOG_DEBUG("_current_chunk: " << _current_chunk.data());
-		_extract_chunk_size(_current_chunk);
-		LOG_ERROR("Resetting bool\n");
-	}
-
-	x++;
 	return State::ParsingChunkedBody;
 }
 
