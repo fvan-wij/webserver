@@ -51,6 +51,7 @@ class HttpRequest
 		void											set_header_parsed(bool state) {_b_header_parsed = state;};
 		void											set_body_parsed(bool state) {_b_body_parsed = state;};
 		void 											set_file_path(std::string_view root);
+		void											set_file_name(std::string& name) {_file.name = name;};
 		void											append_buffer(std::string &buffer);
 
 		//												Parsing methods

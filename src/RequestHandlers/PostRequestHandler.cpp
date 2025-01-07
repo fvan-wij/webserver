@@ -37,5 +37,13 @@ HttpResponse	PostRequestHandler::build_response(HttpRequest &request, Config &co
 		request.set_file_path(path.string());
 		return generate_successful_response(port, request.get_file().name, ResponseType::Upload);
 	}
+	else if (request.get_value("Transfer-Encoding") == "chunked")
+	{
+		request.set_file_path(path.string());
+		std::string filename = "file_id" + Utility::generate_random_string(6);
+		path /= filename;
+		request.set_file_name(filename);
+		return generate_successful_response(port, filename, ResponseType::Upload);
+	}
 	throw HttpException(400, "Bad Request");
 }

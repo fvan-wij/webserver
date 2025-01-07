@@ -158,6 +158,7 @@ void	ClientHandler::_build_redirection_response(int status_code, const std::stri
  */
 void	ClientHandler::_process_request()
 {
+	LOG_DEBUG("HIER?");
 	auto handler 		= HandlerFactory::create_handler(request.get_type());
   	_config 			= _resolve_config(request.get_value("Host"));
 	response 			= handler->build_response(request, _config, _port);

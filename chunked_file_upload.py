@@ -5,7 +5,8 @@ host = "localhost"
 port = 9090
 
 # Open the image file
-image_path = "big_image.png"
+# image_path = "big_image.png"
+image_path = "VitoJam.mp3"
 with open(image_path, "rb") as f:
     image_data = f.read()
 
@@ -18,10 +19,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     # Send the HTTP headers
     headers = (
-        "POST /upload HTTP/1.1\r\n"
+        "POST /uploads HTTP/1.1\r\n"
         f"Host: {host}\r\n"
         "Transfer-Encoding: chunked\r\n"
-        "Content-Type: image/png\r\n"
+        # "Content-Type: image/png\r\n"
+        "Content-Type: audio/mpeg\r\n"
         "\r\n"
     )
     s.sendall(headers.encode())

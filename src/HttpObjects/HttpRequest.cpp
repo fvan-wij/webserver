@@ -99,24 +99,6 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 	}
 }
 
-void	HttpRequest::_extract_chunk_size(std::vector<char>& buffer)
-{
-	if (buffer.size() >= 2 && buffer[0] == '\r' && buffer[1] == '\n')
-		buffer.erase(buffer.begin(), buffer.begin() + 2);
-	std::string	str_buffer(buffer.begin(), buffer.end());
-	size_t chunk_size_pos = str_buffer.find("\r\n");
-	if (chunk_size_pos == std::string::npos)
-	{
-		_current_chunk_size = -1;
-		return;
-	}
-	std::string	chunk_size_str(str_buffer.begin(), str_buffer.begin() + chunk_size_pos);
-	// LOG_DEBUG("Found chunk string: " << chunk_size_str << ", pos: " << chunk_size_pos);
-	_current_chunk_size = std::stoi(chunk_size_str, nullptr, 16);
-	_b_chunk_size_extracted = true;
-	buffer.erase(buffer.begin(), buffer.begin() + chunk_size_pos + 2);
-}
-
 State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 {
 	if (not _left_over.empty())
@@ -131,8 +113,11 @@ State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 		if (_current_chunk_size == 0)
 		{
 			LOG_DEBUG("_body_buffer.size(): " << _body_buffer.size());
+			buffer.clear();
 			_file.data = _body_buffer;
-			exit(123);
+			_file.finished = false;
+			_file.streamcount = 0;
+			LOG_DEBUG("buffer.size(): " << buffer.size());
 			return State::ProcessingRequest;
 		}
 		else if (_current_chunk_size == -1)
@@ -331,6 +316,25 @@ std::string HttpRequest::_extract_boundary(std::string_view content_type)
 	std::string boundary(content_type.substr(boundary_begin));
 	return boundary;
 }
+
+void	HttpRequest::_extract_chunk_size(std::vector<char>& buffer)
+{
+	if (buffer.size() >= 2 && buffer[0] == '\r' && buffer[1] == '\n')
+		buffer.erase(buffer.begin(), buffer.begin() + 2);
+	std::string	str_buffer(buffer.begin(), buffer.end());
+	size_t chunk_size_pos = str_buffer.find("\r\n");
+	if (chunk_size_pos == std::string::npos)
+	{
+		_current_chunk_size = -1;
+		return;
+	}
+	std::string	chunk_size_str(str_buffer.begin(), str_buffer.begin() + chunk_size_pos);
+	// LOG_DEBUG("Found chunk string: " << chunk_size_str << ", pos: " << chunk_size_pos);
+	_current_chunk_size = std::stoi(chunk_size_str, nullptr, 16);
+	_b_chunk_size_extracted = true;
+	buffer.erase(buffer.begin(), buffer.begin() + chunk_size_pos + 2);
+}
+
 
 std::ostream & operator << (std::ostream &out, const HttpRequest &request)
 {

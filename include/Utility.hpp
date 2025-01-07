@@ -16,5 +16,6 @@ class Utility {
 		static std::optional<int>		svtoi(std::optional<std::string_view> str);
 		static std::vector<std::string>	tokenize_string(std::string string, std::string delimiter);
 		static bool 					file_exists(std::string_view file_name);
+		static std::string				generate_random_string(size_t len);
 };
 
