@@ -101,6 +101,8 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 
 void	HttpRequest::_extract_chunk_size(std::vector<char>& buffer)
 {
+	if (buffer.size() >= 2 && buffer[0] == '\r' && buffer[1] == '\n')
+		buffer.erase(buffer.begin(), buffer.begin() + 2);
 	std::string	str_buffer(buffer.begin(), buffer.end());
 	size_t chunk_size_pos = str_buffer.find("\r\n");
 	if (chunk_size_pos == std::string::npos)
@@ -109,7 +111,7 @@ void	HttpRequest::_extract_chunk_size(std::vector<char>& buffer)
 		return;
 	}
 	std::string	chunk_size_str(str_buffer.begin(), str_buffer.begin() + chunk_size_pos);
-	LOG_DEBUG("Found chunk string: " << chunk_size_str << ", pos: " << chunk_size_pos);
+	// LOG_DEBUG("Found chunk string: " << chunk_size_str << ", pos: " << chunk_size_pos);
 	_current_chunk_size = std::stoi(chunk_size_str, nullptr, 16);
 	_b_chunk_size_extracted = true;
 	buffer.erase(buffer.begin(), buffer.begin() + chunk_size_pos + 2);
@@ -122,7 +124,6 @@ State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 		buffer.insert(buffer.begin(), _left_over.begin(), _left_over.end());
 		_left_over.clear();
 	}
-	LOG_DEBUG("parsing body chunked... buffer.size(): "  << buffer.size());
 	// Extract hexadecimal chunk size
 	if (not _b_chunk_size_extracted)
 	{
@@ -130,12 +131,14 @@ State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 		if (_current_chunk_size == 0)
 		{
 			LOG_DEBUG("_body_buffer.size(): " << _body_buffer.size());
+			_file.data = _body_buffer;
 			exit(123);
 			return State::ProcessingRequest;
 		}
 		else if (_current_chunk_size == -1)
 		{
 			_left_over.insert(_left_over.end(), buffer.begin(), buffer.end());
+			buffer.clear();
 			return State::ParsingChunkedBody;
 		}
 	}
