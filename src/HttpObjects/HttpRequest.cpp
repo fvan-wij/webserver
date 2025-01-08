@@ -264,6 +264,27 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 		throw HttpException(400, "URI not present!");
 	_uri = tokens[1];
 
+	size_t	url_param_pos = _uri.find("?");
+
+	if (url_param_pos != std::string::npos)
+	{
+		_url_parameters = _uri.substr(url_param_pos + 1);
+		std::stringstream ss(_url_parameters);
+		std::string	key_val;
+		while (std::getline(ss, key_val, '&'))
+		{
+			LOG_DEBUG("key_val: " << key_val);
+			size_t	equal_pos = key_val.find("=");
+			if (equal_pos != std::string::npos)
+			{
+				std::string key = key_val.substr(0, equal_pos);
+				std::string val = key_val.substr(equal_pos + 1);
+				_url_parameter_map.emplace(key, val);
+			}
+		}
+		_uri.erase(_uri.begin() + url_param_pos, _uri.end());
+	}
+
 	//Extract location
 	std::filesystem::path p(_uri);
 	_location = p.parent_path().string();

@@ -209,7 +209,9 @@ void	ClientHandler::_process_request()
 		std::string body_buf(_request.get_body_buffer().begin(), _request.get_body_buffer().end());
 		LOG_DEBUG("body_buffer: " + body_buf);
 
-		_cgi.verify(_response.get_path(), body_buf, _envp);
+
+
+		_cgi.verify(_response.get_path(), _request.get_url_parameters_as_string(), body_buf, _envp);
 		_cgi.start(_envp);
 		_state = State::ProcessingCGI;
 	}
@@ -287,7 +289,6 @@ void	ClientHandler::_send_response(ResponseType type)
 
 Config	ClientHandler::_resolve_config(std::optional<std::string_view> host)
 {
-	// LOG_DEBUG(host.value_or("No host"));
 	if (not host)
 		return _configs[0];
 	for (auto conf : _configs)

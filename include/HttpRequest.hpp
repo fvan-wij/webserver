@@ -41,6 +41,8 @@ class HttpRequest
 		std::optional<std::string_view>					get_value(const std::string &key) const;
 		std::unordered_map<std::string, std::string>	get_headers() const {return _header;};
 		File&											get_file() {return _file;};
+		std::string&									get_url_parameters_as_string(){return _url_parameters;};
+		std::unordered_map<std::string, std::string>&	get_url_parameters_as_map(){return _url_parameter_map;};
 
 		//												Bools
 		bool											is_header_parsed() {return _b_header_parsed;};
@@ -74,6 +76,8 @@ class HttpRequest
 		std::string 									_location;
 		std::string 									_boundary;
 		std::string 									_boundary_end;
+		std::unordered_map<std::string, std::string>	_url_parameter_map;
+		std::string										_url_parameters;
 
 
 		std::string										_header_buffer;
