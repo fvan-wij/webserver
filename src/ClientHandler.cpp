@@ -209,7 +209,8 @@ void	ClientHandler::_process_request()
 		std::string body_buf(_request.get_body_buffer().begin(), _request.get_body_buffer().end());
 		LOG_DEBUG("body_buffer: " + body_buf);
 
-		_cgi.verify(_response.get_path(), body_buf, _envp);
+
+		_cgi.verify(_response.get_path(), _request.get_url_parameters_as_string(), body_buf, _envp);
 		_cgi.start(_envp);
 		_state = State::ProcessingCGI;
 	}

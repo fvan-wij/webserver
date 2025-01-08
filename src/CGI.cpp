@@ -107,14 +107,19 @@ CGI::CGI() : _is_running(false), _is_killed(false), _has_non_zero_exit(false)
 
 
 
-void CGI::verify(std::string_view uri, std::string &body, char *const envp[])
+void CGI::verify(std::string_view uri, std::string &param, std::string &body, char *const envp[])
 {
 	// just hardcode python3 for now...
 	const std::string path = find_cgi_binary("python3", envp);
 
 	
+	// argv[0] path to python binary
 	_argv.push_back(path);
+	// argv[1] path to exec
 	_argv.push_back(std::string(uri));
+	// argv[2] URL parameters
+	_argv.push_back(param);
+	// argv[3] POST body
 	_argv.push_back(body);
 }
 

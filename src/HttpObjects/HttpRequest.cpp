@@ -265,6 +265,7 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 	_uri = tokens[1];
 
 	size_t	url_param_pos = _uri.find("?");
+
 	if (url_param_pos != std::string::npos)
 	{
 		_url_parameters = _uri.substr(url_param_pos + 1);
@@ -281,6 +282,7 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 				_url_parameter_map.emplace(key, val);
 			}
 		}
+		_uri.erase(_uri.begin() + url_param_pos, _uri.end());
 	}
 
 	//Extract location
