@@ -106,7 +106,7 @@ std::pair<std::string, Location> parse_location(std::vector<std::string> tokens,
 	location.autoindex = false;
 	i++;
 	location.path = tokens[i];
-	while (i < tokens.size())
+	while (i < tokens.size() && tokens[i] != "}")
 	{
 		if (tokens[i] == "root")
 			location.root = parse_string(tokens, i);
@@ -118,8 +118,6 @@ std::pair<std::string, Location> parse_location(std::vector<std::string> tokens,
 			location.redirection = parse_redirection(tokens, i);
 		else if (tokens[i] == "autoindex")
 			location.autoindex = parse_autoindex(tokens, i);
-		else if (tokens[i] != "}")
-			break;
 		else
 			i++;
 	}
@@ -130,7 +128,7 @@ std::pair<std::string, Location> parse_location(std::vector<std::string> tokens,
 Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 {
 	Config server_config;
-	while (i < tokens.size())
+	while (i < tokens.size() && tokens[i] != "}")
 	{
 		if (tokens[i] == "root")
 			server_config.root = parse_string(tokens, i);
@@ -148,8 +146,6 @@ Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 			server_config.client_max_body_size = parse_client_max_body_size(tokens, i);
 		else if (tokens[i] == "location")
 			server_config.location.insert(parse_location(tokens, i));
-		else if (tokens[i] == "}")
-			break ;
 		else
 			i++;
 	}
