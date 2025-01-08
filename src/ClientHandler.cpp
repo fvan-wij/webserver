@@ -288,7 +288,6 @@ void	ClientHandler::_send_response(ResponseType type)
 
 Config	ClientHandler::_resolve_config(std::optional<std::string_view> host)
 {
-	// LOG_DEBUG(host.value_or("No host"));
 	if (not host)
 		return _configs[0];
 	for (auto conf : _configs)

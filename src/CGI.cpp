@@ -182,8 +182,6 @@ void CGI::start(char *const envp[])
 }
 
 
-// TODO in the future we should try to implement chucked reading of the pipe.
-// incase there is more than 4KB of data.
 bool CGI::poll()
 {
 	if (!_is_running)
@@ -211,7 +209,6 @@ bool CGI::poll()
 			{
 				;
 			}
-			LOG_NOTICE("CGI is finished");
 		}
 		else if (WIFSIGNALED(status))
 		{
