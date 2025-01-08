@@ -106,7 +106,7 @@ std::pair<std::string, Location> parse_location(std::vector<std::string> tokens,
 	location.autoindex = false;
 	i++;
 	location.path = tokens[i];
-	while (tokens[i] != "}")
+	while (i < tokens.size())
 	{
 		if (tokens[i] == "root")
 			location.root = parse_string(tokens, i);
@@ -118,6 +118,8 @@ std::pair<std::string, Location> parse_location(std::vector<std::string> tokens,
 			location.redirection = parse_redirection(tokens, i);
 		else if (tokens[i] == "autoindex")
 			location.autoindex = parse_autoindex(tokens, i);
+		else if (tokens[i] != "}")
+			break;
 		else
 			i++;
 	}
