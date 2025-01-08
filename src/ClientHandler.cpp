@@ -16,7 +16,7 @@
  * @param configs: vector of configs
  */
 
-ClientHandler::ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, uint16_t port, char *envp[])
+ClientHandler::ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, char *envp[])
 	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false), _envp(envp)
 {
 

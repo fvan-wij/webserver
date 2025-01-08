@@ -9,12 +9,6 @@
 #include <iostream>
 #include "HttpExceptions.hpp"
 
-//
-// #ifndef DEBUG_SOCKET
-// #define LOG_DEBUG(x) do { } while (0)
-// #endif
-
-
 
 //Socket can be client or listener
 Socket::Socket(SocketType connection_type, int data) : _type(connection_type)	
@@ -43,9 +37,7 @@ Socket &Socket::operator=(const Socket &rhs)
 
 Socket::~Socket()
 {
-	// LOG_DEBUG(*this << " destroyed");
 	_fd = -1;
-
 }
 
 
@@ -128,23 +120,11 @@ std::string Socket::get_address_str() const
 	return str;
 }
 
-
-
-// // TODO Memcmp?
-// bool Socket::operator==	(const Socket &rhs) const
-// {
-// 	return	this->_fd == rhs._fd && this->_type == rhs._type &&
-// 			this->_address.sin_addr.s_addr == rhs._address.sin_addr.s_addr;
-// }
-
-
-
 void 				Socket::_init_listener(int port)
 {
 	_fd = socket(AF_INET, SOCK_STREAM, 0); //Creates connection
 	if (_fd < 0)
 	{
-		// TODO Throw error
 		LOG_ERROR("Error occurred: " << strerror(errno));
 	}
 
@@ -189,6 +169,6 @@ std::ostream& operator<< (std::ostream& os, const Socket& s)
 bool operator==(const Socket &s1, const Socket &s2)
 {
 	return	s1.get_fd() == s2.get_fd() &&
-			s1.get_port() == s2.get_port() &&
-			s1.get_address_str() == s2.get_address_str();
+		s1.get_port() == s2.get_port() &&
+		s1.get_address_str() == s2.get_address_str();
 }

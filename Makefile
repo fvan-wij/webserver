@@ -26,32 +26,32 @@ SRCS		:=	Socket.cpp \
 				Config/print_config.cpp				\
 				Utility.cpp							\
 				ConnectionManager.cpp				\
-				ClientHandler.cpp				\
+				ClientHandler.cpp					\
 				HttpListener.cpp					\
 				FileHandler.cpp						\
 				Timer.cpp							\
 
 
 HEADER_DIR	:=	include
-HEADERS 	:=  Socket.hpp \
-				meta.hpp \
-				CGI.hpp			\
-				HttpRequest.hpp \
-				HttpResponse.hpp \
-				GetRequestHandler.hpp \
-				PostRequestHandler.hpp \
-				DeleteRequestHandler.hpp \
-				RequestHandler.hpp	\
-				HandlerFactory.hpp	\
-				Utility.hpp			\
-				Config.hpp			\
-				ConfigParser.hpp	\
-				Action.hpp			\
-				ClientHandler.hpp \
-				HttpListener.hpp	\
-				FileHandler.hpp		\
-				Timer.hpp			\
-				HttpExceptions.hpp	\
+HEADERS 	:=  Socket.hpp 							\
+				meta.hpp 							\
+				CGI.hpp								\
+				HttpRequest.hpp 					\
+				HttpResponse.hpp 					\
+				GetRequestHandler.hpp 				\
+				PostRequestHandler.hpp 				\
+				DeleteRequestHandler.hpp 			\
+				RequestHandler.hpp					\
+				HandlerFactory.hpp					\
+				Utility.hpp							\
+				Config.hpp							\
+				ConfigParser.hpp					\
+				Action.hpp							\
+				ClientHandler.hpp 					\
+				HttpListener.hpp					\
+				FileHandler.hpp						\
+				Timer.hpp							\
+				HttpExceptions.hpp					\
 
 OBJ_DIR		:=	obj
 

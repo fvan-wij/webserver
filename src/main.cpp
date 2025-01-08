@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <vector>
 
-void poll_loop(ConnectionManager &cm, char *envp[])
+static void poll_loop(ConnectionManager &cm, char *envp[])
 {
 	while (1)
 	{

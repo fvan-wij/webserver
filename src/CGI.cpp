@@ -86,19 +86,6 @@ static std::string find_cgi_binary(const std::string exec_name, char *const envp
 }
 
 
-static bool validate_uri_extension(std::string_view uri, std::string ext)
-{
-	LOG_DEBUG("uri: " << uri);
-
-	std::filesystem::path p = uri;
-	if (p.extension() != ext)
-	{
-		LOG_ERROR(uri << " invalid file type");
-		return false;
-	}
-	return true;
-}
-
 
 CGI::CGI() : _is_running(false), _is_killed(false), _has_non_zero_exit(false)
 {
