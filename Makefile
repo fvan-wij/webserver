@@ -1,4 +1,4 @@
-NAME		:= app
+NAME		:= webserv
 RUN_CMD		:= ./$(NAME) conf/test2.conf
 
 ifdef DEBUG

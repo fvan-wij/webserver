@@ -95,7 +95,7 @@ void FileHandler::_create_file()
 	if (_file.fd < 0)
 	{
 		_file.is_open = false;
-		LOG_ERROR(_file.path + " could not be created in order to handle the file upload");
+		LOG_ERROR(_file.path + " could not be created in order to handle the file upload: " << strerror(errno));
 		throw HttpException(409, "Conflict");
 	}
 	_file.is_open = true;
