@@ -23,6 +23,15 @@ std::optional<int>	Utility::svtoi(std::string_view str)
 	return std::nullopt;
 }
 
+bool Utility::is_multipart_content(std::string value_to_check)
+{
+	if (value_to_check.find("multipart") != std::string::npos)
+	{
+		return true;
+	}
+	return false;
+}
+
 std::string	Utility::generate_random_string(size_t len)
 {
 	srand(time(NULL));

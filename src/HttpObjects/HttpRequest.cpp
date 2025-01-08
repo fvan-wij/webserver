@@ -154,8 +154,7 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 		throw HttpException(400, "Bad Request");
 
 
-	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
-
+	_body_buffer.insert(_body_buffer.end(), buffer.begin(), buffer.end());
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
 
@@ -165,7 +164,8 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 	{
 		LOG_ERROR("content_length is -1");
 	}
-	if (_body_buffer.size() == (unsigned long) content_length)
+	std::string_view content_type = get_value("Content-Type").value_or("");
+	if (_body_buffer.size() == (unsigned long) content_length && not Utility::is_multipart_content(content_type.data()))
 		return State::ProcessingRequest;
 
 
@@ -284,6 +284,7 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 		}
 		_uri.erase(_uri.begin() + url_param_pos, _uri.end());
 	}
+	LOG_DEBUG("URI: " << _uri);
 
 	//Extract location
 	std::filesystem::path p(_uri);

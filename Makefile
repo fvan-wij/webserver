@@ -55,10 +55,8 @@ HEADERS 	:=  Socket.hpp 							\
 
 OBJ_DIR		:=	obj
 
-
 SRCS 		:=	$(addprefix $(SRC_DIR)/, $(SRCS))
 HEADERS 	:=	$(addprefix $(HEADER_DIR)/, $(HEADERS))
-
 
 OBJS 		:=	$(patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.o, $(SRCS))
 OBJ_DIRS 	:=	$(dir $(OBJS))
