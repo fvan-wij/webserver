@@ -72,11 +72,11 @@ void	ClientHandler::_handle_incoming_data()
 
 	if (not incoming_data)
 	{
-		LOG_ERROR("Failed to read request from client (fd " << _socket.get_fd() << ")");
+		LOG_ERROR("Failed to read _request from client (fd " << _socket.get_fd() << ")");
 		throw (HttpException(400, "Bad Request"));
 	}
 
-	LOG_INFO("Received request from client (fd " << _socket.get_fd() << ")" << " on port: " << _socket.get_port());
+	LOG_INFO("Received _request from client (fd " << _socket.get_fd() << ")" << " on port: " << _socket.get_port());
 
 	// NOTE: disable favicon.
 	std::string s(incoming_data->data());
@@ -152,9 +152,9 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 	if (error_path)
 	{
 
-		request.set_file_path(error_path.value());
-		response.set_status_code(status_code);
-		response.set_status_mssg(message);
+		_request.set_file_path(error_path.value());
+		_response.set_status_code(status_code);
+		_response.set_status_mssg(message);
     
 		_add_file_handler(ResponseType::Error);
 		_state = State::ProcessingFileIO;
@@ -171,22 +171,22 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 
 void	ClientHandler::_build_redirection_response(int status_code, const std::string& message)
 {
-	response.set_status_code(status_code);
-	response.set_status_mssg(HTTP_REDIRECTION.at(status_code));
-	response.insert_header({"Location", message});
+	_response.set_status_code(status_code);
+	_response.set_status_mssg(HTTP_REDIRECTION.at(status_code));
+	_response.insert_header({"Location", message});
 
 	_state = State::Ready;
 }
 
 /**
- * @brief Processes and validates the request.
+ * @brief Processes and validates the _request.
  * Creates a new event handler based on the ResponseType (Fetch, Upload, Delete, CGI)
  */
 void	ClientHandler::_process_request()
 {
 	auto handler 		= HandlerFactory::create_handler(_request.get_type());
   	_config 			= _resolve_config(_request.get_value("Host"));
-	_response 			= handler->build_response(_request, _config);
+	_response 			= handler->build_response(_request, _config, _port);
 
 	ResponseType type 	= _response.get_type();
 
@@ -219,7 +219,7 @@ void	ClientHandler::_process_request()
 
 /**
  * @brief Parses the chunk of incoming data.
- * With each parsing call, the data is being moved to the request object
+ * With each parsing call, the data is being moved to the _request object
  * and repeated until the incoming data buffer is empty.
  *
  * @param data: vector<char> read from client
@@ -237,7 +237,7 @@ void	ClientHandler::_parse(std::vector<char>& data)
 					_state = _request.parse_body(data);
 					break;
 				case State::ParsingChunkedBody:
-					_state = request.parse_body_chunked(data);
+					_state = _request.parse_body_chunked(data);
 					break;
 				default:
 					break;
@@ -246,7 +246,7 @@ void	ClientHandler::_parse(std::vector<char>& data)
 }
 
 /**
- * @brief Sends a response based on the given type
+ * @brief Sends a _response based on the given type
  *
  * @param type: ResponseType::(Fetch, Upload, Delete, CGI)
  */
@@ -265,21 +265,21 @@ void	ClientHandler::_send_response(ResponseType type)
 		_response.set_body(_cgi.get_buffer());
 	}
 
-	response.insert_header({"Server", "webserv"});
-	response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
-	response.insert_header({"Connection", "close"});
-	response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
-	_socket.write(response.to_string());
+	_response.insert_header({"Server", "webserv"});
+	_response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
+	_response.insert_header({"Connection", "close"});
+	_response.insert_header({"Content-Length", std::to_string(_response.get_body().size())});
+	_socket.write(_response.to_string());
 	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): ");
-	const auto& headers = response.get_header();
-	std::cout << std::to_string(response.get_status_code()) << " " << response.get_status_mssg() << "\n";
+	const auto& headers = _response.get_header();
+	std::cout << std::to_string(_response.get_status_code()) << " " << _response.get_status_mssg() << "\n";
 	for (const auto& [key, val] : headers)
 	{
 		std::cout << key << " : " << val << "\n";
 	}
 	std::cout << "Body\n";
-	std::cout << "Size: " << response.get_body().size();
-	std::cout << "File: " << request.get_file().name;
+	std::cout << "Size: " << _response.get_body().size();
+	std::cout << "File: " << _request.get_file().name;
 	std::cout << std::endl;
 
 	_close_connection();
@@ -319,7 +319,7 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 	// NOTE if we're doing a `ResponseType::Upload` check if `_request.get_file()` is empty
 	_file_handler = new FileHandler(_request.get_file(), type);
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
-	LOG_NOTICE("FileHandler (fd " << request.get_file().fd << ")");
+	LOG_NOTICE("FileHandler (fd " << _request.get_file().fd << ")");
 	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }
 
