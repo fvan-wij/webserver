@@ -107,22 +107,15 @@ CGI::CGI() : _is_running(false), _is_killed(false), _has_non_zero_exit(false)
 
 
 
-void CGI::verify(std::string_view uri, char *const envp[])
+void CGI::verify(std::string_view uri, std::string &body, char *const envp[])
 {
-	// just hardcode python for now...
+	// just hardcode python3 for now...
 	const std::string path = find_cgi_binary("python3", envp);
 
-
-	if (!validate_uri_extension(uri, ".py"))
-		throw HttpException(500, "Internal Server Error");
-
 	
-
 	_argv.push_back(path);
-	// TODO Append root of webserv serving dir.
 	_argv.push_back(std::string(uri));
-
-	// start(_argv, envp);
+	_argv.push_back(body);
 }
 
 

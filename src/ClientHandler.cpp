@@ -202,12 +202,10 @@ void	ClientHandler::_process_request()
 	// NOTE: leftoff 
 	else if (type == ResponseType::CGI)
 	{
-		std::string s(_request.get_body_buffer().begin(), _request.get_body_buffer().end());
-		LOG_DEBUG("body_buffer: " + s);
+		std::string body_buf(_request.get_body_buffer().begin(), _request.get_body_buffer().end());
+		LOG_DEBUG("body_buffer: " + body_buf);
 
-		// TODO Check if we can run the CGI, if not throw error.
-		_cgi.verify(_response.get_path(), _envp);
-		// std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", s.c_str()};
+		_cgi.verify(_response.get_path(), body_buf, _envp);
 		_cgi.start(_envp);
 		_state = State::ProcessingCGI;
 	}

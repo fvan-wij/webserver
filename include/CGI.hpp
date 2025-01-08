@@ -12,7 +12,7 @@ public:
 	CGI &operator=(const CGI &) = delete;
 	~CGI();
 
-	void verify(std::string_view uri, char *const envp[]);
+	void verify(std::string_view uri, std::string &body, char *const envp[]);
 	void start(char *const envp[]);
 	bool poll();
 	void kill();
