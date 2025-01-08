@@ -11,7 +11,7 @@
 
 class ClientHandler {
 	public:
-		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, char *envp[]);
+		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, uint16_t port, char *envp[]);
 		ClientHandler(const ClientHandler &) = default;
 		ClientHandler &operator=(const ClientHandler &) = default;
 		~ClientHandler() = default;
@@ -22,6 +22,7 @@ class ClientHandler {
 											// Getters
 		std::vector<Config>&				get_configs(){return _configs;};
 		Socket&								get_socket(){return _socket;};
+		uint16_t							get_port(){return _port;};
 		ConnectionManager&					get_connection_manager(){return _connection_manager;};
 		void								init_timer(){_timer.reset();};
 
@@ -38,6 +39,7 @@ class ClientHandler {
 		State								_state;
 		Timer								_timer;
 		bool								_timed_out;
+		uint16_t							_port;
 
 		HttpRequest							_request;
 		HttpResponse						_response;
@@ -48,7 +50,6 @@ class ClientHandler {
 		void								_handle_outgoing_data();
 		void								_poll_cgi();
 		std::optional<std::string> 			_retrieve_error_path(int error_code, Config &config);
-		// void								_build_error_response(int status_code, const std::string& message);
 		void								_build_error_response(int status_code, const std::string& message, std::optional<std::string> error_path);
 		void								_build_redirection_response(int status_code, const std::string& message);
 		void								_process_request();

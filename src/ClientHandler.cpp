@@ -16,7 +16,7 @@
  * @param configs: vector of configs
  */
 
-ClientHandler::ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, char *envp[])
+ClientHandler::ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, uint16_t port, char *envp[])
 	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false), _envp(envp)
 {
 
@@ -53,7 +53,7 @@ void ClientHandler::handle_request(short revents)
 	}
 	catch (const HttpRedirection& e)
 	{
-		LOG_ERROR(std::to_string(e.status()) << " " << HTTP_REDIRECTION.at(e.status()));
+		LOG_ERROR(std::to_string(e.status()) << " " << HTTP_REDIRECTION.at(e.status()) << " redirecting to " << e.what());
 		_build_redirection_response(e.status(), e.what());
 	}
 	catch (const ClosedConnectionException& e)
@@ -151,9 +151,11 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 
 	if (error_path)
 	{
-		_request.set_file_path(error_path.value());
-		// TODO Kan weg?
-		LOG_DEBUG("DEZE?");
+
+		request.set_file_path(error_path.value());
+		response.set_status_code(status_code);
+		response.set_status_mssg(message);
+    
 		_add_file_handler(ResponseType::Error);
 		_state = State::ProcessingFileIO;
 		return;
@@ -169,9 +171,10 @@ void	ClientHandler::_build_error_response(int status_code, const std::string& me
 
 void	ClientHandler::_build_redirection_response(int status_code, const std::string& message)
 {
-	_response.set_status_code(status_code);
-	_response.set_status_mssg(HTTP_REDIRECTION.at(status_code));
-	_response.insert_header({"Location", message}); //Must be set dynamically!
+	response.set_status_code(status_code);
+	response.set_status_mssg(HTTP_REDIRECTION.at(status_code));
+	response.insert_header({"Location", message});
+
 	_state = State::Ready;
 }
 
@@ -186,6 +189,7 @@ void	ClientHandler::_process_request()
 	_response 			= handler->build_response(_request, _config);
 
 	ResponseType type 	= _response.get_type();
+
 
 
 	if (type == ResponseType::Fetch || type == ResponseType::Upload)
@@ -232,6 +236,9 @@ void	ClientHandler::_parse(std::vector<char>& data)
 				case State::ParsingBody:
 					_state = _request.parse_body(data);
 					break;
+				case State::ParsingChunkedBody:
+					_state = request.parse_body_chunked(data);
+					break;
 				default:
 					break;
 		}
@@ -258,11 +265,23 @@ void	ClientHandler::_send_response(ResponseType type)
 		_response.set_body(_cgi.get_buffer());
 	}
 
-	_response.insert_header({"Server", "webserv"});
-	_response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
-	_response.insert_header({"Content-Length", std::to_string(_response.get_body().size())});
-	_socket.write(_response.to_string());
-	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): " << _response.get_body());
+	response.insert_header({"Server", "webserv"});
+	response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
+	response.insert_header({"Connection", "close"});
+	response.insert_header({"Content-Length", std::to_string(response.get_body().size())});
+	_socket.write(response.to_string());
+	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): ");
+	const auto& headers = response.get_header();
+	std::cout << std::to_string(response.get_status_code()) << " " << response.get_status_mssg() << "\n";
+	for (const auto& [key, val] : headers)
+	{
+		std::cout << key << " : " << val << "\n";
+	}
+	std::cout << "Body\n";
+	std::cout << "Size: " << response.get_body().size();
+	std::cout << "File: " << request.get_file().name;
+	std::cout << std::endl;
+
 	_close_connection();
 }
 
@@ -300,6 +319,7 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 	// NOTE if we're doing a `ResponseType::Upload` check if `_request.get_file()` is empty
 	_file_handler = new FileHandler(_request.get_file(), type);
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
+	LOG_NOTICE("FileHandler (fd " << request.get_file().fd << ")");
 	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }
 
@@ -312,7 +332,7 @@ void ClientHandler::_poll_file_handler()
 	{
 		return;
 	}
-	if (_file_handler->error())
+	else if (_file_handler->error())
 	{
 		_connection_manager.remove(_file_handler->get_fd());
 		_file_handler = nullptr;

@@ -23,6 +23,15 @@ std::optional<int>	Utility::svtoi(std::string_view str)
 	return std::nullopt;
 }
 
+std::string	Utility::generate_random_string(size_t len)
+{
+	srand(time(NULL));
+	std::string	char_set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLNMOPQRSTUVWXYZ0123456789");
+	std::string string;
+	for (size_t i = 0; i < len; i++)
+		string += char_set[rand() % char_set.length()];
+	return string;
+}
 
 std::optional<int>	Utility::svtoi(std::optional<std::string_view> str)
 {

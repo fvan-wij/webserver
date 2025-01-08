@@ -9,14 +9,14 @@
 #define LISTEN_BACKLOG 8
 
 // Chunk sizes
-#define CHUNK_SIZE 			4096
+#define CHUNK_SIZE 			4096 * 4
 
 #define SOCKET_READ_SIZE 	CHUNK_SIZE
 #define UPLOAD_CHUNK_SIZE 	CHUNK_SIZE
 #define FETCH_READ_SIZE 	CHUNK_SIZE
 #define PIPE_READ_SIZE 		PIPE_BUF
 
-#define TIME_OUT			2500000 // ms
+#define TIME_OUT			20000 // ms
 
 
 #define UNUSED(x) (void)(x)
@@ -45,6 +45,7 @@
 enum class State {
 	ParsingHeaders,
 	ParsingBody,
+	ParsingChunkedBody,
 	ProcessingRequest,
 	ProcessingCGI,
 	ProcessingFileIO,

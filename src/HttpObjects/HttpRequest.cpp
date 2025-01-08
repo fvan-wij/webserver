@@ -5,10 +5,10 @@
 #include <algorithm>
 
 HttpRequest::HttpRequest()
-	: _b_header_parsed(false), _b_body_parsed(false), _b_file(false),
+	: _b_header_parsed(false), _b_body_parsed(false),
 	_b_file_extracted(false), _b_file_path_extracted(false),
 	_b_boundary_extracted(false), _b_file_data_extracted(false),
-	_file({})
+	_b_chunk_size_extracted(false), _current_chunk_size(0),	_file({})
 {
 
 }
@@ -77,6 +77,13 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 			return State::ParsingHeaders;
 		}
 	}
+
+	if (get_value("Transfer-Encoding") == "chunked")
+	{
+		LOG_DEBUG("It's a chunky boi!");
+		return State::ParsingChunkedBody;
+	}
+
 	if (not buffer.empty() && _b_header_parsed)
 	{
 		return State::ParsingBody;
@@ -90,6 +97,53 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 		}
 		return State::ProcessingRequest;
 	}
+}
+
+State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
+{
+	if (not _left_over.empty())
+	{
+		buffer.insert(buffer.begin(), _left_over.begin(), _left_over.end());
+		_left_over.clear();
+	}
+	// Extract hexadecimal chunk size
+	if (not _b_chunk_size_extracted)
+	{
+		_extract_chunk_size(buffer);
+		if (_current_chunk_size == 0)
+		{
+			LOG_DEBUG("_body_buffer.size(): " << _body_buffer.size());
+			buffer.clear();
+			_file.data = _body_buffer;
+			_file.finished = false;
+			_file.streamcount = 0;
+			LOG_DEBUG("buffer.size(): " << buffer.size());
+			return State::ProcessingRequest;
+		}
+		else if (_current_chunk_size == -1)
+		{
+			_left_over.insert(_left_over.end(), buffer.begin(), buffer.end());
+			buffer.clear();
+			return State::ParsingChunkedBody;
+		}
+	}
+
+	size_t	remaining = _current_chunk_size - _current_chunk.size();
+	size_t	to_read = std::min(remaining, buffer.size());
+
+	_current_chunk.insert(_current_chunk.end(), buffer.begin(), buffer.begin() + to_read);
+	buffer.erase(buffer.begin(), buffer.begin() + to_read);
+
+	// Reset chunk_extraction boolean in case there's another chunk
+	if (_current_chunk.size() == (size_t)_current_chunk_size)
+	{
+		_b_chunk_size_extracted = false;
+		_body_buffer.insert(_body_buffer.end(), _current_chunk.begin(), _current_chunk.end());
+		if (buffer.size() >= 2 && buffer[0] == '\r' && buffer[1] == '\n')
+			buffer.erase(buffer.begin(), buffer.begin() + 2);
+		_current_chunk.clear();
+	}
+	return State::ParsingChunkedBody;
 }
 
 State HttpRequest::parse_body(std::vector<char>& buffer)
@@ -197,7 +251,7 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 	if (tokens.size() != 3)
 		throw HttpException(400, "Bad Request");
 	if (tokens[0] != "GET" && tokens[0] != "POST" && tokens[0] != "DELETE")
-		throw HttpException(405, "Method Not ALlowed");
+		throw HttpException(405, "Method Not Allowed");
 
 	//Extract method
 	_method = tokens[0];
@@ -210,18 +264,9 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 		throw HttpException(400, "URI not present!");
 	_uri = tokens[1];
 
-	//Extract filename, location and is_file_boolean
+	//Extract location
 	std::filesystem::path p(_uri);
-	_filename = p.filename().string();
-	if (p.has_extension())
-	{
-		_b_file = true;
-		_location = p.parent_path().string();
-	}
-	else
-	{
-		_location = "/" + p.stem().string();
-	}
+	_location = p.parent_path().string();
 
 	//Extract protocol
 	if (tokens[2] != "HTTP/1.1\r")
@@ -284,6 +329,25 @@ std::string HttpRequest::_extract_boundary(std::string_view content_type)
 	std::string boundary(content_type.substr(boundary_begin));
 	return boundary;
 }
+
+void	HttpRequest::_extract_chunk_size(std::vector<char>& buffer)
+{
+	if (buffer.size() >= 2 && buffer[0] == '\r' && buffer[1] == '\n')
+		buffer.erase(buffer.begin(), buffer.begin() + 2);
+	std::string	str_buffer(buffer.begin(), buffer.end());
+	size_t chunk_size_pos = str_buffer.find("\r\n");
+	if (chunk_size_pos == std::string::npos)
+	{
+		_current_chunk_size = -1;
+		return;
+	}
+	std::string	chunk_size_str(str_buffer.begin(), str_buffer.begin() + chunk_size_pos);
+	// LOG_DEBUG("Found chunk string: " << chunk_size_str << ", pos: " << chunk_size_pos);
+	_current_chunk_size = std::stoi(chunk_size_str, nullptr, 16);
+	_b_chunk_size_extracted = true;
+	buffer.erase(buffer.begin(), buffer.begin() + chunk_size_pos + 2);
+}
+
 
 std::ostream & operator << (std::ostream &out, const HttpRequest &request)
 {
