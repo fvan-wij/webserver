@@ -4,6 +4,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <fstream>
 #include <meta.hpp>
 
@@ -56,6 +57,16 @@ int main(int argc, char *argv[], char *envp[])
 		LOG_ERROR("Config is invalid or not present, using DEFAULT_CONFIG");
 		configs.push_back(DEFAULT_CONFIG);
 	}
-	cm.add_listeners(configs);
-	poll_loop(cm, envp);
+	bool should_exit = false;
+	try 
+	{
+		cm.add_listeners(configs);
+	}
+	catch (std::exception &e)
+	{
+		should_exit = true;
+	}
+	if (!should_exit)
+		poll_loop(cm, envp);
+	return should_exit;
 }

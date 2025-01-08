@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
+#include <exception>
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <iostream>
@@ -137,11 +138,13 @@ void 				Socket::_init_listener(int port)
 	if (bind(_fd, (struct sockaddr *) &_address, sizeof(_address)) < 0) //Binds connection to address
 	{
 		LOG_ERROR("Error occurred: " << strerror(errno));
+		throw std::exception();
 		return;
 	}
 	if (listen(_fd, 400) < 0)
 	{
 		LOG_ERROR("Error occurred: " << strerror(errno));
+		throw std::exception();
 		return;
 	}
 }
