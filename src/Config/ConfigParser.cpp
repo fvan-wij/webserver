@@ -48,17 +48,21 @@ std::vector<std::string> parse_list(std::vector<std::string> tokens, unsigned lo
 
 std::pair<std::string, int> parse_listen(std::vector<std::string> tokens, unsigned long &i)
 {
+	int port = 0;
 	i++;
 	std::string address = tokens[i].substr(0, tokens[i].find(":"));
-	int port = std::stoi(tokens[i].substr(tokens[i].find(":") + 1, tokens[i].size()));
+	if (std::isdigit(tokens[i][tokens[i].find(":") + 1]))
+		port = std::stoi(tokens[i].substr(tokens[i].find(":") + 1, tokens[i].size()));
 	i++;
 	return {address, port};
 }
 
 std::pair<int, std::string> parse_redirection(std::vector<std::string>& tokens, unsigned long &i)
 {
+	int code = 0;
 	i++;
-	int code = std::stoi(tokens[i]);
+	if (std::isdigit(tokens[i][0]))
+		code = std::stoi(tokens[i]);
 	i++;
 	std::string url = tokens[i].substr(0, tokens[i].size() - 1);
 	i++;
@@ -75,16 +79,20 @@ bool parse_autoindex(std::vector<std::string> tokens, unsigned long &i)
 
 int	parse_client_max_body_size(std::vector<std::string> tokens, unsigned long &i)
 {
+	int client_max_body_size = 0;
 	i++;
-	int client_max_body_size = std::stoi(tokens[i]);
+	if (std::isdigit(tokens[i][0]))
+		client_max_body_size = std::stoi(tokens[i]);
 	i++;
 	return (client_max_body_size);
 }
 
 std::pair<int, std::string> parse_error_page(std::vector<std::string> tokens, unsigned long &i)
 {
+	int code = 0;
 	i++;
-	int code = std::stoi(tokens[i]);
+	if (std::isdigit(tokens[i][0]))
+		code = std::stoi(tokens[i]);
 	i++;
 	std::string path = tokens[i].substr(0, tokens[i].size() - 1);
 	i++;
