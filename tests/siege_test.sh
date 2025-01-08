@@ -11,7 +11,7 @@ SIEGE_PID=$!
 monitor_memory_usage() {
     while kill -0 $SIEGE_PID 2> /dev/null; do
         # Print memory usage for the Siege process
-		MEMORY_USAGE=$(ps -o rss= -p $(pidof app))
+		MEMORY_USAGE=$(ps -o rss= -p $(pidof webserv))
         echo "Memory usage: ${MEMORY_USAGE} KB"
         # Wait 2 seconds before the next check
         sleep 2

@@ -65,7 +65,7 @@ File&	FileHandler::get_file()
 
 void FileHandler::_open_file()
 {
-	if (_file.is_open)
+	if (_error || _file.is_open)
 		return;
 	if (access(_file.path.c_str(), F_OK) == -1)
 	{
