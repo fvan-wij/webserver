@@ -100,7 +100,7 @@ static bool validate_uri_extension(std::string_view uri, std::string ext)
 }
 
 
-CGI::CGI() : _is_running(false), _is_killed(false)
+CGI::CGI() : _is_running(false), _is_killed(false), _has_non_zero_exit(false)
 {
 
 }
@@ -110,19 +110,17 @@ CGI::CGI() : _is_running(false), _is_killed(false)
 void CGI::verify(std::string_view uri, char *const envp[])
 {
 	// just hardcode python for now...
-	// TODO Check catch of 500 error
-	const std::string path = find_cgi_binary("python", envp);
+	const std::string path = find_cgi_binary("python3", envp);
+
 
 	if (!validate_uri_extension(uri, ".py"))
 		throw HttpException(500, "Internal Server Error");
 
 	
 
-	// TODO Construct arguments
-	_argv.push_back(path.c_str());
-	
-	std::string tmp(uri);
-	_argv.push_back(tmp.c_str());
+	_argv.push_back(path);
+	// TODO Append root of webserv serving dir.
+	_argv.push_back(std::string(uri));
 
 	// start(_argv, envp);
 }
@@ -171,12 +169,12 @@ void CGI::start(char *const envp[])
 		const char **argv = new const char* [_argv.size() + 1];
 		for (size_t i = 0; i < _argv.size(); i++)
 		{
-			argv[i] = _argv.at(i);
+			argv[i] = _argv.at(i).c_str();
 		}
 		argv[_argv.size()] = NULL;
 
 
-		if (execve(_argv[0], (char **) argv, envp) == -1)
+		if (execve(argv[0], (char* const*) argv, envp) == -1)
 		{
 			UNIMPLEMENTED("execvp failed" << strerror(errno));
 		}
@@ -223,6 +221,11 @@ bool CGI::poll()
 		}
 		close(_pipes[PipeFD::READ]);
 		_is_running = false;
+		if (WEXITSTATUS(status))
+		{
+			_has_non_zero_exit = true;
+			throw HttpException(500, "Internal Server Error");
+		}
 		return true;
 	}
 	return false;
@@ -231,7 +234,7 @@ bool CGI::poll()
 
 void CGI::kill()
 {
-	if (!_is_running)
+	if (!_is_running || _has_non_zero_exit)
 		return;
 	if (::kill(_pid, SIGTERM) == -1)
 	{

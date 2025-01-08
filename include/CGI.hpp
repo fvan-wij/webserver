@@ -32,10 +32,11 @@ public:
 private:
 	bool		_is_running;
 	bool 		_is_killed;
+	bool 		_has_non_zero_exit;
 	std::string _buffer;
 	int			_pid;
 	int			_pipes[PipeFD::COUNT];
-	std::vector<const char*> _argv;
+	std::vector<std::string> _argv;
 
 
 	int32_t _read();

@@ -206,7 +206,7 @@ void	ClientHandler::_process_request()
 		LOG_DEBUG("body_buffer: " + s);
 
 		// TODO Check if we can run the CGI, if not throw error.
-		_cgi.verify(_request.get_uri(), _envp);
+		_cgi.verify(_response.get_path(), _envp);
 		// std::vector<const char *> args = { "/home/joppe/.local/bin/sleep_echo_var", s.c_str()};
 		_cgi.start(_envp);
 		_state = State::ProcessingCGI;
