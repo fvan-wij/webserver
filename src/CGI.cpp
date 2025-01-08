@@ -107,6 +107,7 @@ CGI::CGI() : _is_running(false), _is_killed(false), _has_non_zero_exit(false)
 
 
 
+
 void CGI::verify(std::string_view uri, std::string &param, std::string &body, char *const envp[])
 {
 	// just hardcode python3 for now...
@@ -209,6 +210,7 @@ bool CGI::poll()
 			{
 				;
 			}
+			LOG_NOTICE("CGI is finished");
 		}
 		else if (WIFSIGNALED(status))
 		{

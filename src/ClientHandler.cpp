@@ -210,6 +210,7 @@ void	ClientHandler::_process_request()
 		LOG_DEBUG("body_buffer: " + body_buf);
 
 
+
 		_cgi.verify(_response.get_path(), _request.get_url_parameters_as_string(), body_buf, _envp);
 		_cgi.start(_envp);
 		_state = State::ProcessingCGI;
