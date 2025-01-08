@@ -11,7 +11,7 @@
 
 class ClientHandler {
 	public:
-		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, char *envp[]);
+		ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, int16_t port, char *envp[]);
 		ClientHandler(const ClientHandler &) = delete;
 		ClientHandler &operator=(const ClientHandler &) = delete;
 		~ClientHandler() = default;

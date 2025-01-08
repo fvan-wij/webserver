@@ -62,14 +62,14 @@ std::optional<std::vector<char>> Socket::read()
 	int n;
 	if ((n = recv(_fd, buffer, SOCKET_READ_SIZE - 1, 0)) == -1)
 	{
-		LOG_DEBUG("n of bytes received " << n);
+		/*LOG_DEBUG("n of bytes received " << n);*/
 		UNIMPLEMENTED("recv failed");
 	}
 	else if (n == 0)
 	{
 		throw ClosedConnectionException("Client closed connection!");
 	}
-	LOG_DEBUG("n of bytes read: " << n);
+	/*LOG_DEBUG("n of bytes read: " << n);*/
 	if (n != 0)
 	{
 		std::vector<char> data(buffer, buffer + n);

@@ -38,7 +38,7 @@ void				HttpListener::listen_handle(short revents)
 		Socket socket = _socket.accept();
 
 
-		ClientHandler *client_handler = new ClientHandler(_connection_manager, socket, _configs, _envp);
+		ClientHandler *client_handler = new ClientHandler(_connection_manager, socket, _configs, socket.get_port(), _envp);
 		auto client_action = new Action<ClientHandler>(client_handler, &ClientHandler::handle_request);
 		_connection_manager.add(socket.get_fd(), mask, client_action);
 		client_handler->init_timer();

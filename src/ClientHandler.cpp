@@ -16,8 +16,8 @@
  * @param configs: vector of configs
  */
 
-ClientHandler::ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, char *envp[])
-	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false), _envp(envp)
+ClientHandler::ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, int16_t port, char *envp[])
+	: _configs(configs), _socket(socket), _connection_manager(cm), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false), _port(port), _envp(envp)
 {
 
 }
@@ -201,10 +201,6 @@ void	ClientHandler::_process_request()
 	else if (type == ResponseType::CGI)
 	{
 		std::string body_buf(_request.get_body_buffer().begin(), _request.get_body_buffer().end());
-		LOG_DEBUG("body_buffer: " + body_buf);
-
-
-
 		_cgi.verify(_response.get_path(), _request.get_url_parameters_as_string(), body_buf, _envp);
 		_cgi.start(_envp);
 		_state = State::ProcessingCGI;
@@ -266,7 +262,9 @@ void	ClientHandler::_send_response(ResponseType type)
 	_response.insert_header({"Connection", "close"});
 	_response.insert_header({"Content-Length", std::to_string(_response.get_body().size())});
 	_socket.write(_response.to_string());
+
 	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): ");
+
 	const auto& headers = _response.get_header();
 	std::cout << std::to_string(_response.get_status_code()) << " " << _response.get_status_mssg() << "\n";
 	for (const auto& [key, val] : headers)
@@ -275,7 +273,7 @@ void	ClientHandler::_send_response(ResponseType type)
 	}
 	std::cout << "Body\n";
 	std::cout << "Size: " << _response.get_body().size();
-	std::cout << "File: " << _request.get_file().name;
+	std::cout << "\nFile: " << _request.get_file().name;
 	std::cout << std::endl;
 
 	_close_connection();

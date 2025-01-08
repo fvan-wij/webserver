@@ -84,7 +84,7 @@ void FileHandler::_open_file()
 		LOG_ERROR(_file.path + " couldn't open file");
 		throw HttpException(409, "Conflict");
 	}
-	LOG_DEBUG("_file (fd " << _file.fd << ") is open");
+	/*LOG_DEBUG("_file (fd " << _file.fd << ") is open");*/
 	_file.is_open = true;
 }
 
@@ -132,9 +132,9 @@ void	FileHandler::_read_file()
 				_file.finished = true;
 				_file.is_open = false;
 				_file.data.push_back('\0'); //Hmm've
-				LOG_DEBUG("FileHandler (fd " << _file.fd << ") is done...");
+				/*LOG_DEBUG("FileHandler (fd " << _file.fd << ") is done...");*/
 			}
-			LOG_DEBUG("Reading file...(fd " << _file.fd << "), (bytes read: " << _file.streamcount << ")");
+			/*LOG_DEBUG("Reading file...(fd " << _file.fd << "), (bytes read: " << _file.streamcount << ")");*/
 		}
 		else
 		{

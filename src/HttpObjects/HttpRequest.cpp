@@ -80,7 +80,6 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 
 	if (get_value("Transfer-Encoding") == "chunked")
 	{
-		LOG_DEBUG("It's a chunky boi!");
 		return State::ParsingChunkedBody;
 	}
 
@@ -112,12 +111,10 @@ State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 		_extract_chunk_size(buffer);
 		if (_current_chunk_size == 0)
 		{
-			LOG_DEBUG("_body_buffer.size(): " << _body_buffer.size());
 			buffer.clear();
 			_file.data = _body_buffer;
 			_file.finished = false;
 			_file.streamcount = 0;
-			LOG_DEBUG("buffer.size(): " << buffer.size());
 			return State::ProcessingRequest;
 		}
 		else if (_current_chunk_size == -1)
@@ -273,7 +270,6 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 		std::string	key_val;
 		while (std::getline(ss, key_val, '&'))
 		{
-			LOG_DEBUG("key_val: " << key_val);
 			size_t	equal_pos = key_val.find("=");
 			if (equal_pos != std::string::npos)
 			{
@@ -284,7 +280,6 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 		}
 		_uri.erase(_uri.begin() + url_param_pos, _uri.end());
 	}
-	LOG_DEBUG("URI: " << _uri);
 
 	//Extract location
 	std::filesystem::path p(_uri);

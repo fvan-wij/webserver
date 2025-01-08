@@ -64,7 +64,6 @@ int main(int argc, char *argv[], char *envp[])
 	}
 	catch (std::exception &e)
 	{
-		LOG_DEBUG("poep");
 		should_exit = true;
 	}
 	if (!should_exit)

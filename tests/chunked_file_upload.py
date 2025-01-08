@@ -6,7 +6,7 @@ port = 9090
 
 # Open the image file
 # image_path = "big_image.png"
-image_path = "VitoJam.mp3"
+image_path = "YoinkTest.png"
 with open(image_path, "rb") as f:
     image_data = f.read()
 
