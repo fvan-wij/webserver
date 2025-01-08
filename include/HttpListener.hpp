@@ -7,7 +7,7 @@
 
 class HttpListener {
 	public:
-		HttpListener(uint16_t port, ConnectionManager &cm);
+		HttpListener(uint16_t port, ConnectionManager &cm, char **envp);
 		HttpListener(const HttpListener &) = default;
 		HttpListener &operator=(const HttpListener &) = default;
 		~HttpListener() = default;
@@ -24,5 +24,6 @@ class HttpListener {
 		std::vector<Config>	_configs;
 		uint16_t			_port;
 		Socket				_socket;
+		char** 				_envp;
 		ConnectionManager	&_connection_manager;
 };

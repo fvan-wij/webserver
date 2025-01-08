@@ -4,4 +4,5 @@ compile_commands.json
 app
 obj/
 *__pycache__*
+pid.txt
 .vscode/*

@@ -1,11 +1,17 @@
 #include "ConnectionManager.hpp"
 #include "Logger.hpp"
 #include "ConfigParser.hpp"
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
 #include <meta.hpp>
 
 #include <cstring>
 #include <string>
 #include <sys/poll.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <vector>
 
 void poll_loop(ConnectionManager &cm, char *envp[])
@@ -24,10 +30,22 @@ static bool	check_extension(const std::string &file, const std::string &ext)
   	return ext.length() <= file.length() && std::equal(ext.rbegin(), ext.rend(), file.rbegin());
 }
 
+
+static void write_pid_to_file(std::string file)
+{
+	std::ofstream out(file);
+	out << getpid() << std::endl;
+	out.close();
+}
+
 int main(int argc, char *argv[], char *envp[])
 {
 	std::vector<Config>	configs;
-	ConnectionManager		cm;
+	ConnectionManager		cm(envp);
+
+
+	write_pid_to_file("pid.txt");
+
 
 	if (argc == 2 && argv[1] && check_extension(argv[1], ".conf"))
 	{

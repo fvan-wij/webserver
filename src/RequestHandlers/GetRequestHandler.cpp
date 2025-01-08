@@ -25,7 +25,7 @@ HttpResponse	GetRequestHandler::build_response(HttpRequest &request, Config &con
 		throw HttpException(404, "Not Found - The server cannot find the requested resource");
 	if (!method_is_valid(location.string(), request.get_method(), config))
 		throw HttpException(405, "Method Not Allowed - The request method is known by the server but is not supported by the target resource");
-	if (contains_redirection(location.string(), config))
+  if (contains_redirection(location.string(), config))
 		throw HttpRedirection(location_block.redirection.first, location_block.redirection.second);
 
 	//Determine if file or directory:

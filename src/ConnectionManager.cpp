@@ -4,7 +4,7 @@
 #include <FileHandler.hpp>
 #include <HttpExceptions.hpp>
 
-ConnectionManager::ConnectionManager()
+ConnectionManager::ConnectionManager(char** envp) : _envp(envp)
 {
 	_pfds.reserve(1024);
 }
@@ -61,7 +61,7 @@ void ConnectionManager::add_listener(Config config, int port)
 	}
 	else
 	{
-		listener = new HttpListener(port, *this);
+		listener = new HttpListener(port, *this, _envp);
 		_listeners[port] = std::shared_ptr<HttpListener>(listener);
 		LOG_NOTICE("Adding listener socket for " << config.get_server_name(0).value_or("") << " on port: " << port);
 	}

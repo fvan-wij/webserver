@@ -1,8 +1,7 @@
 #pragma once
 
-
-#include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class CGI
@@ -13,8 +12,10 @@ public:
 	CGI &operator=(const CGI &) = delete;
 	~CGI();
 
-	void start(std::vector<const char*> args, char *const envp[]);
+	void verify(std::string_view uri, std::string &body, char *const envp[]);
+	void start(char *const envp[]);
 	bool poll();
+	void kill();
 
 	enum PipeFD
 	{
@@ -30,9 +31,12 @@ public:
 
 private:
 	bool		_is_running;
+	bool 		_is_killed;
+	bool 		_has_non_zero_exit;
 	std::string _buffer;
 	int			_pid;
 	int			_pipes[PipeFD::COUNT];
+	std::vector<std::string> _argv;
 
 
 	int32_t _read();

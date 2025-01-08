@@ -149,12 +149,25 @@ State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 State HttpRequest::parse_body(std::vector<char>& buffer)
 {
 	LOG_NOTICE("Parsing body...");
+
 	if (buffer.size() > Utility::svtoi(get_value("Content-Length").value_or("0")))
 		throw HttpException(400, "Bad Request");
 
+
 	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
+
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
+
+
+	int content_length = Utility::svtoi(get_value("Content-Length").value_or("0")).value_or(-1);
+	if (content_length == -1)
+	{
+		LOG_ERROR("content_length is -1");
+	}
+	if (_body_buffer.size() == (unsigned long) content_length)
+		return State::ProcessingRequest;
+
 
 	if (get_value("Content-Type") == "plain/text")
 	{
@@ -343,5 +356,6 @@ std::ostream & operator << (std::ostream &out, const HttpRequest &request)
 	for (const auto& [key, value] : request.get_headers())
 		out << key <<  ":" << value << "\n";
 	out << END << std::endl;
+
 	return out;
 }

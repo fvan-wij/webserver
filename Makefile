@@ -97,13 +97,10 @@ norm:
 
 cgi:
 	mkdir -p ~/.local/bin
-	gcc sleep_echo_prog.c -o ~/.local/bin/sleep_echo_var
+	gcc tests/sleep_echo_prog.c -o ~/.local/bin/sleep_echo_var
 
 test: all
 	pytest pytests/
 
 debug:
 	$(MAKE) DEBUG=1
-
-test: all
-	pytest pytests/

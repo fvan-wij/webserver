@@ -4,6 +4,7 @@
 HttpResponse	PostRequestHandler::build_response(HttpRequest &request, Config &config, uint16_t port)
 {
 	LOG_NOTICE("Handling POST request\n" << static_cast<const HttpRequest>(request));
+
 	// LOG_NOTICE("Handling request: " << request.get_method() + " " + request.get_uri());
 
 	std::filesystem::path path = build_path(config.root, request.get_uri(), std::nullopt);
