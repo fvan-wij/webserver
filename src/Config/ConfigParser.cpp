@@ -36,7 +36,7 @@ std::vector<std::string> parse_list(std::vector<std::string> tokens, unsigned lo
 {
 	std::vector<std::string>	list;
 	i++;
-	while (tokens[i].find(";") == std::string::npos)
+	while (tokens[i].find(";") == std::string::npos && i < tokens.size())
 	{
 		list.push_back(tokens[i]);
 		i++;
