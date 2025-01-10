@@ -120,7 +120,7 @@ void	FileHandler::_read_file()
 			{
 				LOG_ERROR("Error reading " << _file.path);
 				close(_file.fd);
-				throw HttpException(409, "Conflict");
+				throw HttpException(500, "Internal Server Error");
 			}
 			if (bytes_read > 0)
 			{
@@ -168,12 +168,16 @@ void	FileHandler::_write_file()
 	}
 	if (Utility::file_exists(_file.path))
 	{
-		write(_file.fd, &_file.data[_file.streamcount], buffer_size);
+		int err = write(_file.fd, &_file.data[_file.streamcount], buffer_size);
+		if (err < 0)
+		{
+			throw HttpException(500, "Internal Server Error");
+		}
 	}
 	else
 	{
 		LOG_ERROR(_file.path + " appears to be a a non-existing file!");
-		throw HttpException(409, "Conflict");
+		throw HttpException(500, "Internal Server Error");
 	}
 	_file.streamcount += buffer_size;
 	_file.finished = bytes_left <= 0;

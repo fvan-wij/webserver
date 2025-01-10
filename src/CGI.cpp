@@ -2,12 +2,10 @@
 #include "HttpRequest.hpp"
 #include "Logger.hpp"
 #include "meta.hpp"
-#include <algorithm>
 #include <bits/pthread_stack_min-dynamic.h>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include <filesystem>
 #include <iterator>
 #include <string_view>
 #include <sys/wait.h>
@@ -92,9 +90,6 @@ CGI::CGI() : _is_running(false), _is_killed(false), _has_non_zero_exit(false)
 
 }
 
-
-
-
 void CGI::verify(std::string_view uri, std::string &param, std::string &body, char *const envp[])
 {
 	// just hardcode python3 for now...
@@ -120,7 +115,6 @@ void CGI::start(char *const envp[])
 
 	std::string args_printable;
 
-	// for (auto& var : _argv)
 	for (auto& var : _argv)
 	{
 		args_printable += var;
@@ -131,13 +125,13 @@ void CGI::start(char *const envp[])
 
 	if (pipe(_pipes) == -1)
 	{
-		UNIMPLEMENTED("pipe failed" << strerror(errno));
+		throw HttpException(500, "Internal Server Error");
 	}
 
 	_pid = fork();
 	if (_pid == -1)
 	{
-		UNIMPLEMENTED("fork failed" << strerror(errno));
+		throw HttpException(500, "Internal Server Error");
 	}
 
 	// Child process
@@ -146,7 +140,7 @@ void CGI::start(char *const envp[])
 		// Attach "this" process's STDOUT_FILENO to pipe.
 		if (dup2(_pipes[PipeFD::WRITE], STDOUT_FILENO) == -1)
 		{
-			UNIMPLEMENTED("dup2 failed" << strerror(errno));
+			throw HttpException(500, "Internal Server Error");
 		}
 
 		close(_pipes[PipeFD::WRITE]);
@@ -162,7 +156,7 @@ void CGI::start(char *const envp[])
 
 		if (execve(argv[0], (char* const*) argv, envp) == -1)
 		{
-			UNIMPLEMENTED("execvp failed" << strerror(errno));
+			throw HttpException(500, "Internal Server Error");
 		}
 		exit(123);
 	}
@@ -184,7 +178,7 @@ bool CGI::poll()
 	int32_t return_code = ::waitpid(_pid, &status, options);
 	if (return_code == -1)
 	{
-		UNIMPLEMENTED("waitpid failed" << strerror(errno));
+		throw HttpException(500, "Internal Server Error");
 	}
 	else if (return_code == _pid)
 	{
@@ -197,7 +191,6 @@ bool CGI::poll()
 			{
 				;
 			}
-			LOG_NOTICE("CGI is finished");
 		}
 		else if (WIFSIGNALED(status))
 		{
@@ -249,9 +242,8 @@ int32_t CGI::_read()
 	int32_t read_count = read(_pipes[PipeFD::READ], &buffer, PIPE_READ_SIZE - 1);
 	if (read_count == -1)
 	{
-		UNIMPLEMENTED("read failed " << strerror(errno));
+		throw HttpException(500, "Internal Server Error");
 	}
-
 	_buffer += buffer;
 	return read_count;
 }

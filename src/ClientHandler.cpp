@@ -77,8 +77,6 @@ void	ClientHandler::_handle_incoming_data()
 	}
 
 	LOG_INFO("Received _request from client (fd " << _socket.get_fd() << ")" << " on port: " << _socket.get_port());
-
-
 	_parse(incoming_data.value());
 }
 
@@ -261,7 +259,14 @@ void	ClientHandler::_send_response(ResponseType type)
 	_response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
 	_response.insert_header({"Connection", "close"});
 	_response.insert_header({"Content-Length", std::to_string(_response.get_body().size())});
-	_socket.write(_response.to_string());
+	int err = _socket.write(_response.to_string());
+	if (err == -1)
+	{
+		_close_connection();
+	}
+		
+
+
 
 	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): ");
 
