@@ -143,7 +143,10 @@ void CGI::start(char *const envp[])
 			throw HttpException(500, "Internal Server Error");
 		}
 
-		close(_pipes[PipeFD::WRITE]);
+		if (close(_pipes[PipeFD::WRITE]) == -1)
+		{
+			throw HttpException(500, "Internal Server Error");
+		}
 
 
 		const char **argv = new const char* [_argv.size() + 1];
@@ -158,9 +161,11 @@ void CGI::start(char *const envp[])
 		{
 			throw HttpException(500, "Internal Server Error");
 		}
-		exit(123);
 	}
-	close(_pipes[PipeFD::WRITE]);
+	if (close(_pipes[PipeFD::WRITE]) == -1)
+	{
+		throw HttpException(500, "Internal Server Error");
+	}
 }
 
 
@@ -196,8 +201,11 @@ bool CGI::poll()
 		{
 			LOG_DEBUG("CGI received " << strsignal(WTERMSIG(status)) << " with code: " << WTERMSIG(status));
 		}
-		close(_pipes[PipeFD::READ]);
 		_is_running = false;
+		if (close(_pipes[PipeFD::READ]) == -1)
+		{
+			throw HttpException(500, "Internal Server Error");
+		}
 		if (WEXITSTATUS(status))
 		{
 			_has_non_zero_exit = true;
