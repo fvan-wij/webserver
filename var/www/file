@@ -1,7 +1,0 @@
-import pytest
-from time import sleep
-
-dit is een file zonder een extension!
-
-
-
