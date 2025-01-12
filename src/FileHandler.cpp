@@ -75,7 +75,7 @@ void FileHandler::_open_file()
 	if (access(_file.path.c_str(), R_OK) == -1)
 	{
 		LOG_ERROR(_file.path + " has no reading permissions");
-		throw HttpException(409, "Conflict");
+		throw HttpException(403, "Forbidden");
 	}
 	_file.fd = ::open(_file.path.c_str(), O_RDONLY);
 	if (_file.fd < 0)
@@ -91,6 +91,11 @@ void FileHandler::_open_file()
 void FileHandler::_create_file()
 {
 	_file.path += "/" + _file.name;
+	if (access(_file.path.c_str(), F_OK) == -1)
+	{
+		LOG_ERROR(_file.path + " file already exists!");
+		throw HttpException(409, "Conflict");
+	}
 	_file.fd = ::open(_file.path.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644);
 	if (_file.fd < 0)
 	{
@@ -110,7 +115,7 @@ void	FileHandler::_read_file()
 		if (access(_file.path.c_str(), R_OK) == -1)
 		{
 			LOG_ERROR(_file.path + " doesn't have read permissions!");
-			throw HttpException(409, "Conflict");
+			throw HttpException(403, "Forbidden");
 		}
 		if (_file.is_open)
 		{
@@ -131,10 +136,8 @@ void	FileHandler::_read_file()
 			{
 				_file.finished = true;
 				_file.is_open = false;
-				_file.data.push_back('\0'); //Hmm've
-				/*LOG_DEBUG("FileHandler (fd " << _file.fd << ") is done...");*/
+				_file.data.push_back('\0');
 			}
-			/*LOG_DEBUG("Reading file...(fd " << _file.fd << "), (bytes read: " << _file.streamcount << ")");*/
 		}
 		else
 		{

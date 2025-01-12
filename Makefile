@@ -1,5 +1,5 @@
 NAME		:= webserv
-RUN_CMD		:= ./$(NAME) conf/test2.conf
+RUN_CMD		:= ./$(NAME) data/conf/default.conf
 
 ifdef DEBUG
 	CFLAGS		:= -Wall -Wextra -Werror -std=c++17 -g -fsanitize=address -pedantic
@@ -65,7 +65,7 @@ OBJ_DIRS 	:=	$(dir $(OBJS))
 
 all:
 	$(MAKE) $(NAME) -j4
-	@mkdir -p ./var/www/uploads
+	@mkdir -p ./data/server_a/uploads
 
 $(NAME): $(OBJS) $(SRC_DIR)/$(SRC_ENTRY)
 	$(CXX) $(SRC_DIR)/$(SRC_ENTRY) $(OBJS) $(CFLAGS) $(IFLAGS) -o $(NAME)
@@ -76,7 +76,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS)
 
 clean:
 	rm -rf $(OBJ_DIR)
-	rm -rf ./var/www/uploads
+	rm -rf ./data/server_a/uploads
 
 fclean: clean
 	rm -f $(NAME)
