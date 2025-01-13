@@ -90,9 +90,8 @@ CgiHandler::CgiHandler(std::string path, std::string url_params, std::string& bo
 
 void CgiHandler::handle_cgi(short revents)
 {
-	// if (_is_running)
-	// 	return;
-
+	if (_is_running)
+		return;
 	try
 	{
 		if (revents & POLLIN)

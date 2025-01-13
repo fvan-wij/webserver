@@ -89,7 +89,7 @@ void	ClientHandler::_handle_outgoing_data()
 	switch(_state)
 	{
 		case State::Ready:
-			_send_response(_response.get_type());
+			_send_response();
 			break;
 		case State::ProcessingFileIO:
 			_poll_file_handler();
@@ -105,16 +105,6 @@ void	ClientHandler::_handle_outgoing_data()
 	}
 }
 
-
-void ClientHandler::_poll_cgi()
-{
-
-	if (_cgi_handler->poll())
-	{
-		_state = State::Ready;
-		LOG_NOTICE("CGI OUTPUT: " << _cgi_handler->get_buffer());
-	}
-}
 
 /**
  * @brief Searches the list of error pages and returns the correct one.
@@ -239,41 +229,8 @@ void	ClientHandler::_parse(std::vector<char>& data)
 	}
 }
 
-/**
- * @brief Sends a _response based on the given type
- *
- * @param type: ResponseType::(Fetch, Upload, Delete, CGI)
- */
-void	ClientHandler::_send_response(ResponseType type)
+static void	print_response(HttpResponse& _response, HttpRequest& _request)
 {
-	if (type == ResponseType::Fetch || type == ResponseType::Error)
-	{
-		std::vector<char>& data = _file.data;
-		if (not data.empty())
-		{
-			_response.set_body(std::string(data.begin(), data.end()));
-		}
-	}
-	else if (type == ResponseType::CGI)
-	{
-		_response.set_body(_cgi_handler->get_buffer());
-	}
-
-	_response.insert_header({"Server", "webserv"});
-	_response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
-	_response.insert_header({"Connection", "close"});
-	_response.insert_header({"Content-Length", std::to_string(_response.get_body().size())});
-	int err = _socket.write(_response.to_string());
-	if (err == -1)
-	{
-		_close_connection();
-	}
-		
-
-
-
-	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): ");
-
 	const auto& headers = _response.get_header();
 	std::cout << std::to_string(_response.get_status_code()) << " " << _response.get_status_mssg() << "\n";
 	for (const auto& [key, val] : headers)
@@ -284,7 +241,27 @@ void	ClientHandler::_send_response(ResponseType type)
 	std::cout << "Size: " << _response.get_body().size();
 	std::cout << "\nFile: " << _request.get_file().name;
 	std::cout << std::endl;
+}
 
+/**
+ * @brief Sends a _response based on the given type
+ *
+ * @param type: ResponseType::(Fetch, Upload, Delete, CGI)
+ */
+void	ClientHandler::_send_response()
+{
+	_response.insert_header({"Server", "webserv"});
+	_response.insert_header({"Virtual-Host", _config.get_server_name(0).value_or("")});
+	_response.insert_header({"Connection", "close"});
+	_response.insert_header({"Content-Length", std::to_string(_response.get_body().size())});
+	int err = _socket.write(_response.to_string());
+	if (err == -1)
+	{
+		_close_connection();
+	}
+		
+	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): ");
+	print_response(_response, _request);
 	_close_connection();
 }
 
@@ -339,7 +316,7 @@ void ClientHandler::_add_cgi_handler()
 }
 
 /**
- * @brief Polls the _file_handler and sets the finite-state machine to ready when the _file_handler is done
+ * @brief Polls the _file_handler and sets the state machine to ready when the _file_handler is done
  */
 void ClientHandler::_poll_file_handler()
 {
@@ -356,10 +333,36 @@ void ClientHandler::_poll_file_handler()
 	else if (_file_handler->is_finished())
 	{
 		LOG_NOTICE("(fd " << _socket.get_fd() << ") FileHandler is finished (fd " << _file_handler->get_fd() << ")");
-		LOG_INFO("File handler (fd " << _file_handler->get_fd() << ") disconnected");
+		LOG_INFO("File handler (fd " << _file_handler->get_fd() << ") removed");
 		_file = _file_handler->get_file();
+		std::vector<char>& data = _file.data;
+		if (not data.empty())
+		{
+			_response.set_body(std::string(data.begin(), data.end()));
+		}
 		_connection_manager.remove(_file_handler->get_fd());
 		_file_handler = nullptr;
+		_state = State::Ready;
+	}
+}
+
+/**
+ * @brief Polls the _cgi_handler and sets the state machine to ready when the it's done
+ */
+void ClientHandler::_poll_cgi()
+{
+	if (not _cgi_handler)
+	{
+		return;
+	}
+	else if (_cgi_handler->poll())
+	{
+		LOG_NOTICE("(fd " << _socket.get_fd() << ") CgiHandler is finished (fd " << _cgi_handler->get_pipe_fd() << ")");
+		LOG_INFO("File handler (fd " << _cgi_handler->get_pipe_fd() << ") removed");
+		LOG_NOTICE("CGI OUTPUT: " << _cgi_handler->get_buffer());
+		_response.set_body(_cgi_handler->get_buffer());
+		_connection_manager.remove(_cgi_handler->get_pipe_fd());
+		_cgi_handler = nullptr;
 		_state = State::Ready;
 	}
 }
