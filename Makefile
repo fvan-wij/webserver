@@ -12,7 +12,6 @@ IFLAGS		:=	-Iinclude
 SRC_DIR		:=	src
 SRC_ENTRY	:=	main.cpp
 SRCS		:=	Socket.cpp									\
-				CGI.cpp 									\
 				HttpObjects/HttpRequest.cpp 				\
 				HttpObjects/HttpResponse.cpp 				\
 				RequestHandlers/GetRequestHandler.cpp 		\
@@ -30,6 +29,7 @@ SRCS		:=	Socket.cpp									\
 				HttpListener.cpp				   		 	\
 				FileHandler.cpp					   		 	\
 				Timer.cpp						   		 	\
+				CgiHandler.cpp								\
 
 HEADER_DIR	:=	include
 HEADERS 	:=  Socket.hpp 							\
@@ -51,6 +51,7 @@ HEADERS 	:=  Socket.hpp 							\
 				FileHandler.hpp						\
 				Timer.hpp							\
 				HttpExceptions.hpp					\
+				CgiHandler.hpp						\
 
 OBJ_DIR		:=	obj
 

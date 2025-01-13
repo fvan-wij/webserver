@@ -9,13 +9,13 @@ class ClientHandler;
 
 class FileHandler {
 	public:
-        // 		Constructors
+		// 		Constructors
 		FileHandler(File& file, ResponseType type);
 		FileHandler(const FileHandler &) = default;
 		FileHandler &operator=(const FileHandler &) = default;
 		~FileHandler() = default;
 
-        // 		Methods
+		// 		Methods
 		void	handle_file(short revents);
 		bool	is_finished();
 		bool	error();

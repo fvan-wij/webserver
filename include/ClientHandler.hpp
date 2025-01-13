@@ -1,5 +1,6 @@
 #pragma once
-#include "CGI.hpp"
+
+#include <CgiHandler.hpp>
 #include <string>
 #include <vector>
 #include <Socket.hpp>
@@ -30,10 +31,11 @@ class ClientHandler {
 	private:
 		std::string							_response_data;
 		std::vector<Config>					_configs;
-		CGI 								_cgi;
+		// CGI 								_cgi;
 		Config								_config;
 		Socket								_socket;
 		ConnectionManager					&_connection_manager;
+		CgiHandler 							*_cgi_handler;
 		FileHandler					 		*_file_handler;
 		File								_file;
 		State								_state;
@@ -59,6 +61,7 @@ class ClientHandler {
 		void 								_poll_file_handler();
 		Config								_resolve_config(std::optional<std::string_view> host);
 		void								_add_file_handler(ResponseType type);
+		void 								_add_cgi_handler();
 		void								_poll_timeout_timer();
 		void								_close_connection();
 
