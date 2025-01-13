@@ -11,26 +11,25 @@ IFLAGS		:=	-Iinclude
 
 SRC_DIR		:=	src
 SRC_ENTRY	:=	main.cpp
-SRCS		:=	Socket.cpp \
-				CGI.cpp			\
-				HttpObjects/HttpRequest.cpp \
-				HttpObjects/HttpResponse.cpp \
-				RequestHandlers/GetRequestHandler.cpp \
-				RequestHandlers/PostRequestHandler.cpp \
-				RequestHandlers/DeleteRequestHandler.cpp \
-				RequestHandlers/BadRequestHandler.cpp \
-				RequestHandlers/RequestHandler.cpp 	\
-				RequestHandlers/HandlerFactory.cpp 	\
-				logging/Logger.cpp					\
-				Config/ConfigParser.cpp				\
-				Config/print_config.cpp				\
-				Utility.cpp							\
-				ConnectionManager.cpp				\
-				ClientHandler.cpp					\
-				HttpListener.cpp					\
-				FileHandler.cpp						\
-				Timer.cpp							\
-
+SRCS		:=	Socket.cpp									\
+				CGI.cpp 									\
+				HttpObjects/HttpRequest.cpp 				\
+				HttpObjects/HttpResponse.cpp 				\
+				RequestHandlers/GetRequestHandler.cpp 		\
+				RequestHandlers/PostRequestHandler.cpp 		\
+				RequestHandlers/DeleteRequestHandler.cpp 	\
+				RequestHandlers/BadRequestHandler.cpp 		\
+				RequestHandlers/RequestHandler.cpp 			\
+				RequestHandlers/HandlerFactory.cpp 			\
+				logging/Logger.cpp				   		 	\
+				Config/ConfigParser.cpp			   		 	\
+				Config/print_config.cpp			   		 	\
+				Utility.cpp						   		 	\
+				ConnectionManager.cpp			   		 	\
+				ClientHandler.cpp				   		 	\
+				HttpListener.cpp				   		 	\
+				FileHandler.cpp					   		 	\
+				Timer.cpp						   		 	\
 
 HEADER_DIR	:=	include
 HEADERS 	:=  Socket.hpp 							\
@@ -61,11 +60,14 @@ HEADERS 	:=	$(addprefix $(HEADER_DIR)/, $(HEADERS))
 OBJS 		:=	$(patsubst $(SRC_DIR)%.cpp, $(OBJ_DIR)%.o, $(SRCS))
 OBJ_DIRS 	:=	$(dir $(OBJS))
 
+
+UPLOADS_DIR :=  ./data/server_a/uploads
+
+MAKEFLAGS 	+= -j${nproc --all} 
+
 .PHONY: make_libs fclean
 
-all:
-	$(MAKE) $(NAME) -j4
-	@mkdir -p ./data/server_a/uploads
+all: $(NAME) | $(UPLOADS_DIR)
 
 $(NAME): $(OBJS) $(SRC_DIR)/$(SRC_ENTRY)
 	$(CXX) $(SRC_DIR)/$(SRC_ENTRY) $(OBJS) $(CFLAGS) $(IFLAGS) -o $(NAME)
@@ -73,6 +75,11 @@ $(NAME): $(OBJS) $(SRC_DIR)/$(SRC_ENTRY)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS)
 	@mkdir -p $(OBJ_DIRS)
 	$(CXX) $(CFLAGS) $(IFLAGS) -c $< -o $@
+
+$(UPLOADS_DIR):
+	@mkdir -p $@
+
+
 
 clean:
 	rm -rf $(OBJ_DIR)
@@ -83,6 +90,8 @@ fclean: clean
 	rm -rf $(NAME).dSYM
 
 re: fclean all
+
+
 
 run: all
 	$(RUN_CMD)
