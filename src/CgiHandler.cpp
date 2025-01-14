@@ -167,7 +167,6 @@ void CgiHandler::start(char *const envp[])
 			throw HttpException(500, "Internal Server Error");
 		}
 
-
 		const char **argv = new const char* [_argv.size() + 1];
 		for (size_t i = 0; i < _argv.size(); i++)
 		{
@@ -221,17 +220,12 @@ bool CgiHandler::poll()
 			LOG_DEBUG("CgiHandler received " << strsignal(WTERMSIG(status)) << " with code: " << WTERMSIG(status));
 		}
 		_is_running = false;
-		// if (close(_pipes[PipeFD::READ]) == -1)
-		// {
-		// 	throw HttpException(500, "Internal Server Error");
-		// }
 		if (WEXITSTATUS(status))
 		{
 			throw HttpException(500, "Internal Server Error");
 		}
 		if (_is_finished)
 		{
-			LOG_DEBUG("Poll(): true");
 			return true;
 		}
 	}
@@ -269,12 +263,10 @@ int32_t CgiHandler::_read_pipe()
 {
 	char buffer[PIPE_READ_SIZE];
 
-	LOG_DEBUG("_read_pipe(" << _pipes[PipeFD::READ] << ")");
 	int32_t read_count = read(_pipes[PipeFD::READ], &buffer, PIPE_READ_SIZE - 1);
-	LOG_DEBUG("read_count: " << read_count);
 	if (read_count == -1)
 	{
-		LOG_DEBUG("strerror: " << strerror(errno));
+		LOG_ERROR(strerror(errno));
 		throw HttpException(500, "Internal Server Error");
 	}
 	else if (read_count == 0 || read_count < PIPE_READ_SIZE - 1)
