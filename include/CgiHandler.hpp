@@ -31,6 +31,7 @@ class CgiHandler
 		const int			&get_pipe_fd() const;
 		bool				is_running() {return _is_running;};
 		bool				is_finished() {return _is_finished;};
+		bool 				error();
 
 	private:
 		bool		_is_running;

@@ -90,7 +90,7 @@ CgiHandler::CgiHandler(std::string path, std::string url_params, std::string& bo
 
 void CgiHandler::handle_cgi(short revents)
 {
-	if (_is_running)
+	if (_is_running || _error)
 		return;
 	try
 	{
@@ -102,6 +102,7 @@ void CgiHandler::handle_cgi(short revents)
 	catch (HttpException& e)
 	{
 		LOG_ERROR("Error reading pipe!");
+		_error = true;
 	}
 
 }
@@ -159,6 +160,8 @@ void CgiHandler::start(char *const envp[])
 			throw HttpException(500, "Internal Server Error");
 		}
 
+		LOG_DEBUG("Pipe FD: " << _pipes[PipeFD::READ]);
+
 		if (close(_pipes[PipeFD::WRITE]) == -1)
 		{
 			throw HttpException(500, "Internal Server Error");
@@ -184,9 +187,15 @@ void CgiHandler::start(char *const envp[])
 	}
 }
 
+bool CgiHandler::error()
+{
+	return _error;
+}
 
 bool CgiHandler::poll()
 {
+	if (!_is_running && _is_finished)
+		return true;
 	if (!_is_running)
 		return false;
 
@@ -212,16 +221,19 @@ bool CgiHandler::poll()
 			LOG_DEBUG("CgiHandler received " << strsignal(WTERMSIG(status)) << " with code: " << WTERMSIG(status));
 		}
 		_is_running = false;
-		if (close(_pipes[PipeFD::READ]) == -1)
-		{
-			throw HttpException(500, "Internal Server Error");
-		}
+		// if (close(_pipes[PipeFD::READ]) == -1)
+		// {
+		// 	throw HttpException(500, "Internal Server Error");
+		// }
 		if (WEXITSTATUS(status))
 		{
-			_error = true;
 			throw HttpException(500, "Internal Server Error");
 		}
-		return true;
+		if (_is_finished)
+		{
+			LOG_DEBUG("Poll(): true");
+			return true;
+		}
 	}
 	return false;
 }
@@ -229,7 +241,7 @@ bool CgiHandler::poll()
 
 void CgiHandler::kill()
 {
-	if (!_is_running || _error)
+	if (!_is_running)
 		return;
 	if (::kill(_pid, SIGTERM) == -1)
 	{
@@ -250,19 +262,22 @@ const std::string& CgiHandler::get_buffer() const
 
 const int& CgiHandler::get_pipe_fd() const
 {
-	return _pipes[READ];
+	return _pipes[PipeFD::READ];
 }
 
 int32_t CgiHandler::_read_pipe()
 {
 	char buffer[PIPE_READ_SIZE];
 
+	LOG_DEBUG("_read_pipe(" << _pipes[PipeFD::READ] << ")");
 	int32_t read_count = read(_pipes[PipeFD::READ], &buffer, PIPE_READ_SIZE - 1);
+	LOG_DEBUG("read_count: " << read_count);
 	if (read_count == -1)
 	{
+		LOG_DEBUG("strerror: " << strerror(errno));
 		throw HttpException(500, "Internal Server Error");
 	}
-	else if (read_count == 0)
+	else if (read_count == 0 || read_count < PIPE_READ_SIZE - 1)
 	{
 		LOG_NOTICE("CgiHandler finished!");
 		_is_finished = true;

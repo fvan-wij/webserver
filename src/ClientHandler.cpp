@@ -18,7 +18,8 @@
  */
 
 ClientHandler::ClientHandler(ConnectionManager& cm, Socket socket, std::vector<Config>& configs, int16_t port, char *envp[])
-	: _configs(configs), _socket(socket), _connection_manager(cm), _cgi_handler(nullptr), _file_handler(nullptr), _state(State::ParsingHeaders), _timed_out(false), _port(port), _envp(envp)
+	: _configs(configs), _socket(socket), _connection_manager(cm), _cgi_handler(nullptr), _file_handler(nullptr),
+		_state(State::ParsingHeaders), _timed_out(false), _port(port), _envp(envp)
 {
 
 }
@@ -311,7 +312,7 @@ void ClientHandler::_add_cgi_handler()
 	_state = State::ProcessingCGI;
 	_cgi_handler = new CgiHandler(_response.get_path(), _request.get_url_parameters_as_string(), body_buff, _envp);
 	Action<CgiHandler> *cgi_action = new Action<CgiHandler>(_cgi_handler, &CgiHandler::handle_cgi);
-	LOG_NOTICE("FileHandler (fd " << _request.get_file().fd << ")");
+	LOG_NOTICE("CgiHandler (fd " << _cgi_handler->get_pipe_fd() << ")");
 	_connection_manager.add(_cgi_handler->get_pipe_fd(), POLLIN, cgi_action);
 }
 
@@ -355,10 +356,16 @@ void ClientHandler::_poll_cgi()
 	{
 		return;
 	}
+	else if (_cgi_handler->error())
+	{
+		_connection_manager.remove(_cgi_handler->get_pipe_fd());
+		_cgi_handler = nullptr;
+		_build_error_response(400, "Bad Request", _retrieve_error_path(400, _configs[0]));
+	}
 	else if (_cgi_handler->poll())
 	{
 		LOG_NOTICE("(fd " << _socket.get_fd() << ") CgiHandler is finished (fd " << _cgi_handler->get_pipe_fd() << ")");
-		LOG_INFO("File handler (fd " << _cgi_handler->get_pipe_fd() << ") removed");
+		LOG_INFO("CgiHandler (fd " << _cgi_handler->get_pipe_fd() << ") removed");
 		LOG_NOTICE("CGI OUTPUT: " << _cgi_handler->get_buffer());
 		_response.set_body(_cgi_handler->get_buffer());
 		_connection_manager.remove(_cgi_handler->get_pipe_fd());
