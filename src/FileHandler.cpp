@@ -91,7 +91,7 @@ void FileHandler::_open_file()
 void FileHandler::_create_file()
 {
 	_file.path += "/" + _file.name;
-	if (access(_file.path.c_str(), F_OK) == -1)
+	if (access(_file.path.c_str(), F_OK) == 0)
 	{
 		LOG_ERROR(_file.path + " file already exists!");
 		throw HttpException(409, "Conflict");

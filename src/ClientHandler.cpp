@@ -335,11 +335,14 @@ void ClientHandler::_poll_file_handler()
 	{
 		LOG_NOTICE("(fd " << _socket.get_fd() << ") FileHandler is finished (fd " << _file_handler->get_fd() << ")");
 		LOG_INFO("File handler (fd " << _file_handler->get_fd() << ") removed");
-		_file = _file_handler->get_file();
-		std::vector<char>& data = _file.data;
-		if (not data.empty())
+		if (_response.get_type() == ResponseType::Fetch)
 		{
-			_response.set_body(std::string(data.begin(), data.end()));
+			_file = _file_handler->get_file();
+			std::vector<char>& data = _file.data;
+			if (not data.empty())
+			{
+				_response.set_body(std::string(data.begin(), data.end()));
+			}
 		}
 		_connection_manager.remove(_file_handler->get_fd());
 		_file_handler = nullptr;
