@@ -4,7 +4,7 @@ RUN_CMD		:= ./$(NAME) data/conf/default.conf
 ifdef DEBUG
 	CFLAGS		:= -Wall -Wextra -Werror -std=c++17 -g -fsanitize=address -pedantic
 else
-	CFLAGS		:= -Wall -Wextra -Werror -std=c++17 
+	CFLAGS		:= -Wall -Wextra -Werror -std=c++17 -g -fsanitize=address -pedantic
 endif
 
 IFLAGS		:=	-Iinclude

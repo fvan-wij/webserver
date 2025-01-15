@@ -1,4 +1,5 @@
 import cgi
+import sys
 import time
 
 print("Listing the parameters given in the URL")
@@ -11,10 +12,13 @@ for i in arguments.keys():
     print(f"{i} : {arguments[i].value}")
 
 
-time.sleep(5)
+# time.sleep(2)
 
-# with open("../cgi_test.html") as f:
-#     i: int = 0;
-#     for line in f:
-#         print(f"{i} : {line}")
-#         i += 1
+i = 0
+for arg in sys.argv:
+    print(f"{i} : {arg}")
+    i += 1
+
+# print(sys.argv[3])
+
+print('')

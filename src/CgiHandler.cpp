@@ -8,6 +8,7 @@
 #include <cstring>
 #include <iterator>
 #include <string_view>
+#include <strings.h>
 #include <sys/wait.h>
 #include <cstdint>
 #include <cstdlib>
@@ -167,13 +168,11 @@ void CgiHandler::start(char *const envp[])
 			throw HttpException(500, "Internal Server Error");
 		}
 
-		const char **argv = new const char* [_argv.size() + 1];
+		const char **argv = new const char* [_argv.size() + 0]();
 		for (size_t i = 0; i < _argv.size(); i++)
 		{
 			argv[i] = _argv.at(i).c_str();
 		}
-		argv[_argv.size()] = NULL;
-
 
 		if (execve(argv[0], (char* const*) argv, envp) == -1)
 		{
