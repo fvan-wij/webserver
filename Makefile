@@ -2,9 +2,9 @@ NAME		:= webserv
 RUN_CMD		:= ./$(NAME) data/conf/default.conf
 
 ifdef DEBUG
-	CFLAGS		:= -Wall -Wextra -std=c++17 -g -fsanitize=address -pedantic
+	CFLAGS		:= -Wall -Wextra -Werror -std=c++17 -g -fsanitize=address -pedantic
 else
-	CFLAGS		:= -Wall -Wextra -std=c++17 -pedantic
+	CFLAGS		:= -Wall -Wextra -Werror -std=c++17 -pedantic
 endif
 
 IFLAGS		:=	-Iinclude
