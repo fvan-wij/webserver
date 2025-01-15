@@ -261,6 +261,7 @@ const int& CgiHandler::get_pipe_fd() const
 int32_t CgiHandler::_read_pipe()
 {
 	char buffer[PIPE_READ_SIZE];
+	bzero(buffer, PIPE_READ_SIZE);
 
 	int32_t read_count = read(_pipes[PipeFD::READ], &buffer, PIPE_READ_SIZE - 1);
 	if (read_count == -1)

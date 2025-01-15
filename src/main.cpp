@@ -46,7 +46,7 @@ static void poll_loop(ConnectionManager &cm)
 int main(int argc, char *argv[], char *envp[])
 {
 	std::optional<std::vector<Config>>		configs;
-	ConnectionManager		cm(envp);
+	ConnectionManager						cm(envp);
 
 	if (argc == 2 && argv[1] && Utility::check_extension(argv[1], ".conf"))
 	{
