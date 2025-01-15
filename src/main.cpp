@@ -9,6 +9,7 @@
 #include <exception>
 #include <meta.hpp>
 #include <cstring>
+#include <optional>
 #include <sys/poll.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -44,14 +45,14 @@ static void poll_loop(ConnectionManager &cm)
 
 int main(int argc, char *argv[], char *envp[])
 {
-	std::vector<Config>		configs;
+	std::optional<std::vector<Config>>		configs;
 	ConnectionManager		cm(envp);
 
 	if (argc == 2 && argv[1] && Utility::check_extension(argv[1], ".conf"))
 	{
 		configs = parse_config(argv[1]);
 	}
-	else
+	if (!configs)
 	{
 		LOG_ERROR("Config is invalid or not present!");
 		return 1;
@@ -59,7 +60,7 @@ int main(int argc, char *argv[], char *envp[])
 
 	try 
 	{
-		cm.add_listeners(configs);
+		cm.add_listeners(*configs);
 	}
 	catch (std::exception &e)
 	{

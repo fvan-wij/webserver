@@ -1,5 +1,10 @@
 #include <Config.hpp>
 #include <ConfigParser.hpp>
+#include <cstdint>
+#include <exception>
+#include <limits>
+#include <optional>
+#include <stdexcept>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -10,18 +15,18 @@
 
 static std::vector<std::string> tokenize_string(std::string string, std::string delimiters)
 {
-		std::vector<std::string>	tokens;
-		size_t						start = 0;
-		size_t						end = 0;
+	std::vector<std::string>	tokens;
+	size_t						start = 0;
+	size_t						end = 0;
 
+	start = string.find_first_not_of(delimiters, end);
+	while (start != std::string::npos)
+	{
+		end = string.find_first_of(delimiters, start);
+		tokens.push_back(string.substr(start, end - start));
 		start = string.find_first_not_of(delimiters, end);
-		while (start != std::string::npos)
-		{
-			end = string.find_first_of(delimiters, start);
-			tokens.push_back(string.substr(start, end - start));
-			start = string.find_first_not_of(delimiters, end);
-		}
-		return tokens;
+	}
+	return tokens;
 }
 
 std::string	parse_string(std::vector<std::string> tokens, unsigned long &i)
@@ -52,7 +57,19 @@ std::pair<std::string, int> parse_listen(std::vector<std::string> tokens, unsign
 	i++;
 	std::string address = tokens[i].substr(0, tokens[i].find(":"));
 	if (std::isdigit(tokens[i][tokens[i].find(":") + 1]))
-		port = std::stoi(tokens[i].substr(tokens[i].find(":") + 1, tokens[i].size()));
+	{
+		bool should_throw = false;
+		try
+		{
+			port = std::stoi(tokens[i].substr(tokens[i].find(":") + 1, tokens[i].size()));
+		}
+		catch (const std::exception &)
+		{
+			should_throw = true;
+		}
+		if (should_throw || port >= std::numeric_limits<int16_t>::max())
+			throw std::invalid_argument("invalid port number choose a value between 0-65535");
+	}
 	i++;
 	return {address, port};
 }
@@ -62,7 +79,19 @@ std::pair<int, std::string> parse_redirection(std::vector<std::string>& tokens, 
 	int code = 0;
 	i++;
 	if (std::isdigit(tokens[i][0]))
-		code = std::stoi(tokens[i]);
+	{
+		bool should_throw = false;
+		try
+		{
+			code = std::stoi(tokens[i]);
+		}
+		catch (const std::exception &)
+		{
+			should_throw = true;
+		}
+		if (should_throw || code >= 1000)
+			throw std::invalid_argument("invalid port number choose a value between 0-1000");
+	}
 	i++;
 	std::string url = tokens[i].substr(0, tokens[i].size() - 1);
 	i++;
@@ -92,7 +121,19 @@ std::pair<int, std::string> parse_error_page(std::vector<std::string> tokens, un
 	int code = 0;
 	i++;
 	if (std::isdigit(tokens[i][0]))
-		code = std::stoi(tokens[i]);
+	{
+		bool should_throw = false;
+		try
+		{
+			code = std::stoi(tokens[i]);
+		}
+		catch (const std::exception &)
+		{
+			should_throw = true;
+		}
+		if (should_throw || code >= 1000)
+			throw std::invalid_argument("invalid port number choose a value between 0-1000");
+	}
 	i++;
 	std::string path = tokens[i].substr(0, tokens[i].size() - 1);
 	i++;
@@ -133,7 +174,15 @@ Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 		if (tokens[i] == "root")
 			server_config.root = parse_string(tokens, i);
 		else if (tokens[i] == "listen")
-			server_config.listen.push_back(parse_listen(tokens, i));
+		{
+			auto listen = parse_listen(tokens, i);
+			for (auto const& [key, val] : server_config.listen)
+			{
+				if (val == listen.second)
+					throw std::invalid_argument("port number already defined");
+			}
+			server_config.listen.push_back(listen);
+		}
 		else if (tokens[i] == "index")
 			server_config.index = parse_string(tokens, i);
 		else if (tokens[i] == "server_name")
@@ -153,7 +202,7 @@ Config	read_config(std::vector<std::string> tokens, unsigned long &i)
 	return (server_config);
 }
 
-std::vector<Config>	parse_config(std::string_view config_path)
+std::optional<std::vector<Config>>	parse_config(std::string_view config_path)
 {
 	std::vector<Config>			configs;
 	std::ifstream				in(config_path.data(), std::ios_base::in);
@@ -172,7 +221,17 @@ std::vector<Config>	parse_config(std::string_view config_path)
 	while (i < tokens.size())
 	{
 		if (tokens[i] == "server")
-			configs.push_back(read_config(tokens, i));
+		{
+			try
+			{
+				configs.push_back(read_config(tokens, i));
+			}
+			catch (std::exception &e)
+			{
+				LOG_ERROR("Invalid config : " << e.what());
+				return {};
+			}
+		}
 		i++;
 	}
 	return (configs);
