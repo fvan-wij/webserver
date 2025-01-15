@@ -331,7 +331,7 @@ void ClientHandler::_poll_file_handler()
 	{
 		LOG_NOTICE("(fd " << _socket.get_fd() << ") FileHandler is finished (fd " << _file_handler->get_fd() << ")");
 		LOG_INFO("File handler (fd " << _file_handler->get_fd() << ") removed");
-		if (_response.get_type() == ResponseType::Fetch)
+		if (_response.get_type() == ResponseType::Fetch || _response.get_type() == ResponseType::Error)
 		{
 			_file = _file_handler->get_file();
 			std::vector<char>& data = _file.data;

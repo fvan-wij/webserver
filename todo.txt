@@ -1,0 +1,10 @@
+- Search for all read/recv/write/send and check if the returned value is correctly checked (checking only -1 or 0 values is not enough, both should be checked).
+- Search for all read/recv/write/send on a socket and check that, if an error is returned, the client is removed. 
+
+- stoi crash with large MAX_BODY_SIZE (joppe)
+
+# - error pages not working (flip)
+
+- Duplicate ports in same server block
+- Matching host in different server blocks
+
