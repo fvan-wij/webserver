@@ -4,16 +4,11 @@
 #include <arpa/inet.h>
 #include <cerrno>
 #include <cstring>
+#include <exception>
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <iostream>
 #include "HttpExceptions.hpp"
-
-//
-// #ifndef DEBUG_SOCKET
-// #define LOG_DEBUG(x) do { } while (0)
-// #endif
-
 
 
 //Socket can be client or listener
@@ -43,9 +38,7 @@ Socket &Socket::operator=(const Socket &rhs)
 
 Socket::~Socket()
 {
-	// LOG_DEBUG(*this << " destroyed");
 	_fd = -1;
-
 }
 
 
@@ -54,7 +47,6 @@ Socket Socket::accept()
 	int clientFd = ::accept(_fd, nullptr, nullptr);
 	if (clientFd == -1)
 	{
-		UNIMPLEMENTED("EXCEPTION: Failed accepting client on fd: " << _fd << ", " << strerror(errno));
 		close(_fd);
 	}
 	return Socket(SocketType::CLIENT, clientFd);
@@ -69,14 +61,12 @@ std::optional<std::vector<char>> Socket::read()
 	int n;
 	if ((n = recv(_fd, buffer, SOCKET_READ_SIZE - 1, 0)) == -1)
 	{
-		LOG_DEBUG("n of bytes received " << n);
-		UNIMPLEMENTED("recv failed");
+		return std::nullopt;
 	}
 	else if (n == 0)
 	{
 		throw ClosedConnectionException("Client closed connection!");
 	}
-	LOG_DEBUG("n of bytes read: " << n);
 	if (n != 0)
 	{
 		std::vector<char> data(buffer, buffer + n);
@@ -88,22 +78,16 @@ std::optional<std::vector<char>> Socket::read()
 	}
 }
 
-void Socket::write(const std::string s)
+int Socket::write(const std::string& s)
 {
-	UNUSED(s);
-
 	ssize_t data_sent = send(_fd, s.c_str(), s.length(), 0);
-	if (data_sent == -1)
-	{
-		UNIMPLEMENTED("send failed");
-	}
-	if (data_sent != (ssize_t) s.length())
+	if (!data_sent || data_sent == -1 || data_sent != (ssize_t) s.length())
 	{
 		LOG_WARNING("data send is not equal to data passed in");
+		return -1;
 	}
+	return 0;
 }
-
-
 
 int 						Socket::get_fd() const
 {
@@ -128,23 +112,11 @@ std::string Socket::get_address_str() const
 	return str;
 }
 
-
-
-// // TODO Memcmp?
-// bool Socket::operator==	(const Socket &rhs) const
-// {
-// 	return	this->_fd == rhs._fd && this->_type == rhs._type &&
-// 			this->_address.sin_addr.s_addr == rhs._address.sin_addr.s_addr;
-// }
-
-
-
 void 				Socket::_init_listener(int port)
 {
 	_fd = socket(AF_INET, SOCK_STREAM, 0); //Creates connection
 	if (_fd < 0)
 	{
-		// TODO Throw error
 		LOG_ERROR("Error occurred: " << strerror(errno));
 	}
 
@@ -157,11 +129,13 @@ void 				Socket::_init_listener(int port)
 	if (bind(_fd, (struct sockaddr *) &_address, sizeof(_address)) < 0) //Binds connection to address
 	{
 		LOG_ERROR("Error occurred: " << strerror(errno));
+		throw std::exception();
 		return;
 	}
 	if (listen(_fd, 400) < 0)
 	{
 		LOG_ERROR("Error occurred: " << strerror(errno));
+		throw std::exception();
 		return;
 	}
 }
@@ -189,6 +163,6 @@ std::ostream& operator<< (std::ostream& os, const Socket& s)
 bool operator==(const Socket &s1, const Socket &s2)
 {
 	return	s1.get_fd() == s2.get_fd() &&
-			s1.get_port() == s2.get_port() &&
-			s1.get_address_str() == s2.get_address_str();
+		s1.get_port() == s2.get_port() &&
+		s1.get_address_str() == s2.get_address_str();
 }

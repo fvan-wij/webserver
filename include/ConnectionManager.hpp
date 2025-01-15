@@ -44,17 +44,17 @@ class ConnectionManager {
 
 		void	add(int fd, short events, ActionBase* action);
 		void 	remove(int fd);
-
 		void	add_listeners(std::vector<Config> &configs);
 		void	add_listener(Config config, int port);
 
 
 		std::vector<pollfd>&		get_pfds();
-		void 						handle_pfd_events(char *envp[]);
+		std::vector<int>			get_listener_fds();
+		void 						handle_pfd_events();
 
 	private:
-		std::vector<pollfd>	_pfds;
-		std::unordered_map<int, ActionBase *>	_actions;
-		std::unordered_map<int, std::shared_ptr<HttpListener>> _listeners;
-		char**			_envp;
+		std::vector<pollfd>										_pfds;
+		std::unordered_map<int, ActionBase *>					_actions;
+		std::unordered_map<int, std::shared_ptr<HttpListener>> 	_listeners;
+		char**													_envp;
 };

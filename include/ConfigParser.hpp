@@ -4,7 +4,7 @@
 #include <vector>
 #include <Config.hpp>
 
-std::vector<Config>	parse_config(std::string_view config_path);
+std::optional<std::vector<Config>>	parse_config(std::string_view config_path);
 
 class ConfigParser {
 	public:

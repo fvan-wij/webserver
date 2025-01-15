@@ -16,26 +16,7 @@
 #define FETCH_READ_SIZE 	CHUNK_SIZE
 #define PIPE_READ_SIZE 		PIPE_BUF
 
-#define TIME_OUT			5000 // ms
-
-
-#define UNUSED(x) (void)(x)
-#define WARNING(message) \
-	do { \
-		LOG_ERROR("\x1b[0m" << __FILE__ << ":" << __LINE__ << ": WARNING: " << message); \
-	} while (0)
-
-#define UNIMPLEMENTED(message) \
-	do { \
-		LOG_ERROR("\x1b[0m" << __FILE__ << ":" << __LINE__ << ": UNIMPLEMENTED: " << message); \
-		exit(1); \
-	} while (0)
-
-#define UNREACHABLE(message) \
-	do { \
-		LOG_ERROR("\x1b[0m" << __FILE__ << ":" << __LINE__ << ": UNREACHABLE: " << message); \
-		exit(1); \
-	} while (0)
+#define TIME_OUT			8000 // ms
 
 #define RED 	"\x1B[31m"
 #define GREEN 	"\x1B[32m"

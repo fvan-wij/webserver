@@ -80,7 +80,6 @@ State	HttpRequest::parse_header(std::vector<char>& buffer)
 
 	if (get_value("Transfer-Encoding") == "chunked")
 	{
-		LOG_DEBUG("It's a chunky boi!");
 		return State::ParsingChunkedBody;
 	}
 
@@ -112,12 +111,10 @@ State HttpRequest::parse_body_chunked(std::vector<char>& buffer)
 		_extract_chunk_size(buffer);
 		if (_current_chunk_size == 0)
 		{
-			LOG_DEBUG("_body_buffer.size(): " << _body_buffer.size());
 			buffer.clear();
 			_file.data = _body_buffer;
 			_file.finished = false;
 			_file.streamcount = 0;
-			LOG_DEBUG("buffer.size(): " << buffer.size());
 			return State::ProcessingRequest;
 		}
 		else if (_current_chunk_size == -1)
@@ -154,8 +151,7 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 		throw HttpException(400, "Bad Request");
 
 
-	_body_buffer.insert(_body_buffer.end(), std::make_move_iterator(buffer.begin()), std::make_move_iterator(buffer.end()));
-
+	_body_buffer.insert(_body_buffer.end(), buffer.begin(), buffer.end());
 	buffer.clear();
 	std::string_view 	sv_buffer(_body_buffer.data(), _body_buffer.size());
 
@@ -165,7 +161,8 @@ State HttpRequest::parse_body(std::vector<char>& buffer)
 	{
 		LOG_ERROR("content_length is -1");
 	}
-	if (_body_buffer.size() == (unsigned long) content_length)
+	std::string_view content_type = get_value("Content-Type").value_or("");
+	if (_body_buffer.size() == (unsigned long) content_length && not Utility::is_multipart_content(content_type.data()))
 		return State::ProcessingRequest;
 
 
@@ -273,7 +270,6 @@ void	HttpRequest::_extract_request_line(std::istringstream 	&stream)
 		std::string	key_val;
 		while (std::getline(ss, key_val, '&'))
 		{
-			LOG_DEBUG("key_val: " << key_val);
 			size_t	equal_pos = key_val.find("=");
 			if (equal_pos != std::string::npos)
 			{
@@ -376,7 +372,7 @@ std::ostream & operator << (std::ostream &out, const HttpRequest &request)
 		out << YELLOW << request.get_method() << " " << request.get_uri() << " " << request.get_protocol() << std::endl;
 	for (const auto& [key, value] : request.get_headers())
 		out << key <<  ":" << value << "\n";
-	out << END << std::endl;
+	out << END << std::flush;
 
 	return out;
 }

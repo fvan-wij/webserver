@@ -65,7 +65,7 @@ File&	FileHandler::get_file()
 
 void FileHandler::_open_file()
 {
-	if (_file.is_open)
+	if (_error || _file.is_open)
 		return;
 	if (access(_file.path.c_str(), F_OK) == -1)
 	{
@@ -75,7 +75,7 @@ void FileHandler::_open_file()
 	if (access(_file.path.c_str(), R_OK) == -1)
 	{
 		LOG_ERROR(_file.path + " has no reading permissions");
-		throw HttpException(409, "Conflict");
+		throw HttpException(403, "Forbidden");
 	}
 	_file.fd = ::open(_file.path.c_str(), O_RDONLY);
 	if (_file.fd < 0)
@@ -84,18 +84,23 @@ void FileHandler::_open_file()
 		LOG_ERROR(_file.path + " couldn't open file");
 		throw HttpException(409, "Conflict");
 	}
-	LOG_DEBUG("_file (fd " << _file.fd << ") is open");
+	/*LOG_DEBUG("_file (fd " << _file.fd << ") is open");*/
 	_file.is_open = true;
 }
 
 void FileHandler::_create_file()
 {
 	_file.path += "/" + _file.name;
+	if (access(_file.path.c_str(), F_OK) == 0)
+	{
+		LOG_ERROR(_file.path + " file already exists!");
+		throw HttpException(409, "Conflict");
+	}
 	_file.fd = ::open(_file.path.c_str(), O_WRONLY | O_APPEND | O_CREAT, 0644);
 	if (_file.fd < 0)
 	{
 		_file.is_open = false;
-		LOG_ERROR(_file.path + " could not be created in order to handle the file upload");
+		LOG_ERROR(_file.path + " could not be created in order to handle the file upload: " << strerror(errno));
 		throw HttpException(409, "Conflict");
 	}
 	_file.is_open = true;
@@ -110,7 +115,7 @@ void	FileHandler::_read_file()
 		if (access(_file.path.c_str(), R_OK) == -1)
 		{
 			LOG_ERROR(_file.path + " doesn't have read permissions!");
-			throw HttpException(409, "Conflict");
+			throw HttpException(403, "Forbidden");
 		}
 		if (_file.is_open)
 		{
@@ -120,7 +125,7 @@ void	FileHandler::_read_file()
 			{
 				LOG_ERROR("Error reading " << _file.path);
 				close(_file.fd);
-				throw HttpException(409, "Conflict");
+				throw HttpException(500, "Internal Server Error");
 			}
 			if (bytes_read > 0)
 			{
@@ -131,10 +136,8 @@ void	FileHandler::_read_file()
 			{
 				_file.finished = true;
 				_file.is_open = false;
-				_file.data.push_back('\0'); //Hmm've
-				LOG_DEBUG("FileHandler (fd " << _file.fd << ") is done...");
+				_file.data.push_back('\0');
 			}
-			LOG_DEBUG("Reading file...(fd " << _file.fd << "), (bytes read: " << _file.streamcount << ")");
 		}
 		else
 		{
@@ -168,12 +171,16 @@ void	FileHandler::_write_file()
 	}
 	if (Utility::file_exists(_file.path))
 	{
-		write(_file.fd, &_file.data[_file.streamcount], buffer_size);
+		int err = write(_file.fd, &_file.data[_file.streamcount], buffer_size);
+		if (err < 0)
+		{
+			throw HttpException(500, "Internal Server Error");
+		}
 	}
 	else
 	{
 		LOG_ERROR(_file.path + " appears to be a a non-existing file!");
-		throw HttpException(409, "Conflict");
+		throw HttpException(500, "Internal Server Error");
 	}
 	_file.streamcount += buffer_size;
 	_file.finished = bytes_left <= 0;

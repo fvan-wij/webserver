@@ -1,61 +1,72 @@
 #include "ConnectionManager.hpp"
 #include "Logger.hpp"
 #include "ConfigParser.hpp"
+#include <Utility.hpp>
+
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
-#include <fstream>
+#include <exception>
 #include <meta.hpp>
-
 #include <cstring>
-#include <string>
+#include <optional>
 #include <sys/poll.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
 
-void poll_loop(ConnectionManager &cm, char *envp[])
+static void	cleanup_handlers(ConnectionManager& cm, std::vector<pollfd>& pfds)
 {
-	while (1)
+	for (auto fd : pfds)
 	{
-		std::vector<pollfd> &pfds = cm.get_pfds();
-		int n_ready = ::poll(pfds.data(), pfds.size(), POLL_TIMEOUT);
-		if (n_ready > 0)
-			cm.handle_pfd_events(envp);
+		cm.remove(fd.fd);
 	}
 }
 
-static bool	check_extension(const std::string &file, const std::string &ext)
+static void poll_loop(ConnectionManager &cm)
 {
-  	return ext.length() <= file.length() && std::equal(ext.rbegin(), ext.rend(), file.rbegin());
-}
+	bool	should_quit = false;
 
-
-static void write_pid_to_file(std::string file)
-{
-	std::ofstream out(file);
-	out << getpid() << std::endl;
-	out.close();
+	while (!should_quit)
+	{
+		std::vector<pollfd> &pfds = cm.get_pfds();
+		int n_ready = ::poll(pfds.data(), pfds.size(), POLL_TIMEOUT);
+		if (n_ready < 0)
+		{
+			cleanup_handlers(cm, pfds);
+			should_quit = true;
+		}
+		else if (n_ready > 0)
+		{
+			cm.handle_pfd_events();
+		}
+	}
 }
 
 int main(int argc, char *argv[], char *envp[])
 {
-	std::vector<Config>	configs;
-	ConnectionManager		cm(envp);
+	std::optional<std::vector<Config>>		configs;
+	ConnectionManager						cm(envp);
 
-
-	write_pid_to_file("pid.txt");
-
-
-	if (argc == 2 && argv[1] && check_extension(argv[1], ".conf"))
+	if (argc == 2 && argv[1] && Utility::check_extension(argv[1], ".conf"))
 	{
 		configs = parse_config(argv[1]);
 	}
-	else
+	if (!configs)
 	{
-		LOG_ERROR("Config is invalid or not present, using DEFAULT_CONFIG");
-		configs.push_back(DEFAULT_CONFIG);
+		LOG_ERROR("Config is invalid or not present!");
+		return 1;
 	}
-	cm.add_listeners(configs);
-	poll_loop(cm, envp);
+
+	try 
+	{
+		cm.add_listeners(*configs);
+	}
+	catch (std::exception &e)
+	{
+		LOG_ERROR("Error: " << e.what());
+		return 1;
+	}
+	poll_loop(cm);
+	return 0;
 }

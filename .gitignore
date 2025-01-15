@@ -1,4 +1,5 @@
 .cache
+webserv
 Session.vim
 compile_commands.json
 app

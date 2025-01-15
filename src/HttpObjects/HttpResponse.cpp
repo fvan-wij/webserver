@@ -36,6 +36,21 @@ void		HttpResponse::set_body(const std::string &body)
 	_body = body;
 }
 
+void HttpResponse::insert_header(std::pair<std::string, std::string> key_value_pair)
+{
+	auto it = _header.find(key_value_pair.first);
+	if (it == _header.end())
+	{
+		_header.insert(key_value_pair);
+		return;
+	}
+	else
+	{
+		_header.erase(it);
+		_header.insert(key_value_pair);
+	}
+}
+
 void			HttpResponse::append_body(std::string &buffer)
 {
 	_body += buffer;

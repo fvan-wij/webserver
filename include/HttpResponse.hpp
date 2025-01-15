@@ -62,7 +62,7 @@ class HttpResponse
 		std::string		to_string() const;
 		void 			set_error_response(const int status, const std::string &status_mssg);
 		void			set_redirection(const int redirection_code, const std::string& message){_redirection = {redirection_code, message};};
-		void 			insert_header(std::pair<std::string, std::string> key_value_pair){_header.insert(key_value_pair);};
+		void 			insert_header(std::pair<std::string, std::string> key_value_pair);
 
 	private:
 		int				_status_code;

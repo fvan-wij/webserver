@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>index.html</title>
+		<style>
+body {
+	background-color: #18191a;
+	color: #B0B3B8;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	font-size: 1.5em;
+		</style>	
+	</head>
+	<body>
+		<div>
+			<h1>CGI test</h1>
+			<h4>Send POST request and trigger CGI</h1>
+			<form action='/cgi-bin/hello_world.py' method='post'><button name='foo' value='Yeeat'>Test Post</button></form>
+		</div>
+
+		<div>
+			<h1>CGI test</h1>
+			<h4>Send GET request and trigger CGI</h1>
+			<form action='/cgi-bin/hello_world.py' method='get'><button name='foo' value='Yeaaet'>Test GET</button></form>
+		</div>
+	</body>
+
+	<body>
+		<div>
+			<h1>CGI test</h1>
+			<h4>Send POST request and trigger CGI</h1>
+			<form action='/cgi-bin/cgi_get_params.py' method='post'><button name='foo' value='Yeeat'>Test Post</button></form>
+		</div>
+
+		<div>
+			<h1>CGI test</h1>
+			<h4>Send GET request and trigger CGI</h1>
+			<form action='/cgi-bin/cgi_get_params.py' method='get'><button name='foo' value='Yeaaet'>Test GET</button></form>
+		</div>
+	</body>
+
+</html>

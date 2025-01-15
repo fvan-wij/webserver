@@ -16,13 +16,11 @@ static std::string generate_list(std::filesystem::path path, uint16_t port)
 	std::string list = "<h1>Directory listing</h1>\n<hr class='rounded'>\n";
 
 	path = path.parent_path();
-	LOG_DEBUG("path.string() : " << path.string());
 	
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
 		std::string file_name = entry.path().string().substr(entry.path().string().find_last_of('/'), entry.path().string().length());
 		std::string uri = path.string().substr(path.string().find_last_of('/')) + file_name;
-		LOG_DEBUG("uri : " << uri);
 		std::string href_open = "<a href=\'http://localhost:" + std::to_string(port) + uri + "\'>";
 		std::string item = "<li>" + href_open + file_name  + "</a></li>";
 		list += item;
@@ -42,36 +40,6 @@ static std::string generate_directory_listing(std::string_view path, uint16_t po
 	std::string directory_list;
 	directory_list.append("<div class=\"fileBlock\">" + generate_list(path, port) + "</div>");
 	return directory_list;
-}
-
-std::optional<std::string> RequestHandler::retrieve_index_html(std::string_view path)
-{
-	constexpr auto 	READ_SIZE 	= std::size_t(1024);
-	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
-	auto 			out 		= std::string();
-
-	if (not file_stream)
-	{
-		LOG_ERROR("Could not open file");
-		return std::nullopt;
-	}
-	else
-	{
-		auto buf = std::string(READ_SIZE, '\0');
-		while (file_stream.read(&buf[0], READ_SIZE))
-		{
-			out.append(buf, 0, file_stream.gcount());
-		}
-		out.append(buf, 0, file_stream.gcount());
-	}
-	if (not out.empty())
-	{
-		return out;
-	}
-	else
-	{
-		return std::nullopt;
-	}
 }
 
 bool			RequestHandler::method_is_allowed(std::string_view method, std::vector<std::string> v)

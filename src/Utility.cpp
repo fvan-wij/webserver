@@ -23,6 +23,21 @@ std::optional<int>	Utility::svtoi(std::string_view str)
 	return std::nullopt;
 }
 
+bool	Utility::check_extension(const std::string &file, const std::string &ext)
+{
+  	return ext.length() <= file.length() && std::equal(ext.rbegin(), ext.rend(), file.rbegin());
+}
+
+
+bool Utility::is_multipart_content(std::string value_to_check)
+{
+	if (value_to_check.find("multipart") != std::string::npos)
+	{
+		return true;
+	}
+	return false;
+}
+
 std::string	Utility::generate_random_string(size_t len)
 {
 	srand(time(NULL));

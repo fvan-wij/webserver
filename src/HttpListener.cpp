@@ -2,7 +2,7 @@
 #include <ClientHandler.hpp>
 #include <Socket.hpp>
 
-HttpListener::HttpListener(uint16_t port, ConnectionManager &cm, char **envp) : _port(port), _socket(SocketType::LISTENER, port), _connection_manager(cm), _envp(envp)
+HttpListener::HttpListener(uint16_t port, ConnectionManager &cm, char **envp) : _port(port), _socket(SocketType::LISTENER, port), _envp(envp), _connection_manager(cm)
 {
 	short mask = POLLIN;
 	Action<HttpListener> *listener_action = new Action<HttpListener>(this, &HttpListener::listen_handle);
@@ -38,7 +38,7 @@ void				HttpListener::listen_handle(short revents)
 		Socket socket = _socket.accept();
 
 
-		ClientHandler *client_handler = new ClientHandler(_connection_manager, socket, _configs, _port, _envp);
+		ClientHandler *client_handler = new ClientHandler(_connection_manager, socket, _configs, socket.get_port(), _envp);
 		auto client_action = new Action<ClientHandler>(client_handler, &ClientHandler::handle_request);
 		_connection_manager.add(socket.get_fd(), mask, client_action);
 		client_handler->init_timer();

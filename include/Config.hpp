@@ -14,16 +14,6 @@ struct Location {
 	bool									autoindex;
 };
 
-const Location DEFAULT_LOCATION = {
-    "/",                            // path
-    {"GET", "POST"},                // allowed_methods
-    "/var/www/html",                // root
-    "index.html",                   // index
-	{},// {301, "http://localhost:9090"}, // redirection
-	false                           // autoindex
-
-};
-
 struct Config {
 	std::vector<std::string>					server_name;
 	std::vector<std::pair<std::string, int>>	listen;
@@ -40,17 +30,6 @@ struct Config {
 			return std::nullopt;
 		return server_name[index];
 	}
-};
-
-const Config DEFAULT_CONFIG = {
-    {"default_server"},                        // server_name
-    {{"0.0.0.0", 9090}},                    // listen (IP, port)
-    {"GET", "POST"},                      // methods
-    { {"/", DEFAULT_LOCATION} },          // location map
-    "/var/www/html",                      // root
-    1048576,                              // client_max_body_size (1MB)
-    {{404, "/404.html"}},                 // error_page (404 -> /404.html)
-    "index.html",                         // index page
 };
 
 void	print_config(const Config& config);

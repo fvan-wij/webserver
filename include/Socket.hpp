@@ -48,7 +48,7 @@ class Socket
 		// Funcs
 		Socket 								accept();
 		std::optional<std::vector<char>> 	read();
-		void 								write(const std::string s);
+		int 								write(const std::string& s);
 
 		// Getters
 		int 								get_fd() const;

@@ -3,6 +3,7 @@
 #include <HttpListener.hpp>
 #include <FileHandler.hpp>
 #include <HttpExceptions.hpp>
+#include <algorithm>
 
 ConnectionManager::ConnectionManager(char** envp) : _envp(envp)
 {
@@ -68,6 +69,10 @@ void ConnectionManager::add_listener(Config config, int port)
 	listener->add_config(config);
 }
 
+
+/**
+ * @brief removes pfd, actionbase and closes fd
+ */
 void ConnectionManager::remove(int fd)
 {
 	for (size_t i = 0; i < _pfds.size(); i++)
@@ -78,7 +83,11 @@ void ConnectionManager::remove(int fd)
 	close(fd);
 	ActionBase *act = _actions[fd];
 	_actions.erase(fd);
-	act->cleanup();
+	const auto& lfds = get_listener_fds();
+	if (std::find(lfds.begin(), lfds.end(), fd) == lfds.end())
+	{
+		act->cleanup();
+	}
 	delete act;
 }
 
@@ -92,14 +101,28 @@ std::vector<pollfd>&	ConnectionManager::get_pfds()
 }
 
 /**
+ * @brief
+ * @return vector of listener fds
+ */
+std::vector<int>	ConnectionManager::get_listener_fds()
+{
+	std::vector<int>	fds;
+
+	for (const auto& [port, listener] : _listeners)
+	{
+		int fd = listener->get_socket().get_fd();
+		fds.push_back(fd);
+	}
+	return fds;
+}
+
+/**
  * @brief Loop over the pollfd list and handle the events.
  *
  * @param envp
  */
-void ConnectionManager::handle_pfd_events(char *envp[])
+void ConnectionManager::handle_pfd_events()
 {
-	(void) envp;
-
 	for (size_t i = 0; i < _pfds.size(); i++)
 	{
 		if (_pfds[i].revents)
