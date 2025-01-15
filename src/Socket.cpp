@@ -81,13 +81,10 @@ std::optional<std::vector<char>> Socket::read()
 int Socket::write(const std::string& s)
 {
 	ssize_t data_sent = send(_fd, s.c_str(), s.length(), 0);
-	if (data_sent == -1)
-	{
-		return -1;
-	}
-	if (data_sent != (ssize_t) s.length())
+	if (!data_sent || data_sent == -1 || data_sent != (ssize_t) s.length())
 	{
 		LOG_WARNING("data send is not equal to data passed in");
+		return -1;
 	}
 	return 0;
 }
