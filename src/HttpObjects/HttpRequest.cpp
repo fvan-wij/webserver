@@ -372,7 +372,7 @@ std::ostream & operator << (std::ostream &out, const HttpRequest &request)
 		out << YELLOW << request.get_method() << " " << request.get_uri() << " " << request.get_protocol() << std::endl;
 	for (const auto& [key, value] : request.get_headers())
 		out << key <<  ":" << value << "\n";
-	out << END << std::endl;
+	out << END << std::flush;
 
 	return out;
 }

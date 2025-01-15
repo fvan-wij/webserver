@@ -230,18 +230,15 @@ void	ClientHandler::_parse(std::vector<char>& data)
 	}
 }
 
-static void	print_response(HttpResponse& _response, HttpRequest& _request)
+static void	print_response(HttpResponse& _response)
 {
 	const auto& headers = _response.get_header();
-	std::cout << std::to_string(_response.get_status_code()) << " " << _response.get_status_mssg() << "\n";
+	std::cout << YELLOW << std::to_string(_response.get_status_code()) << " " << _response.get_status_mssg() << "\n";
 	for (const auto& [key, val] : headers)
 	{
 		std::cout << key << " : " << val << "\n";
 	}
-	std::cout << "Body\n";
-	std::cout << "Size: " << _response.get_body().size();
-	std::cout << "\nFile: " << _request.get_file().name;
-	std::cout << std::endl;
+	std::cout << END << std::endl;
 }
 
 /**
@@ -262,7 +259,7 @@ void	ClientHandler::_send_response()
 	}
 		
 	LOG_NOTICE("(Server) " << _config.get_server_name(0).value_or("") << ": Response sent (fd " << _socket.get_fd() << "): ");
-	print_response(_response, _request);
+	print_response(_response);
 	_close_connection();
 }
 
@@ -299,7 +296,6 @@ void	ClientHandler::_add_file_handler(ResponseType type)
 	// NOTE if we're doing a `ResponseType::Upload` check if `_request.get_file()` is empty
 	_file_handler = new FileHandler(_request.get_file(), type);
 	Action<FileHandler> *file_action = new Action<FileHandler>(_file_handler, &FileHandler::handle_file);
-	LOG_NOTICE("FileHandler (fd " << _request.get_file().fd << ")");
 	_connection_manager.add(_file_handler->get_fd(), mask, file_action);
 }
 
