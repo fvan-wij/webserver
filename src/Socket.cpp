@@ -89,8 +89,6 @@ int Socket::write(const std::string& s)
 	return 0;
 }
 
-
-
 int 						Socket::get_fd() const
 {
 	if (_fd <= 0)

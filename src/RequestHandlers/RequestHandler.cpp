@@ -42,36 +42,6 @@ static std::string generate_directory_listing(std::string_view path, uint16_t po
 	return directory_list;
 }
 
-std::optional<std::string> RequestHandler::retrieve_index_html(std::string_view path)
-{
-	constexpr auto 	READ_SIZE 	= std::size_t(1024);
-	auto 			file_stream = std::ifstream(path.data(), std::ios::binary);
-	auto 			out 		= std::string();
-
-	if (not file_stream)
-	{
-		LOG_ERROR("Could not open file");
-		return std::nullopt;
-	}
-	else
-	{
-		auto buf = std::string(READ_SIZE, '\0');
-		while (file_stream.read(&buf[0], READ_SIZE))
-		{
-			out.append(buf, 0, file_stream.gcount());
-		}
-		out.append(buf, 0, file_stream.gcount());
-	}
-	if (not out.empty())
-	{
-		return out;
-	}
-	else
-	{
-		return std::nullopt;
-	}
-}
-
 bool			RequestHandler::method_is_allowed(std::string_view method, std::vector<std::string> v)
 {
 	bool	allowed = false;
