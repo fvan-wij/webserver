@@ -24,6 +24,18 @@ Or via the makefile (this will load `test.conf` from the root of the project)
 make run
 ```
 
+## Dev scripts
+There is a script called `monitor_children.sh` to monitor the child procs, you can run it like this
+```
+./tests/monitor_children.sh `pidof webserv`
+```
+
+Same script for monitoring the fd
+
+```
+./tests/monitor_fds.sh `pidof webserv`
+```
+
 
 
 ## Running Tests
