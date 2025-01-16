@@ -13,33 +13,60 @@ body {
 	justify-content: center;
 	align-items: center;
 	font-size: 1.5em;
-		</style>	
+}
+
+.split {
+	background-color: #881a11;
+	padding-top: 0;
+	padding-bottom: 20px;
+	margin-bottom: 20px;
+	margin-top: 0;
+	padding: 20px;
+	border: 2px groove #aaaaaa;
+	border-radius: 20px 20px;
+
+}
+
+
+
+
+
+</style>
+
 	</head>
 	<body>
-		<div>
-			<h1>CGI test</h1>
-			<h4>Send POST request and trigger CGI</h1>
-			<form action='/cgi-bin/hello_world.py' method='post'><button name='foo' value='Yeeat'>Test Post</button></form>
+		<div class="split">
+			<h1>
+				<i> hello_world.py </i>
+			</h1>
+			<div>
+				<h2>CGI test</h2>
+				<h4>Send POST request and trigger CGI</h1>
+				<form action='/cgi-bin/hello_world.py' method='post'><button name='foo' value='Yeeat'>POST</button></form>
+			</div>
+	
+			<div>
+				<h2>CGI test</h2>
+				<h4>Send GET request and trigger CGI</h1>
+				<form action='/cgi-bin/hello_world.py' method='get'><button name='foo' value='Yeaaet'>GET</button></form>
+			</div>
 		</div>
 
-		<div>
-			<h1>CGI test</h1>
-			<h4>Send GET request and trigger CGI</h1>
-			<form action='/cgi-bin/hello_world.py' method='get'><button name='foo' value='Yeaaet'>Test GET</button></form>
-		</div>
-	</body>
-
-	<body>
-		<div>
-			<h1>CGI test</h1>
-			<h4>Send POST request and trigger CGI</h1>
-			<form action='/cgi-bin/cgi_get_params.py' method='post'><button name='foo' value='Yeeat'>Test Post</button></form>
-		</div>
-
-		<div>
-			<h1>CGI test</h1>
-			<h4>Send GET request and trigger CGI</h1>
-			<form action='/cgi-bin/cgi_get_params.py' method='get'><button name='foo' value='Yeaaet'>Test GET</button></form>
+		<div class="split">
+			<h1>
+				<i> cgi_get_params.py </i>
+			</h1>
+			<div>
+				<h2>CGI test</h2>
+				<h4>Send POST request and trigger CGI</h1>
+				<form action='/cgi-bin/cgi_get_params.py' method='post'><button name='foo' value='Yeeat'>POST</button></form>
+			</div>
+	
+			<div>
+				<h2>CGI test</h2>
+				<h4>Send GET request and trigger CGI</h1>
+				<form action='/cgi-bin/cgi_get_params.py' method='get'><button name='foo' value='Yeaaet'>GET</button></form>
+			</div>
 		</div>
 	</body>
 
