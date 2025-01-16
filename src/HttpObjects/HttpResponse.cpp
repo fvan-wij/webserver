@@ -1,5 +1,6 @@
 #include "HttpResponse.hpp"
 #include "Logger.hpp"
+#include <cstdlib>
 
 HttpResponse::HttpResponse() : _status_code(0), _streamcount(0), _ready(NOT_READY), _type(ResponseType::Unknown)
 {
@@ -60,11 +61,18 @@ std::string		HttpResponse::to_string() const
 {
 	std::string response;
 
+	// TODO For debugging
+
 	response += "HTTP/1.1 " + std::to_string(_status_code) + " " + _status_message + "\r\n";
 	for (auto [key, value]: _header)
 	{
 		response += key + ": " + value + "\r\n";
 	}
 	response += "\r\n" + _body + "\r\n";
+	if (_status_code == 500)
+	{
+		LOG_ERROR("Exit code 500, exiting program...");
+		exit(1);
+	}
 	return response;
 }

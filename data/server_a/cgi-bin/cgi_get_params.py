@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import cgi
 import sys
 
