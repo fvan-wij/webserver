@@ -7,7 +7,7 @@
 
 class ClientHandler;
 
-FileHandler::FileHandler(File& file, ResponseType type) : _file(file), _type(type), _error(false)
+FileHandler::FileHandler(File file, ResponseType type) : _file(file), _type(type), _error(false)
 {
 	switch (type)
 	{
@@ -30,7 +30,7 @@ void FileHandler::handle_file(short revents)
 	if (_error)
 		return;
 
-	try 
+	try
 	{
 		if (revents & POLLIN)
 		{
@@ -185,4 +185,3 @@ void	FileHandler::_write_file()
 	_file.streamcount += buffer_size;
 	_file.finished = bytes_left <= 0;
 }
-
