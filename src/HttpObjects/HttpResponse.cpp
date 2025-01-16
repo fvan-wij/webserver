@@ -61,7 +61,6 @@ std::string		HttpResponse::to_string() const
 {
 	std::string response;
 
-	// TODO For debugging
 
 	response += "HTTP/1.1 " + std::to_string(_status_code) + " " + _status_message + "\r\n";
 	for (auto [key, value]: _header)
@@ -69,10 +68,11 @@ std::string		HttpResponse::to_string() const
 		response += key + ": " + value + "\r\n";
 	}
 	response += "\r\n" + _body + "\r\n";
-	if (_status_code == 500)
-	{
-		LOG_ERROR("Exit code 500, exiting program...");
-		exit(1);
-	}
+	// // TODO For debugging
+	// if (_status_code == 500)
+	// {
+	// 	LOG_ERROR("Exit code 500, exiting program...");
+	// 	exit(1);
+	// }
 	return response;
 }

@@ -393,7 +393,10 @@ void	ClientHandler::_poll_timeout_timer()
 void	ClientHandler::_close_connection()
 {
 	if (_cgi_handler)
+	{
 		_cgi_handler->kill();
+		_connection_manager.remove(_cgi_handler->get_pipe_fd());
+	}
 	LOG_INFO("Client (fd " << _socket.get_fd() << ") disconnected");
 	_connection_manager.remove(_socket.get_fd());
 }
