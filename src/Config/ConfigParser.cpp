@@ -54,10 +54,11 @@ std::vector<std::string> parse_list(std::vector<std::string> tokens, unsigned lo
 std::pair<std::string, int> parse_listen(std::vector<std::string> tokens, unsigned long &i)
 {
 	int port = 0;
+	std::string address = "";
 	i++;
-	std::string address = tokens[i].substr(0, tokens[i].find(":"));
 	if (std::isdigit(tokens[i][tokens[i].find(":") + 1]))
 	{
+		std::string address = tokens[i].substr(0, tokens[i].find(":"));
 		bool should_throw = false;
 		try
 		{
@@ -70,6 +71,9 @@ std::pair<std::string, int> parse_listen(std::vector<std::string> tokens, unsign
 		if (should_throw || port >= std::numeric_limits<int16_t>::max())
 			throw std::invalid_argument("invalid port number choose a value between 0-65535");
 	}
+	else
+		throw std::invalid_argument("invalid address");
+	std::cout << "address: " << address << " port: " << port << std::endl;
 	i++;
 	return {address, port};
 }
@@ -210,6 +214,7 @@ std::optional<std::vector<Config>>	parse_config(std::string_view config_path)
 	std::string					line;
 	std::vector<std::string>	tokens;
 
+	std::cout << "Parsing config file: " << config_path << std::endl;
 	while (getline(in, line))
 	{
 		tokenized_line = tokenize_string(line, "\t\r\n ");
@@ -233,6 +238,11 @@ std::optional<std::vector<Config>>	parse_config(std::string_view config_path)
 			}
 		}
 		i++;
+	}
+	if (configs.empty())
+	{
+		LOG_ERROR("No server block found in config file");
+		return {};
 	}
 	return (configs);
 }

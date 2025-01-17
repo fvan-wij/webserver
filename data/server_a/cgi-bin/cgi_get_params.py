@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import cgi
 import sys
 
@@ -9,18 +10,22 @@ print("")
 
 i = 0
 for arg in sys.argv:
-    print(f"{i} : {arg}")
+    print(f"argv[{i}] : {arg}")
     i += 1
 
 print('')
 print('')
 
 
-arguments = cgi.FieldStorage()
-for i in arguments.keys():
-    print(f"{i} : {arguments[i].value}")
+if sys.argv[1]:
+    print("get parameters")
+    arguments = cgi.FieldStorage()
+    for i in arguments.keys():
+        print(f"{i} : {arguments[i].value}")
 
 
 
-# print(sys.argv[3])
 
+if sys.argv[2]:
+    print("post body")
+    print(f"{sys.argv[2]}")
